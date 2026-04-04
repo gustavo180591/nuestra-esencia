@@ -22,12 +22,12 @@
 
 ## 🧱 FASE 2 — UI CAJA (SPRINT 2)
 
-- [ ] Pantalla POS
-- [ ] Listado productos (botones grandes)
-- [ ] Carrito
-- [ ] Total automático
-- [ ] Botón cobrar
-- [ ] Método de pago
+- [x] Pantalla POS
+- [x] Listado productos (botones grandes)
+- [x] Carrito
+- [x] Total automático
+- [x] Botón cobrar
+- [x] Método de pago
 
 ---
 
@@ -82,8 +82,8 @@
 
 ## 🎯 MVP
 
-- [ ] Seed
-- [ ] Endpoint venta
-- [ ] UI caja
-- [ ] Stock automático
-- [ ] Método de pago
+- [x] Seed
+- [x] Endpoint venta
+- [x] UI caja
+- [x] Stock automático
+- [x] Método de pago
