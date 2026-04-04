@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: nuestra-esencia-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nuestra-esencia
+      POSTGRES_USER: nuestra-esencia
+      POSTGRES_PASSWORD: Nuestra123
+    ports:
+      - '5438:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - nuestra-esencia-network
+
+  # Opcional: pgAdmin para gestión visual
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: nuestra-esencia-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@nuestra-esencia.com
+      PGADMIN_DEFAULT_PASSWORD: NuestraEsencia2026!
+    ports:
+      - '5050:80'
+    depends_on:
+      - postgres
+    networks:
+      - nuestra-esencia-network
+
+volumes:
+  postgres_data:
+
+networks:
+  nuestra-esencia-network:
+    driver: bridge

@@ -1,0 +1,285 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  VENDEDOR
+  COMPRAS
+  DUENO
+}
+
+enum ProductStatus {
+  ACTIVO
+  INACTIVO
+}
+
+enum SaleStatus {
+  COMPLETADA
+  CANCELADA
+}
+
+enum PurchaseStatus {
+  REGISTRADA
+  CANCELADA
+}
+
+enum StockMovementType {
+  ENTRADA_COMPRA
+  SALIDA_VENTA
+  AJUSTE_MANUAL
+  REVERSO_VENTA
+  REVERSO_COMPRA
+}
+
+enum UnitMeasure {
+  UNIDAD
+  DOCENA
+  MEDIA_DOCENA
+  KILOGRAMO
+  PORCION
+}
+
+enum PaymentMethod {
+  EFECTIVO
+  TRANSFERENCIA
+  TARJETA
+}
+
+model User {
+  id           String      @id @default(cuid())
+  name         String
+  email        String      @unique
+  passwordHash String
+  role         UserRole
+  active       Boolean     @default(true)
+
+  sales        Sale[]
+  purchases    Purchase[]
+  stockMoves   StockMovement[]
+  cancelledSales Sale[]    @relation("SaleCancelledBy")
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?
+  active      Boolean    @default(true)
+
+  products    Product[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Product {
+  id              String              @id @default(cuid())
+  name            String
+  description     String?
+  status          ProductStatus       @default(ACTIVO)
+  categoryId      String?
+  category        Category?           @relation(fields: [categoryId], references: [id])
+
+  stock           Decimal             @db.Decimal(10, 3)
+  stockMin        Decimal             @default(0) @db.Decimal(10, 3)
+
+  isPerishable    Boolean             @default(false)
+
+  saleFormats     ProductSaleFormat[]
+  saleItems       SaleItem[]
+  purchaseItems   PurchaseItem[]
+  stockMoves      StockMovement[]
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([name])
+  @@index([status])
+  @@map("products")
+}
+
+model ProductSaleFormat {
+  id            String       @id @default(cuid())
+  productId     String
+  product       Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  unitMeasure   UnitMeasure
+  label         String?      // Ej: "Unidad", "Media docena", "Docena", "Kg", "Porción"
+  price         Decimal      @db.Decimal(10, 2)
+  active        Boolean      @default(true)
+
+  saleItems     SaleItem[]
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([productId, unitMeasure])
+  @@index([productId])
+  @@map("product_sale_formats")
+}
+
+model Supplier {
+  id           String       @id @default(cuid())
+  name         String
+  phone        String?
+  address      String?
+  email        String?
+  active       Boolean      @default(true)
+
+  purchases    Purchase[]
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([name])
+  @@map("suppliers")
+}
+
+model Sale {
+  id              String       @id @default(cuid())
+  saleNumber      Int          @default(autoincrement())
+  status          SaleStatus   @default(COMPLETADA)
+
+  userId          String
+  user            User         @relation(fields: [userId], references: [id])
+
+  items           SaleItem[]
+  stockMoves      StockMovement[]
+
+  subtotal        Decimal      @db.Decimal(12, 2)
+  discount        Decimal      @default(0) @db.Decimal(12, 2)
+  total           Decimal      @db.Decimal(12, 2)
+
+  // 💳 NUEVO
+  paymentMethod   PaymentMethod
+
+  // 💵 OPCIONAL (solo para efectivo)
+  cashReceived    Decimal?     @db.Decimal(12, 2)
+  changeGiven     Decimal?     @db.Decimal(12, 2)
+
+  cancelledAt     DateTime?
+  cancelledById   String?
+  cancelledBy     User?        @relation("SaleCancelledBy", fields: [cancelledById], references: [id])
+  cancellationReason String?
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([saleNumber])
+  @@index([createdAt])
+  @@index([status])
+  @@map("sales")
+}
+
+model SaleItem {
+  id                 String             @id @default(cuid())
+  saleId             String
+  sale               Sale               @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  productId          String
+  product            Product            @relation(fields: [productId], references: [id])
+
+  productSaleFormatId String?
+  productSaleFormat  ProductSaleFormat? @relation(fields: [productSaleFormatId], references: [id])
+
+  productNameSnapshot String
+  formatLabelSnapshot String?
+  unitMeasure        UnitMeasure
+
+  quantity           Decimal            @db.Decimal(10, 3)
+  unitPrice          Decimal            @db.Decimal(10, 2)
+  subtotal           Decimal            @db.Decimal(12, 2)
+
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([saleId])
+  @@index([productId])
+  @@map("sale_items")
+}
+
+model Purchase {
+  id             String          @id @default(cuid())
+  purchaseNumber Int             @default(autoincrement())
+  status         PurchaseStatus  @default(REGISTRADA)
+
+  supplierId     String
+  supplier       Supplier        @relation(fields: [supplierId], references: [id])
+
+  userId         String
+  user           User            @relation(fields: [userId], references: [id])
+
+  items          PurchaseItem[]
+  stockMoves     StockMovement[]
+
+  subtotal       Decimal         @db.Decimal(12, 2)
+  total          Decimal         @db.Decimal(12, 2)
+  notes          String?
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([purchaseNumber])
+  @@index([createdAt])
+  @@index([status])
+  @@map("purchases")
+}
+
+model PurchaseItem {
+  id                  String       @id @default(cuid())
+  purchaseId          String
+  purchase            Purchase     @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+
+  productId           String
+  product             Product      @relation(fields: [productId], references: [id])
+
+  productNameSnapshot String
+  quantity            Decimal      @db.Decimal(10, 3)
+  unitCost            Decimal      @db.Decimal(10, 2)
+  subtotal            Decimal      @db.Decimal(12, 2)
+
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  @@index([purchaseId])
+  @@index([productId])
+  @@map("purchase_items")
+}
+
+model StockMovement {
+  id             String             @id @default(cuid())
+  productId      String
+  product        Product            @relation(fields: [productId], references: [id])
+
+  type           StockMovementType
+  quantity       Decimal            @db.Decimal(10, 3)
+  previousStock  Decimal            @db.Decimal(10, 3)
+  newStock       Decimal            @db.Decimal(10, 3)
+
+  saleId         String?
+  sale           Sale?              @relation(fields: [saleId], references: [id])
+
+  purchaseId     String?
+  purchase       Purchase?          @relation(fields: [purchaseId], references: [id])
+
+  userId         String?
+  user           User?              @relation(fields: [userId], references: [id])
+
+  reason         String?
+
+  createdAt      DateTime           @default(now())
+
+  @@index([productId, createdAt])
+  @@index([type])
+  @@index([saleId])
+  @@index([purchaseId])
+  @@map("stock_movements")
+}
