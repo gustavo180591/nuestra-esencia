@@ -53,6 +53,8 @@
 	"dependencies": {
 		"@auth/sveltekit": "^1.11.1",
 		"@prisma/client": "^6.19.2",
+		"@types/bcryptjs": "^2.4.6",
+		"bcryptjs": "^3.0.3",
 		"zod": "^4.3.6",
 		"zod-form-data": "^3.0.1"
 	}

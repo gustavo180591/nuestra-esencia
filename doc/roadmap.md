@@ -1,227 +1,89 @@
-# 🚀 Roadmap de Desarrollo - Nuestra Esencia
+# 🚀 Roadmap Optimizado - Nuestra Esencia
 
 ---
 
-## 📋 Estado Actual
+## 🧱 FASE 1 — CORE REAL (SPRINT 1)
 
-- [x] Base de datos PostgreSQL configurada
-- [x] Modelo de datos con Prisma
-- [x] Logo en formato SVG
-- [x] Docker compose funcionando
-- [x] Documentación inicial
+### Backend
 
----
+- [x] Variables de entorno
+- [x] Prisma conectado
+- [x] Seed completo (usuarios, productos, formatos)
+- [x] Endpoint GET productos
+- [x] Endpoint POST venta
 
-## 🎯 Fase 1: Fundamentos (Sprint 1)
+### Lógica
 
-### Backend Core
-
-- [x] Configurar variables de entorno
-- [x] Crear API routes básicas
-- [ ] Implementar autenticación simple
-- [x] Conectar Prisma Client
-
-### Frontend Base
-
-- [ ] Configurar layout principal
-- [ ] Crear componente Hero section
-- [ ] Implementar navegación
-- [ ] Configurar TailwindCSS themes
-
-### Datos Iniciales
-
-- [ ] Crear seed de categorías
-- [ ] Crear seed de productos básicos
-- [ ] Crear usuario administrador
+- [x] Calcular total venta
+- [x] Descontar stock
+- [x] Crear StockMovement
 
 ---
 
-## 🎯 Fase 2: Gestión de Productos (Sprint 2)
+## 🧱 FASE 2 — UI CAJA (SPRINT 2)
 
-### CRUD Productos
-
-- [ ] Listado de productos
-- [ ] Formulario alta producto
-- [ ] Formulario edición producto
-- [ ] Eliminar producto (soft delete)
-
-### Características
-
-- [ ] Categorías de productos
-- [ ] Múltiples formatos de venta
-- [ ] Control de stock básico
-- [ ] Estados activo/inactivo
-
-### UI/UX
-
-- [ ] Dashboard productos
-- [ ] Búsqueda y filtros
-- [ ] Paginación
-- [ ] Modo responsive
+- [ ] Pantalla POS
+- [ ] Listado productos (botones grandes)
+- [ ] Carrito
+- [ ] Total automático
+- [ ] Botón cobrar
+- [ ] Método de pago
 
 ---
 
-## 🎯 Fase 3: Sistema de Ventas (Sprint 3)
+## 🧱 FASE 3 — PRODUCTOS (SPRINT 3)
 
-### POS - Punto de Venta
-
-- [ ] Interfaz tipo caja
-- [ ] Carrito de compras
-- [ ] Cálculo automático de totales
-- [ ] Selección de formatos de venta
-
-### Proceso de Venta
-
-- [ ] Registrar venta
-- [ ] Descuento automático de stock
-- [ ] Historial de ventas
-- [ ] Cancelación de ventas
-
-### UI/UX
-
-- [ ] Teclado numérico virtual
-- [ ] Botones de productos grandes
-- [ ] Vista rápida de stock
-- [ ] Confirmación de venta
+- [ ] CRUD productos
+- [ ] Formatos de venta
+- [ ] Categorías
 
 ---
 
-## 🎯 Fase 4: Control de Stock (Sprint 4)
+## 🧱 FASE 4 — STOCK (SPRINT 4)
 
-### Gestión de Inventario
-
-- [ ] Dashboard de stock
-- [ ] Movimientos de stock
-- [ ] Alertas de stock bajo
-- [ ] Ajustes manuales de stock
-
-### Reportes
-
-- [ ] Reporte de stock actual
-- [ ] Historial de movimientos
-- [ ] Productos críticos
-- [ ] Exportación a Excel
+- [ ] Dashboard stock
+- [ ] Alertas stock bajo
+- [ ] Ajustes manuales
 
 ---
 
-## 🎯 Fase 5: Compras y Proveedores (Sprint 5)
-
-### Gestión de Proveedores
+## 🧱 FASE 5 — COMPRAS (SPRINT 5)
 
 - [ ] CRUD proveedores
-- [ ] Listado de proveedores
-- [ ] Historial por proveedor
-- [ ] Contacto rápido
-
-### Gestión de Compras
-
-- [ ] Registro de compras
-- [ ] Actualización automática de stock
-- [ ] Control de gastos
-- [ ] Compras vs ventas
+- [ ] Registrar compras
+- [ ] Actualizar stock
 
 ---
 
-## 🎯 Fase 6: Reportes y Analytics (Sprint 6)
+## 🧱 FASE 6 — REPORTES (SPRINT 6)
 
-### Reportes de Ventas
-
-- [ ] Ventas por período
+- [ ] Ventas por día
 - [ ] Productos más vendidos
-- [ ] Análisis de ganancias
-- [ ] Tendencias de venta
-
-### Dashboard Principal
-
-- [ ] KPIs principales
-- [ ] Gráficos interactivos
-- [ ] Filtros avanzados
-- [ ] Exportación PDF/Excel
+- [ ] Caja diaria
 
 ---
 
-## 🎯 Fase 7: Mejoras y Optimización (Sprint 7)
+## 🧱 FASE 7 — UX PRO (SPRINT 7)
 
-### Performance
-
-- [ ] Optimización de consultas
-- [ ] Caching inteligente
-- [ ] Lazy loading
-- [ ] Testing de carga
-
-### UX Avanzada
-
+- [ ] Teclado numérico
+- [ ] Atajos
 - [ ] Modo oscuro
-- [ ] Atajos de teclado
-- [ ] Notificaciones
-- [ ] Offline mode básico
 
 ---
 
-## 🎯 Fase 8: Despliegue y Producción (Sprint 8)
+## 🧱 FASE 8 — DEPLOY (SPRINT 8)
 
-### Preparación
-
-- [ ] Variables de entorno producción
-- [ ] Build optimizado
-- [ ] Testing final
-- [ ] Documentación API
-
-### Deploy
-
-- [ ] Configuración servidor
-- [ ] Dominio y SSL
-- [ ] Backup automático
-- [ ] Monitoreo básico
+- [ ] Docker producción
+- [ ] VPS
+- [ ] Dominio + SSL
+- [ ] Backup DB
 
 ---
 
-## 📊 Métricas de Progreso
+## 🎯 MVP
 
-### Porcentaje General: 0%
-
-- Backend: 0%
-- Frontend: 0%
-- Base de datos: 100%
-- Deploy: 0%
-
-### Sprints Completados: 0/8
-
-- Tiempo estimado: 8 semanas
-- Sprint actual: 1
-
----
-
-## 🔄 Actualizaciones
-
-**Última actualización:** 2026-04-04
-
-### Próximos pasos inmediatos:
-
-1. Configurar variables de entorno
-2. Crear Hero section
-3. Implementar autenticación básica
-4. Seed de datos iniciales
-
----
-
-## 🎯 Objetivo MVP (Mínimo Viable)
-
-Para tener una versión funcional mínima:
-
-- [ ] Gestión de productos básica
-- [ ] Sistema de ventas simple
-- [ ] Control de stock automático
-- [ ] Reporte diario básico
-- [ ] Deploy en producción
-
-**Timeline MVP:** 4 semanas (Sprints 1-4)
-
----
-
-## 📝 Notas
-
-- Priorizar siempre velocidad de venta sobre características complejas
-- Mantener UI simple y tipo caja registradora
-- Cada sprint debe entregar valor tangible
-- Testing continuo durante desarrollo
+- [ ] Seed
+- [ ] Endpoint venta
+- [ ] UI caja
+- [ ] Stock automático
+- [ ] Método de pago
