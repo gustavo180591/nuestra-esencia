@@ -189,7 +189,7 @@
 	<div class="mx-auto max-w-7xl">
 		<div class="mb-6 flex items-center justify-between">
 			<h1 class="text-3xl font-bold text-gray-900">Gestión de Productos</h1>
-			<div class="flex gap-3">
+			<div class="flex gap-3 flex-wrap">
 			<a
 				href="/admin/categories"
 				class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -219,6 +219,12 @@
 				class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700"
 			>
 				Compras
+			</a>
+			<a
+				href="/admin/reports"
+				class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700"
+			>
+				Reportes
 			</a>
 			<button
 				onclick={openCreateModal}

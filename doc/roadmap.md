@@ -57,9 +57,9 @@
 
 ## 🧱 FASE 6 — REPORTES (SPRINT 6)
 
-- [ ] Ventas por día
-- [ ] Productos más vendidos
-- [ ] Caja diaria
+- [x] Ventas por día
+- [x] Productos más vendidos
+- [x] Caja diaria
 
 ---
 
