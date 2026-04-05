@@ -1,0 +1,262 @@
+import { db } from '$lib/server/db';
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+
+export const GET: RequestHandler = async ({ params }) => {
+	try {
+		const product = await db.product.findUnique({
+			where: {
+				id: params.id
+			},
+			include: {
+				category: {
+					select: {
+						id: true,
+						name: true
+					}
+				},
+				saleFormats: {
+					select: {
+						id: true,
+						unitMeasure: true,
+						label: true,
+						price: true,
+						active: true
+					},
+					orderBy: {
+						price: 'asc'
+					}
+				}
+			}
+		});
+
+		if (!product) {
+			return json(
+				{
+					success: false,
+					message: 'Producto no encontrado'
+				},
+				{ status: 404 }
+			);
+		}
+
+		return json({
+			success: true,
+			data: product
+		});
+	} catch (error) {
+		console.error('Error fetching product:', error);
+		return json(
+			{
+				success: false,
+				message: 'Error al obtener producto',
+				error: error instanceof Error ? error.message : 'Unknown error'
+			},
+			{ status: 500 }
+		);
+	}
+};
+
+export const PUT: RequestHandler = async ({ params, request }) => {
+	try {
+		const data = await request.json();
+
+		const { name, description, categoryId, status, stock, stockMin, isPerishable, saleFormats } =
+			data;
+
+		// Validaciones básicas
+		if (!name || name.trim() === '') {
+			return json(
+				{
+					success: false,
+					message: 'El nombre del producto es requerido'
+				},
+				{ status: 400 }
+			);
+		}
+
+		// Verificar que el producto existe
+		const existingProduct = await db.product.findUnique({
+			where: { id: params.id }
+		});
+
+		if (!existingProduct) {
+			return json(
+				{
+					success: false,
+					message: 'Producto no encontrado'
+				},
+				{ status: 404 }
+			);
+		}
+
+		// Actualizar producto
+		const product = await db.product.update({
+			where: {
+				id: params.id
+			},
+			data: {
+				name: name.trim(),
+				description: description?.trim() || null,
+				categoryId: categoryId || null,
+				status: status || 'ACTIVO',
+				stock: stock || 0,
+				stockMin: stockMin || 0,
+				isPerishable: isPerishable || false
+			},
+			include: {
+				category: {
+					select: {
+						id: true,
+						name: true
+					}
+				},
+				saleFormats: {
+					select: {
+						id: true,
+						unitMeasure: true,
+						label: true,
+						price: true,
+						active: true
+					}
+				}
+			}
+		});
+
+		// Si se proporcionan formatos de venta, actualizarlos
+		if (saleFormats && saleFormats.length > 0) {
+			// Desactivar todos los formatos existentes
+			await db.productSaleFormat.updateMany({
+				where: {
+					productId: params.id
+				},
+				data: {
+					active: false
+				}
+			});
+
+			// Crear o actualizar los formatos proporcionados
+			for (const format of saleFormats) {
+				if (format.id) {
+					// Actualizar formato existente
+					await db.productSaleFormat.update({
+						where: {
+							id: format.id
+						},
+						data: {
+							unitMeasure: format.unitMeasure,
+							label: format.label,
+							price: format.price,
+							active: true
+						}
+					});
+				} else {
+					// Crear nuevo formato
+					await db.productSaleFormat.create({
+						data: {
+							productId: params.id,
+							unitMeasure: format.unitMeasure,
+							label: format.label,
+							price: format.price,
+							active: true
+						}
+					});
+				}
+			}
+
+			// Recargar el producto con los formatos actualizados
+			const updatedProduct = await db.product.findUnique({
+				where: { id: params.id },
+				include: {
+					category: {
+						select: {
+							id: true,
+							name: true
+						}
+					},
+					saleFormats: {
+						select: {
+							id: true,
+							unitMeasure: true,
+							label: true,
+							price: true,
+							active: true
+						},
+						where: {
+							active: true
+						},
+						orderBy: {
+							price: 'asc'
+						}
+					}
+				}
+			});
+
+			return json({
+				success: true,
+				message: 'Producto actualizado exitosamente',
+				data: updatedProduct
+			});
+		}
+
+		return json({
+			success: true,
+			message: 'Producto actualizado exitosamente',
+			data: product
+		});
+	} catch (error) {
+		console.error('Error updating product:', error);
+		return json(
+			{
+				success: false,
+				message: 'Error al actualizar producto',
+				error: error instanceof Error ? error.message : 'Unknown error'
+			},
+			{ status: 500 }
+		);
+	}
+};
+
+export const DELETE: RequestHandler = async ({ params }) => {
+	try {
+		// Verificar que el producto existe
+		const existingProduct = await db.product.findUnique({
+			where: { id: params.id }
+		});
+
+		if (!existingProduct) {
+			return json(
+				{
+					success: false,
+					message: 'Producto no encontrado'
+				},
+				{ status: 404 }
+			);
+		}
+
+		// Soft delete - cambiar status a INACTIVO
+		await db.product.update({
+			where: {
+				id: params.id
+			},
+			data: {
+				status: 'INACTIVO'
+			}
+		});
+
+		return json({
+			success: true,
+			message: 'Producto eliminado exitosamente'
+		});
+	} catch (error) {
+		console.error('Error deleting product:', error);
+		return json(
+			{
+				success: false,
+				message: 'Error al eliminar producto',
+				error: error instanceof Error ? error.message : 'Unknown error'
+			},
+			{ status: 500 }
+		);
+	}
+};

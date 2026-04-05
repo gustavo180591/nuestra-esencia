@@ -2,7 +2,7 @@ export interface Product {
 	id: string;
 	name: string;
 	description: string | null;
-	status: string;
+	status: 'ACTIVO' | 'INACTIVO';
 	categoryId: string | null;
 	category: {
 		id: string;
@@ -18,8 +18,20 @@ export interface Product {
 
 export interface ProductSaleFormat {
 	id: string;
-	unitMeasure: string;
+	unitMeasure: 'UNIDAD' | 'DOCENA' | 'MEDIA_DOCENA' | 'KILOGRAMO' | 'PORCION';
 	label: string | null;
 	price: string;
 	active: boolean;
+}
+
+export interface Category {
+	id: string;
+	name: string;
+	description: string | null;
+	active: boolean;
+	_count?: {
+		products: number;
+	};
+	createdAt: string;
+	updatedAt: string;
 }

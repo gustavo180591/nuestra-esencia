@@ -33,9 +33,9 @@
 
 ## 🧱 FASE 3 — PRODUCTOS (SPRINT 3)
 
-- [ ] CRUD productos
-- [ ] Formatos de venta
-- [ ] Categorías
+- [x] CRUD productos
+- [x] Formatos de venta
+- [x] Categorías
 
 ---
 
