@@ -41,9 +41,9 @@
 
 ## 🧱 FASE 4 — STOCK (SPRINT 4)
 
-- [ ] Dashboard stock
-- [ ] Alertas stock bajo
-- [ ] Ajustes manuales
+- [x] Dashboard stock
+- [x] Alertas stock bajo
+- [x] Ajustes manuales
 
 ---
 

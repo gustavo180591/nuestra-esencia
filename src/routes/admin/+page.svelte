@@ -190,25 +190,31 @@
 		<div class="mb-6 flex items-center justify-between">
 			<h1 class="text-3xl font-bold text-gray-900">Gestión de Productos</h1>
 			<div class="flex gap-3">
-				<a
-					href="/admin/categories"
-					class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-				>
-					Gestionar Categorías
-				</a>
-				<a
-					href="/admin/formats"
-					class="rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700"
-				>
-					Gestionar Formatos
-				</a>
-				<button
-					onclick={openCreateModal}
-					class="rounded-lg bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"
-				>
-					Nuevo Producto
-				</button>
-			</div>
+			<a
+				href="/admin/categories"
+				class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+			>
+				Gestionar Categorías
+			</a>
+			<a
+				href="/admin/formats"
+				class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+			>
+				Gestionar Formatos
+			</a>
+			<a
+				href="/admin/stock"
+				class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+			>
+				Gestión de Stock
+			</a>
+			<button
+				onclick={openCreateModal}
+				class="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700"
+			>
+				Nuevo Producto
+			</button>
+		</div>
 		</div>
 
 		{#if loading}
