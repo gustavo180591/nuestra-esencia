@@ -208,6 +208,18 @@
 			>
 				Gestión de Stock
 			</a>
+			<a
+				href="/admin/suppliers"
+				class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+			>
+				Proveedores
+			</a>
+			<a
+				href="/admin/purchases"
+				class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700"
+			>
+				Compras
+			</a>
 			<button
 				onclick={openCreateModal}
 				class="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700"

@@ -49,9 +49,9 @@
 
 ## 🧱 FASE 5 — COMPRAS (SPRINT 5)
 
-- [ ] CRUD proveedores
-- [ ] Registrar compras
-- [ ] Actualizar stock
+- [x] CRUD proveedores
+- [x] Registrar compras
+- [x] Actualizar stock
 
 ---
 

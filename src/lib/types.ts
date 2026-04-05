@@ -35,3 +35,51 @@ export interface Category {
 	createdAt: string;
 	updatedAt: string;
 }
+
+export interface Supplier {
+	id: string;
+	name: string;
+	phone: string | null;
+	address: string | null;
+	email: string | null;
+	active: boolean;
+	_count?: {
+		purchases: number;
+	};
+	purchases?: Purchase[];
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface Purchase {
+	id: string;
+	purchaseNumber: number;
+	status: 'REGISTRADA' | 'CANCELADA';
+	supplierId: string;
+	supplier?: {
+		id: string;
+		name: string;
+	};
+	total: string;
+	_count?: {
+		items: number;
+	};
+	items?: PurchaseItem[];
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface PurchaseItem {
+	id: string;
+	purchaseId: string;
+	productId: string;
+	product?: {
+		id: string;
+		name: string;
+	};
+	productNameSnapshot: string;
+	quantity: string;
+	unitCost: string;
+	subtotal: string;
+	createdAt: string;
+}
