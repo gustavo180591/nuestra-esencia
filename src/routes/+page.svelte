@@ -21,7 +21,9 @@
 				stats.totalProducts = products.length;
 				stats.activeProducts = products.filter((p: Product) => p.status === 'ACTIVO').length;
 				stats.totalStock = products.reduce((sum: number, p: Product) => sum + Number(p.stock), 0);
-				stats.lowStockProducts = products.filter((p: Product) => Number(p.stock) <= Number(p.stockMin)).length;
+				stats.lowStockProducts = products.filter(
+					(p: Product) => Number(p.stock) <= Number(p.stockMin)
+				).length;
 			}
 		} catch {
 			console.error('Error loading stats');
@@ -68,7 +70,7 @@
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
 			<a
 				href="/pos"
-				class="bg-amber-600 text-white p-8 rounded-lg shadow-lg hover:bg-amber-700 transition-colors"
+				class="rounded-lg bg-amber-600 p-8 text-white shadow-lg transition-colors hover:bg-amber-700"
 			>
 				<div class="mb-2 text-2xl font-bold">🏪 Punto de Venta</div>
 				<div class="text-amber-100">Abrir caja para ventas</div>
@@ -76,7 +78,7 @@
 
 			<a
 				href="/admin"
-				class="bg-blue-600 text-white p-8 rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
+				class="rounded-lg bg-blue-600 p-8 text-white shadow-lg transition-colors hover:bg-blue-700"
 			>
 				<div class="mb-2 text-2xl font-bold">📦 Gestión de Productos</div>
 				<div class="text-blue-100">Administrar productos y categorías</div>
