@@ -65,9 +65,9 @@
 
 ## 🧱 FASE 7 — UX PRO (SPRINT 7)
 
-- [ ] Teclado numérico
-- [ ] Atajos
-- [ ] Modo oscuro
+- [x] Teclado numérico
+- [x] Atajos
+- [x] Modo oscuro
 
 ---
 

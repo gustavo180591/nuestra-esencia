@@ -26,7 +26,23 @@
 	let cashReceived = $state(0);
 	let changeGiven = $state(0);
 
+	// Teclado numérico
+	let showKeypad = $state(false);
+	let activeInput = $state<'discount' | 'cash' | null>(null);
+	let keypadValue = $state('');
+
 	// Cargar productos desde la API
+	onMount(() => {
+		loadProducts();
+		// Agregar event listener para atajos de teclado
+		window.addEventListener('keydown', handleKeyboardShortcuts);
+		
+		// Limpiar event listener al desmontar
+		return () => {
+			window.removeEventListener('keydown', handleKeyboardShortcuts);
+		};
+	});
+
 	async function loadProducts() {
 		try {
 			const response = await fetch('/api/products');
@@ -41,6 +57,93 @@
 			error = 'Error al cargar productos';
 		} finally {
 			loading = false;
+		}
+	}
+
+	// Teclado numérico
+	function openKeypad(inputType: 'discount' | 'cash') {
+		activeInput = inputType;
+		keypadValue = inputType === 'discount' ? discount.toString() : cashReceived.toString();
+		showKeypad = true;
+	}
+
+	function closeKeypad() {
+		showKeypad = false;
+		activeInput = null;
+		keypadValue = '';
+	}
+
+	function appendToKeypad(value: string) {
+		if (value === 'C') {
+			keypadValue = '';
+		} else if (value === '⌫') {
+			keypadValue = keypadValue.slice(0, -1);
+		} else {
+			// Permitir solo un punto decimal
+			if (value === '.' && keypadValue.includes('.')) return;
+			keypadValue += value;
+		}
+	}
+
+	function applyKeypadValue() {
+		const numValue = parseFloat(keypadValue) || 0;
+		
+		if (activeInput === 'discount') {
+			discount = numValue;
+		} else if (activeInput === 'cash') {
+			cashReceived = numValue;
+		}
+		
+		closeKeypad();
+	}
+
+	// Atajos de teclado
+	function handleKeyboardShortcuts(event: KeyboardEvent) {
+		// Ctrl/Cmd + N: Nuevo carrito
+		if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
+			event.preventDefault();
+			clearCart();
+		}
+		
+		// Ctrl/Cmd + Enter: Procesar venta
+		if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+			event.preventDefault();
+			processSale();
+		}
+		
+		// Escape: Cerrar modal o limpiar selección
+		if (event.key === 'Escape') {
+			if (showKeypad) {
+				closeKeypad();
+			}
+		}
+		
+		// F1-F3: Métodos de pago
+		if (event.key === 'F1') {
+			event.preventDefault();
+			paymentMethod = 'EFECTIVO';
+		}
+		if (event.key === 'F2') {
+			event.preventDefault();
+			paymentMethod = 'TRANSFERENCIA';
+		}
+		if (event.key === 'F3') {
+			event.preventDefault();
+			paymentMethod = 'TARJETA';
+		}
+		
+		// Ctrl/Cmd + D: Foco en descuento
+		if ((event.ctrlKey || event.metaKey) && event.key === 'd') {
+			event.preventDefault();
+			openKeypad('discount');
+		}
+		
+		// Ctrl/Cmd + E: Foco en efectivo
+		if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
+			event.preventDefault();
+			if (paymentMethod === 'EFECTIVO') {
+				openKeypad('cash');
+			}
 		}
 	}
 
@@ -307,6 +410,8 @@
 								bind:value={discount}
 								class="w-20 rounded border px-2 py-1 text-right"
 								placeholder="0"
+								readonly
+								onclick={() => openKeypad('discount')}
 							/>
 						</div>
 						<div class="flex justify-between text-lg font-bold">
@@ -343,6 +448,8 @@
 								bind:value={cashReceived}
 								class="w-full rounded-md border border-gray-300 px-3 py-2"
 								placeholder="0.00"
+								readonly
+								onclick={() => openKeypad('cash')}
 							/>
 							{#if cashReceived > 0}
 								<div class="flex justify-between font-medium text-green-600">
@@ -375,6 +482,130 @@
 		</div>
 	</main>
 </div>
+
+<!-- Teclado Numérico Modal -->
+{#if showKeypad}
+	<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+		<div class="bg-white rounded-lg shadow-xl max-w-sm w-full">
+			<div class="p-4 border-b">
+				<div class="flex justify-between items-center">
+					<h3 class="text-lg font-semibold">
+						{activeInput === 'discount' ? 'Descuento' : 'Efectivo Recibido'}
+					</h3>
+					<button
+						onclick={closeKeypad}
+						class="text-gray-400 hover:text-gray-600"
+					>
+						✕
+					</button>
+				</div>
+				<div class="mt-2 text-2xl font-bold text-amber-600">
+					${keypadValue || '0'}
+				</div>
+			</div>
+			
+			<div class="p-4">
+				<div class="grid grid-cols-3 gap-2">
+					<!-- Números 7-9 -->
+					<button
+						onclick={() => appendToKeypad('7')}
+						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+					>
+						7
+					</button>
+					<button
+						onclick={() => appendToKeypad('8')}
+						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+					>
+						8
+					</button>
+					<button
+						onclick={() => appendToKeypad('9')}
+						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+					>
+						9
+					</button>
+					
+					<!-- Números 4-6 -->
+					<button
+						onclick={() => appendToKeypad('4')}
+						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+					>
+						4
+					</button>
+					<button
+						onclick={() => appendToKeypad('5')}
+						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+					>
+						5
+					</button>
+					<button
+						onclick={() => appendToKeypad('6')}
+						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+					>
+						6
+					</button>
+					
+					<!-- Números 1-3 -->
+					<button
+						onclick={() => appendToKeypad('1')}
+						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+					>
+						1
+					</button>
+					<button
+						onclick={() => appendToKeypad('2')}
+						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+					>
+						2
+					</button>
+					<button
+						onclick={() => appendToKeypad('3')}
+						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+					>
+						3
+					</button>
+					
+					<!-- 0, punto, borrar -->
+					<button
+						onclick={() => appendToKeypad('0')}
+						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+					>
+						0
+					</button>
+					<button
+						onclick={() => appendToKeypad('.')}
+						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+					>
+						.
+					</button>
+					<button
+						onclick={() => appendToKeypad('⌫')}
+						class="p-4 text-lg font-semibold bg-red-100 rounded hover:bg-red-200 active:bg-red-300"
+					>
+						⌫
+					</button>
+				</div>
+				
+				<!-- Botones de acción -->
+				<div class="mt-4 grid grid-cols-2 gap-2">
+					<button
+						onclick={() => appendToKeypad('C')}
+						class="p-3 font-semibold bg-red-500 text-white rounded hover:bg-red-600 active:bg-red-700"
+					>
+						Limpiar
+					</button>
+					<button
+						onclick={applyKeypadValue}
+						class="p-3 font-semibold bg-amber-600 text-white rounded hover:bg-amber-700 active:bg-amber-800"
+					>
+						Aceptar
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.sticky {

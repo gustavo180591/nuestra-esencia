@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { Product } from '$lib/types';
+	import ToggleTheme from '../components/ToggleTheme.svelte';
 
 	let stats = $state({
 		totalProducts: 0,
@@ -35,11 +36,14 @@
 	onMount(loadStats);
 </script>
 
-<div class="min-h-screen bg-gray-50 p-6">
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
 	<div class="mx-auto max-w-7xl">
-		<div class="mb-8">
-			<h1 class="mb-2 text-4xl font-bold text-gray-900">Nuestra Esencia</h1>
-			<p class="text-lg text-gray-600">Sistema de Gestión de Tienda</p>
+		<div class="mb-8 flex justify-between items-start">
+			<div>
+				<h1 class="mb-2 text-4xl font-bold text-gray-900 dark:text-gray-100">Nuestra Esencia</h1>
+				<p class="text-lg text-gray-600 dark:text-gray-400">Sistema de Gestión de Tienda</p>
+			</div>
+			<ToggleTheme />
 		</div>
 
 		{#if loading}
