@@ -116,7 +116,7 @@
 						id="start-date"
 						type="date"
 						bind:value={dateRange.startDate}
-						class="px-3 py-2 border border-gray-300 rounded-md"
+						class="px-3 py-2 border border-gray-300 rounded-md text-gray-900"
 					/>
 				</div>
 				<div>
@@ -127,14 +127,14 @@
 						id="end-date"
 						type="date"
 						bind:value={dateRange.endDate}
-						class="px-3 py-2 border border-gray-300 rounded-md"
+						class="px-3 py-2 border border-gray-300 rounded-md text-gray-900"
 					/>
 				</div>
 				<div>
 					<label for="sales-group" class="block text-sm font-medium text-gray-700 mb-1">
 						Agrupar Ventas por
 					</label>
-					<select id="sales-group" bind:value={chartConfig.sales.groupBy} class="px-3 py-2 border border-gray-300 rounded-md">
+					<select id="sales-group" bind:value={chartConfig.sales.groupBy} class="px-3 py-2 border border-gray-300 rounded-md text-gray-900">
 						<option value="day">Día</option>
 						<option value="week">Semana</option>
 						<option value="month">Mes</option>
@@ -144,7 +144,7 @@
 					<label for="products-limit" class="block text-sm font-medium text-gray-700 mb-1">
 						Top Productos
 					</label>
-					<select id="products-limit" bind:value={chartConfig.products.limit} class="px-3 py-2 border border-gray-300 rounded-md">
+					<select id="products-limit" bind:value={chartConfig.products.limit} class="px-3 py-2 border border-gray-300 rounded-md text-gray-900">
 						<option value="10">Top 10</option>
 						<option value="20">Top 20</option>
 						<option value="50">Top 50</option>

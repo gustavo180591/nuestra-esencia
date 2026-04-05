@@ -137,7 +137,7 @@
 
 		{#if loading}
 			<div class="text-center py-8">
-				<div class="text-gray-500">Cargando compras...</div>
+				<div class="text-gray-900">Cargando compras...</div>
 			</div>
 		{:else if error}
 			<div class="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -151,22 +151,22 @@
 				<table class="min-w-full divide-y divide-gray-200">
 					<thead class="bg-gray-50">
 						<tr>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
 								Compra
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
 								Proveedor
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
 								Items
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
 								Total
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
 								Estado
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-900 uppercase tracking-wider">
 								Fecha
 							</th>
 						</tr>
@@ -215,10 +215,10 @@
 				<form onsubmit={savePurchase}>
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 						<div>
-							<label for="purchase-supplier" class="block text-sm font-medium text-gray-700 mb-1">
+							<label for="purchase-supplier" class="block text-sm font-medium text-gray-900 mb-1">
 								Proveedor *
 							</label>
-							<select id="purchase-supplier" bind:value={formData.supplierId} class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+							<select id="purchase-supplier" bind:value={formData.supplierId} class="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900" required>
 								<option value="">Seleccionar proveedor</option>
 								{#each suppliers as supplier}
 									<option value={supplier.id}>{supplier.name}</option>
@@ -227,7 +227,7 @@
 						</div>
 
 						<div>
-							<label for="purchase-notes" class="block text-sm font-medium text-gray-700 mb-1">
+							<label for="purchase-notes" class="block text-sm font-medium text-gray-900 mb-1">
 								Notas
 							</label>
 							<input
@@ -235,7 +235,7 @@
 								type="text"
 								bind:value={formData.notes}
 								placeholder="Notas de la compra"
-								class="w-full px-3 py-2 border border-gray-300 rounded-md"
+								class="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
 							/>
 						</div>
 					</div>
@@ -255,7 +255,7 @@
 						<div class="space-y-3">
 							{#each formData.items as item, index}
 								<div class="flex gap-2 items-center p-3 border rounded-lg bg-gray-50">
-									<select bind:value={item.productId} class="flex-1 px-3 py-2 border border-gray-300 rounded-md">
+									<select bind:value={item.productId} class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-gray-900">
 										<option value="">Seleccionar producto</option>
 										{#each products as product}
 											<option value={product.id}>{product.name}</option>
@@ -267,7 +267,7 @@
 										step="0.001"
 										bind:value={item.quantity}
 										placeholder="Cantidad"
-										class="w-24 px-3 py-2 border border-gray-300 rounded-md"
+										class="w-24 px-3 py-2 border border-gray-300 rounded-md text-gray-900"
 									/>
 
 									<input
@@ -275,7 +275,7 @@
 										step="0.01"
 										bind:value={item.unitPrice}
 										placeholder="Precio unit."
-										class="w-32 px-3 py-2 border border-gray-300 rounded-md"
+										class="w-32 px-3 py-2 border border-gray-300 rounded-md text-gray-900"
 									/>
 
 									<div class="w-24 text-sm font-medium text-gray-900">
@@ -310,7 +310,7 @@
 								showCreateModal = false;
 								resetForm();
 							}}
-							class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+							class="px-4 py-2 border border-gray-300 rounded-md text-gray-900 hover:bg-gray-50"
 						>
 							Cancelar
 						</button>

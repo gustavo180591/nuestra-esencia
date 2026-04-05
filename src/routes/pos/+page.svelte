@@ -284,11 +284,11 @@
 			<!-- Panel de Productos (2/3 del ancho) -->
 			<div class="lg:col-span-2">
 				<div class="rounded-lg bg-white p-6 shadow-md">
-					<h2 class="mb-4 text-xl font-semibold text-gray-800">Productos</h2>
+					<h2 class="mb-4 text-xl font-semibold text-gray-900">Productos</h2>
 
 					{#if loading}
 						<div class="py-8 text-center">
-							<div class="text-gray-500">Cargando productos...</div>
+							<div class="text-gray-900">Cargando productos...</div>
 						</div>
 					{:else if error}
 						<div class="py-8 text-center">
@@ -306,7 +306,7 @@
 							{@const categoryProducts = products.filter((p) => p.category?.name === categoryName)}
 
 							<div class="mb-6">
-								<h3 class="mb-3 border-b pb-2 text-lg font-medium text-gray-700">
+								<h3 class="mb-3 border-b pb-2 text-lg font-medium text-gray-900">
 									{categoryName || 'Sin categoría'}
 								</h3>
 
@@ -318,8 +318,8 @@
 												class="w-full transform rounded-xl border-2 border-amber-300 bg-linear-to-br from-amber-50 to-amber-100 p-6 text-left transition-all duration-200 hover:scale-105 hover:border-amber-500 hover:from-amber-100 hover:to-amber-200 hover:shadow-lg active:scale-95"
 												onclick={() => addToCart(product, product.saleFormats[0])}
 											>
-												<div class="mb-1 text-lg font-bold text-gray-800">{product.name}</div>
-												<div class="mb-2 flex items-center text-sm text-gray-600">
+												<div class="mb-1 text-lg font-bold text-gray-900">{product.name}</div>
+												<div class="mb-2 flex items-center text-sm text-gray-900">
 													<span class="mr-2 inline-block h-2 w-2 rounded-full bg-green-500"></span>
 													Stock: {product.stock}
 												</div>
@@ -343,7 +343,7 @@
 															title="{format.label} - ${format.price}"
 														>
 															<div class="font-bold text-amber-800">{format.label}</div>
-															<div class="text-xs text-gray-600">${format.price}</div>
+															<div class="text-xs text-gray-900">${format.price}</div>
 														</button>
 													{/each}
 												</div>
@@ -360,18 +360,18 @@
 			<!-- Panel del Carrito (1/3 del ancho) -->
 			<div class="lg:col-span-1">
 				<div class="sticky top-6 rounded-lg bg-white p-6 shadow-md">
-					<h2 class="mb-4 text-xl font-semibold text-gray-800">Carrito</h2>
+					<h2 class="mb-4 text-xl font-semibold text-gray-900">Carrito</h2>
 
 					<!-- Items del carrito -->
 					<div class="mb-4 max-h-96 space-y-2 overflow-y-auto">
 						{#if cart.length === 0}
-							<div class="py-4 text-center text-gray-500">El carrito está vacío</div>
+							<div class="py-4 text-center text-gray-900">El carrito está vacío</div>
 						{:else}
 							{#each cart as item, index (item.productId + '-' + item.productSaleFormatId)}
 								<div class="flex items-center justify-between rounded bg-gray-50 p-3">
 									<div class="flex-1">
 										<div class="font-medium">{item.productName}</div>
-										<div class="text-sm text-gray-600">{item.formatLabel}</div>
+										<div class="text-sm text-gray-900">{item.formatLabel}</div>
 										<div class="text-sm font-bold">${item.unitPrice} c/u</div>
 									</div>
 									<div class="flex items-center space-x-2">
@@ -422,13 +422,13 @@
 
 					<!-- Método de pago -->
 					<div class="mt-4 space-y-2">
-						<label for="payment-method" class="block text-sm font-medium text-gray-700"
+						<label for="payment-method" class="block text-sm font-medium text-gray-900"
 							>Método de pago:</label
 						>
 						<select
 							id="payment-method"
 							bind:value={paymentMethod}
-							class="w-full rounded-md border border-gray-300 px-3 py-2"
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 						>
 							<option value="EFECTIVO">Efectivo</option>
 							<option value="TRANSFERENCIA">Transferencia</option>
@@ -439,14 +439,14 @@
 					<!-- Campos para efectivo -->
 					{#if paymentMethod === 'EFECTIVO'}
 						<div class="space-y-2">
-							<label for="cash-received" class="block text-sm font-medium text-gray-700"
+							<label for="cash-received" class="block text-sm font-medium text-gray-900"
 								>Efectivo recibido:</label
 							>
 							<input
 								id="cash-received"
 								type="number"
 								bind:value={cashReceived}
-								class="w-full rounded-md border border-gray-300 px-3 py-2"
+								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 								placeholder="0.00"
 								readonly
 								onclick={() => openKeypad('cash')}
@@ -470,7 +470,7 @@
 							Cobrar ${total}
 						</button>
 						<button
-							class="w-full rounded-lg bg-gray-200 py-2 text-gray-700 hover:bg-gray-300"
+							class="w-full rounded-lg bg-gray-200 py-2 text-gray-900 hover:bg-gray-300"
 							onclick={clearCart}
 							disabled={cart.length === 0}
 						>
@@ -494,7 +494,7 @@
 					</h3>
 					<button
 						onclick={closeKeypad}
-						class="text-gray-400 hover:text-gray-600"
+						class="text-gray-900 hover:text-gray-900"
 					>
 						✕
 					</button>
