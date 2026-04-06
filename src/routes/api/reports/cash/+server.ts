@@ -77,7 +77,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		for (const sale of sales) {
 			const date = sale.createdAt.toISOString().split('T')[0];
-			
+
 			// Inicializar día si no existe
 			if (!dailyData[date]) {
 				dailyData[date] = {
@@ -204,7 +204,8 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		// Calcular porcentajes de métodos de pago
 		for (const method in paymentStats) {
-			paymentStats[method].percentage = totalRevenue > 0 ? (paymentStats[method].amount / totalRevenue) * 100 : 0;
+			paymentStats[method].percentage =
+				totalRevenue > 0 ? (paymentStats[method].amount / totalRevenue) * 100 : 0;
 		}
 
 		// Calcular ticket promedio por vendedor

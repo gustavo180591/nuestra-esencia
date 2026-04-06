@@ -35,7 +35,7 @@
 	onMount(loadStats);
 </script>
 
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+<div class="min-h-screen bg-gray-50 p-6 dark:bg-gray-900">
 	<div class="mx-auto max-w-7xl">
 		<div class="mb-8">
 			<h1 class="mb-2 text-4xl font-bold text-gray-900 dark:text-gray-100">Nuestra Esencia</h1>

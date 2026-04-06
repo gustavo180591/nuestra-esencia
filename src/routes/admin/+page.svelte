@@ -189,55 +189,55 @@
 	<div class="mx-auto max-w-7xl">
 		<div class="mb-6 flex items-center justify-between">
 			<h1 class="text-3xl font-bold text-gray-900">Gestión de Productos</h1>
-			<div class="flex gap-3 flex-wrap">
-			<a
-				href="/admin/categories"
-				class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-			>
-				Gestionar Categorías
-			</a>
-			<a
-				href="/admin/formats"
-				class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
-			>
-				Gestionar Formatos
-			</a>
-			<a
-				href="/admin/stock"
-				class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-			>
-				Gestión de Stock
-			</a>
-			<a
-				href="/admin/suppliers"
-				class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-			>
-				Proveedores
-			</a>
-			<a
-				href="/admin/purchases"
-				class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700"
-			>
-				Compras
-			</a>
-			<a
-				href="/admin/reports"
-				class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700"
-			>
-				Reportes
-			</a>
-			<button
-				onclick={openCreateModal}
-				class="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700"
-			>
-				Nuevo Producto
-			</button>
-		</div>
+			<div class="flex flex-wrap gap-3">
+				<a
+					href="/admin/categories"
+					class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+				>
+					Gestionar Categorías
+				</a>
+				<a
+					href="/admin/formats"
+					class="rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700"
+				>
+					Gestionar Formatos
+				</a>
+				<a
+					href="/admin/stock"
+					class="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+				>
+					Gestión de Stock
+				</a>
+				<a
+					href="/admin/suppliers"
+					class="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
+				>
+					Proveedores
+				</a>
+				<a
+					href="/admin/purchases"
+					class="rounded-lg bg-teal-600 px-4 py-2 text-white hover:bg-teal-700"
+				>
+					Compras
+				</a>
+				<a
+					href="/admin/reports"
+					class="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
+				>
+					Reportes
+				</a>
+				<button
+					onclick={openCreateModal}
+					class="rounded-lg bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"
+				>
+					Nuevo Producto
+				</button>
+			</div>
 		</div>
 
 		{#if loading}
 			<div class="py-8 text-center">
-				<div class="text-gray-500">Cargando productos...</div>
+				<div class="text-gray-900">Cargando productos...</div>
 			</div>
 		{:else if error}
 			<div class="rounded-lg border border-red-200 bg-red-50 p-4">
@@ -250,32 +250,32 @@
 					<thead class="bg-gray-50">
 						<tr>
 							<th
-								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-900 uppercase"
 							>
 								Producto
 							</th>
 							<th
-								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-900 uppercase"
 							>
 								Categoría
 							</th>
 							<th
-								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-900 uppercase"
 							>
 								Stock
 							</th>
 							<th
-								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-900 uppercase"
 							>
 								Precios
 							</th>
 							<th
-								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-900 uppercase"
 							>
 								Estado
 							</th>
 							<th
-								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-900 uppercase"
 							>
 								Acciones
 							</th>
@@ -288,7 +288,7 @@
 									<div>
 										<div class="text-sm font-medium text-gray-900">{product.name}</div>
 										{#if product.description}
-											<div class="text-sm text-gray-500">{product.description}</div>
+											<div class="text-sm text-gray-900">{product.description}</div>
 										{/if}
 									</div>
 								</td>
@@ -350,45 +350,45 @@
 	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
 		<div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
 			<div class="p-6">
-				<h2 class="mb-4 text-xl font-semibold">
+				<h2 class="mb-4 text-xl font-semibold text-gray-900">
 					{showEditModal ? 'Editar Producto' : 'Nuevo Producto'}
 				</h2>
 
 				<form onsubmit={saveProduct}>
 					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<div class="md:col-span-2">
-							<label for="product-name" class="mb-1 block text-sm font-medium text-gray-700">
+							<label for="product-name" class="mb-1 block text-sm font-medium text-gray-900">
 								Nombre *
 							</label>
 							<input
 								id="product-name"
 								type="text"
 								bind:value={formData.name}
-								class="w-full rounded-md border border-gray-300 px-3 py-2"
+								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 								required
 							/>
 						</div>
 
 						<div class="md:col-span-2">
-							<label for="product-description" class="mb-1 block text-sm font-medium text-gray-700">
+							<label for="product-description" class="mb-1 block text-sm font-medium text-gray-900">
 								Descripción
 							</label>
 							<textarea
 								id="product-description"
 								bind:value={formData.description}
 								rows="3"
-								class="w-full rounded-md border border-gray-300 px-3 py-2"
+								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 							></textarea>
 						</div>
 
 						<div>
-							<label for="product-category" class="mb-1 block text-sm font-medium text-gray-700">
+							<label for="product-category" class="mb-1 block text-sm font-medium text-gray-900">
 								Categoría
 							</label>
 							<select
 								id="product-category"
 								bind:value={formData.categoryId}
-								class="w-full rounded-md border border-gray-300 px-3 py-2"
+								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 							>
 								<option value="">Sin categoría</option>
 								{#each categories as category}
@@ -399,13 +399,13 @@
 
 						{#if showEditModal}
 							<div>
-								<label for="product-status" class="mb-1 block text-sm font-medium text-gray-700">
+								<label for="product-status" class="mb-1 block text-sm font-medium text-gray-900">
 									Estado
 								</label>
 								<select
 									id="product-status"
 									bind:value={formData.status}
-									class="w-full rounded-md border border-gray-300 px-3 py-2"
+									class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 								>
 									<option value="ACTIVO">Activo</option>
 									<option value="INACTIVO">Inactivo</option>
@@ -414,7 +414,7 @@
 						{/if}
 
 						<div>
-							<label for="product-stock" class="mb-1 block text-sm font-medium text-gray-700">
+							<label for="product-stock" class="mb-1 block text-sm font-medium text-gray-900">
 								Stock Actual
 							</label>
 							<input
@@ -422,12 +422,12 @@
 								type="number"
 								step="0.001"
 								bind:value={formData.stock}
-								class="w-full rounded-md border border-gray-300 px-3 py-2"
+								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 							/>
 						</div>
 
 						<div>
-							<label for="product-stock-min" class="mb-1 block text-sm font-medium text-gray-700">
+							<label for="product-stock-min" class="mb-1 block text-sm font-medium text-gray-900">
 								Stock Mínimo
 							</label>
 							<input
@@ -435,7 +435,7 @@
 								type="number"
 								step="0.001"
 								bind:value={formData.stockMin}
-								class="w-full rounded-md border border-gray-300 px-3 py-2"
+								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 							/>
 						</div>
 
@@ -447,14 +447,14 @@
 									bind:checked={formData.isPerishable}
 									class="mr-2"
 								/>
-								<span class="text-sm font-medium text-gray-700">Producto perecedero</span>
+								<span class="text-sm font-medium text-gray-900">Producto perecedero</span>
 							</label>
 						</div>
 					</div>
 
 					<div class="mt-6">
 						<div class="mb-3 flex items-center justify-between">
-							<h3 class="text-lg font-medium">Formatos de Venta</h3>
+							<h3 class="text-lg font-medium text-gray-900">Formatos de Venta</h3>
 							<button
 								type="button"
 								onclick={addSaleFormat}
@@ -469,7 +469,7 @@
 								<div class="flex items-center gap-2">
 									<select
 										bind:value={format.unitMeasure}
-										class="rounded-md border border-gray-300 px-3 py-2"
+										class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 									>
 										<option value="UNIDAD">Unidad</option>
 										<option value="DOCENA">Docena</option>
@@ -482,7 +482,7 @@
 										type="text"
 										bind:value={format.label}
 										placeholder="Etiqueta"
-										class="flex-1 rounded-md border border-gray-300 px-3 py-2"
+										class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 									/>
 
 									<input
@@ -490,7 +490,7 @@
 										step="0.01"
 										bind:value={format.price}
 										placeholder="Precio"
-										class="w-24 rounded-md border border-gray-300 px-3 py-2"
+										class="w-24 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 									/>
 
 									{#if formData.saleFormats.length > 1}
@@ -516,7 +516,7 @@
 								selectedProduct = null;
 								resetForm();
 							}}
-							class="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+							class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
 						>
 							Cancelar
 						</button>

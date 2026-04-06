@@ -36,7 +36,7 @@
 		loadProducts();
 		// Agregar event listener para atajos de teclado
 		window.addEventListener('keydown', handleKeyboardShortcuts);
-		
+
 		// Limpiar event listener al desmontar
 		return () => {
 			window.removeEventListener('keydown', handleKeyboardShortcuts);
@@ -87,13 +87,13 @@
 
 	function applyKeypadValue() {
 		const numValue = parseFloat(keypadValue) || 0;
-		
+
 		if (activeInput === 'discount') {
 			discount = numValue;
 		} else if (activeInput === 'cash') {
 			cashReceived = numValue;
 		}
-		
+
 		closeKeypad();
 	}
 
@@ -104,20 +104,20 @@
 			event.preventDefault();
 			clearCart();
 		}
-		
+
 		// Ctrl/Cmd + Enter: Procesar venta
 		if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
 			event.preventDefault();
 			processSale();
 		}
-		
+
 		// Escape: Cerrar modal o limpiar selección
 		if (event.key === 'Escape') {
 			if (showKeypad) {
 				closeKeypad();
 			}
 		}
-		
+
 		// F1-F3: Métodos de pago
 		if (event.key === 'F1') {
 			event.preventDefault();
@@ -131,13 +131,13 @@
 			event.preventDefault();
 			paymentMethod = 'TARJETA';
 		}
-		
+
 		// Ctrl/Cmd + D: Foco en descuento
 		if ((event.ctrlKey || event.metaKey) && event.key === 'd') {
 			event.preventDefault();
 			openKeypad('discount');
 		}
-		
+
 		// Ctrl/Cmd + E: Foco en efectivo
 		if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
 			event.preventDefault();
@@ -485,119 +485,114 @@
 
 <!-- Teclado Numérico Modal -->
 {#if showKeypad}
-	<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-		<div class="bg-white rounded-lg shadow-xl max-w-sm w-full">
-			<div class="p-4 border-b">
-				<div class="flex justify-between items-center">
+	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+		<div class="w-full max-w-sm rounded-lg bg-white shadow-xl">
+			<div class="border-b p-4">
+				<div class="flex items-center justify-between">
 					<h3 class="text-lg font-semibold">
 						{activeInput === 'discount' ? 'Descuento' : 'Efectivo Recibido'}
 					</h3>
-					<button
-						onclick={closeKeypad}
-						class="text-gray-900 hover:text-gray-900"
-					>
-						✕
-					</button>
+					<button onclick={closeKeypad} class="text-gray-900 hover:text-gray-900"> ✕ </button>
 				</div>
 				<div class="mt-2 text-2xl font-bold text-amber-600">
 					${keypadValue || '0'}
 				</div>
 			</div>
-			
+
 			<div class="p-4">
 				<div class="grid grid-cols-3 gap-2">
 					<!-- Números 7-9 -->
 					<button
 						onclick={() => appendToKeypad('7')}
-						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
 					>
 						7
 					</button>
 					<button
 						onclick={() => appendToKeypad('8')}
-						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
 					>
 						8
 					</button>
 					<button
 						onclick={() => appendToKeypad('9')}
-						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
 					>
 						9
 					</button>
-					
+
 					<!-- Números 4-6 -->
 					<button
 						onclick={() => appendToKeypad('4')}
-						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
 					>
 						4
 					</button>
 					<button
 						onclick={() => appendToKeypad('5')}
-						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
 					>
 						5
 					</button>
 					<button
 						onclick={() => appendToKeypad('6')}
-						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
 					>
 						6
 					</button>
-					
+
 					<!-- Números 1-3 -->
 					<button
 						onclick={() => appendToKeypad('1')}
-						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
 					>
 						1
 					</button>
 					<button
 						onclick={() => appendToKeypad('2')}
-						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
 					>
 						2
 					</button>
 					<button
 						onclick={() => appendToKeypad('3')}
-						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
 					>
 						3
 					</button>
-					
+
 					<!-- 0, punto, borrar -->
 					<button
 						onclick={() => appendToKeypad('0')}
-						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
 					>
 						0
 					</button>
 					<button
 						onclick={() => appendToKeypad('.')}
-						class="p-4 text-lg font-semibold bg-gray-100 rounded hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
 					>
 						.
 					</button>
 					<button
 						onclick={() => appendToKeypad('⌫')}
-						class="p-4 text-lg font-semibold bg-red-100 rounded hover:bg-red-200 active:bg-red-300"
+						class="rounded bg-red-100 p-4 text-lg font-semibold hover:bg-red-200 active:bg-red-300"
 					>
 						⌫
 					</button>
 				</div>
-				
+
 				<!-- Botones de acción -->
 				<div class="mt-4 grid grid-cols-2 gap-2">
 					<button
 						onclick={() => appendToKeypad('C')}
-						class="p-3 font-semibold bg-red-500 text-white rounded hover:bg-red-600 active:bg-red-700"
+						class="rounded bg-red-500 p-3 font-semibold text-white hover:bg-red-600 active:bg-red-700"
 					>
 						Limpiar
 					</button>
 					<button
 						onclick={applyKeypadValue}
-						class="p-3 font-semibold bg-amber-600 text-white rounded hover:bg-amber-700 active:bg-amber-800"
+						class="rounded bg-amber-600 p-3 font-semibold text-white hover:bg-amber-700 active:bg-amber-800"
 					>
 						Aceptar
 					</button>

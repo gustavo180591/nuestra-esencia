@@ -218,21 +218,21 @@
 	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
 		<div class="w-full max-w-md rounded-lg bg-white">
 			<div class="p-6">
-				<h2 class="mb-4 text-xl font-semibold">
+				<h2 class="mb-4 text-xl font-semibold text-gray-900">
 					{showEditModal ? 'Editar Categoría' : 'Nueva Categoría'}
 				</h2>
 
 				<form onsubmit={saveCategory}>
 					<div class="space-y-4">
 						<div>
-							<label for="category-name" class="mb-1 block text-sm font-medium text-gray-700">
+							<label for="category-name" class="mb-1 block text-sm font-medium text-gray-900">
 								Nombre *
 							</label>
 							<input
 								id="category-name"
 								type="text"
 								bind:value={formData.name}
-								class="w-full rounded-md border border-gray-300 px-3 py-2"
+								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 								required
 							/>
 						</div>
@@ -240,7 +240,7 @@
 						<div>
 							<label
 								for="category-description"
-								class="mb-1 block text-sm font-medium text-gray-700"
+								class="mb-1 block text-sm font-medium text-gray-900"
 							>
 								Descripción
 							</label>
@@ -248,7 +248,7 @@
 								id="category-description"
 								bind:value={formData.description}
 								rows="3"
-								class="w-full rounded-md border border-gray-300 px-3 py-2"
+								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 							></textarea>
 						</div>
 
@@ -256,7 +256,7 @@
 							<div>
 								<label class="flex items-center">
 									<input type="checkbox" bind:checked={formData.active} class="mr-2" />
-									<span class="text-sm font-medium text-gray-700">Categoría activa</span>
+									<span class="text-sm font-medium text-gray-900">Categoría activa</span>
 								</label>
 							</div>
 						{/if}
@@ -271,7 +271,7 @@
 								selectedCategory = null;
 								resetForm();
 							}}
-							class="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+							class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
 						>
 							Cancelar
 						</button>

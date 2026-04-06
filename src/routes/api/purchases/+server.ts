@@ -157,24 +157,26 @@ export const POST: RequestHandler = async ({ request }) => {
 			const purchaseItems = await Promise.all(
 				items.map((item: any) => {
 					// Obtener nombre del producto para snapshot
-					return tx.product.findUnique({
-						where: { id: item.productId }
-					}).then(product => {
-						if (!product) {
-							throw new Error(`Producto ${item.productId} no encontrado`);
-						}
-
-						return tx.purchaseItem.create({
-							data: {
-								purchaseId: purchase.id,
-								productId: item.productId,
-								productNameSnapshot: product.name,
-								quantity: item.quantity,
-								unitCost: item.unitPrice,
-								subtotal: (Number(item.quantity) * Number(item.unitPrice)).toString()
+					return tx.product
+						.findUnique({
+							where: { id: item.productId }
+						})
+						.then((product) => {
+							if (!product) {
+								throw new Error(`Producto ${item.productId} no encontrado`);
 							}
+
+							return tx.purchaseItem.create({
+								data: {
+									purchaseId: purchase.id,
+									productId: item.productId,
+									productNameSnapshot: product.name,
+									quantity: item.quantity,
+									unitCost: item.unitPrice,
+									subtotal: (Number(item.quantity) * Number(item.unitPrice)).toString()
+								}
+							});
 						});
-					});
 				})
 			);
 

@@ -192,7 +192,8 @@ export const DELETE: RequestHandler = async ({ params }) => {
 			return json(
 				{
 					success: false,
-					message: 'No se puede eliminar un proveedor que tiene compras registradas. Primero elimine o cancele las compras.'
+					message:
+						'No se puede eliminar un proveedor que tiene compras registradas. Primero elimine o cancele las compras.'
 				},
 				{ status: 400 }
 			);

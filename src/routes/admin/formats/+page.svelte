@@ -211,13 +211,13 @@
 	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
 		<div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
 			<div class="p-6">
-				<h2 class="mb-4 text-xl font-semibold">
+				<h2 class="mb-4 text-xl font-semibold text-gray-900">
 					Editar Formatos de Venta - {selectedProduct.name}
 				</h2>
 
 				<div class="mb-6">
 					<div class="mb-3 flex items-center justify-between">
-						<h3 class="text-lg font-medium">Formatos Actuales</h3>
+						<h3 class="text-lg font-medium text-gray-900">Formatos Actuales</h3>
 						<button
 							type="button"
 							onclick={addFormat}
@@ -233,7 +233,7 @@
 								<div class="mb-3 flex items-center gap-2">
 									<select
 										bind:value={format.unitMeasure}
-										class="rounded-md border border-gray-300 px-3 py-2"
+										class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 									>
 										<option value="UNIDAD">Unidad</option>
 										<option value="DOCENA">Docena</option>
@@ -246,7 +246,7 @@
 										type="text"
 										bind:value={format.label}
 										placeholder="Etiqueta del formato"
-										class="flex-1 rounded-md border border-gray-300 px-3 py-2"
+										class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 									/>
 
 									<input
@@ -254,7 +254,7 @@
 										step="0.01"
 										bind:value={format.price}
 										placeholder="Precio"
-										class="w-24 rounded-md border border-gray-300 px-3 py-2"
+										class="w-24 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 									/>
 
 									<label class="flex items-center">
@@ -285,7 +285,7 @@
 							selectedProduct = null;
 							formatsData = [];
 						}}
-						class="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+						class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
 					>
 						Cancelar
 					</button>

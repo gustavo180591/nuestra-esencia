@@ -113,7 +113,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		// Calcular porcentajes
 		for (const product of topProducts) {
 			product.quantityPercentage = totalUnits > 0 ? (product.totalQuantity / totalUnits) * 100 : 0;
-			product.revenuePercentage = totalRevenue > 0 ? (product.totalRevenue / totalRevenue) * 100 : 0;
+			product.revenuePercentage =
+				totalRevenue > 0 ? (product.totalRevenue / totalRevenue) * 100 : 0;
 		}
 
 		// Estadísticas generales
@@ -121,8 +122,10 @@ export const GET: RequestHandler = async ({ url }) => {
 			totalProducts: Object.keys(productStats).length,
 			totalUnits,
 			totalRevenue,
-			averageUnitsPerProduct: Object.keys(productStats).length > 0 ? totalUnits / Object.keys(productStats).length : 0,
-			averageRevenuePerProduct: Object.keys(productStats).length > 0 ? totalRevenue / Object.keys(productStats).length : 0
+			averageUnitsPerProduct:
+				Object.keys(productStats).length > 0 ? totalUnits / Object.keys(productStats).length : 0,
+			averageRevenuePerProduct:
+				Object.keys(productStats).length > 0 ? totalRevenue / Object.keys(productStats).length : 0
 		};
 
 		return json({

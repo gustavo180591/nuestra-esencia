@@ -73,7 +73,12 @@ export const POST: RequestHandler = async ({ params, request }) => {
 			});
 
 			// Registrar movimiento de stock
-			let movementType: 'ENTRADA_COMPRA' | 'SALIDA_VENTA' | 'AJUSTE_MANUAL' | 'REVERSO_VENTA' | 'REVERSO_COMPRA';
+			let movementType:
+				| 'ENTRADA_COMPRA'
+				| 'SALIDA_VENTA'
+				| 'AJUSTE_MANUAL'
+				| 'REVERSO_VENTA'
+				| 'REVERSO_COMPRA';
 			if (type === 'SALE') {
 				movementType = 'SALIDA_VENTA';
 			} else if (type === 'PURCHASE') {

@@ -77,7 +77,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		for (const sale of sales) {
 			const period = formatDate(new Date(sale.createdAt), groupBy);
-			
+
 			if (!groupedSales[period]) {
 				groupedSales[period] = {
 					period,
@@ -112,7 +112,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		// Calcular ticket promedio por período
 		for (const period in groupedSales) {
 			if (groupedSales[period].salesCount > 0) {
-				groupedSales[period].averageTicket = groupedSales[period].revenue / groupedSales[period].salesCount;
+				groupedSales[period].averageTicket =
+					groupedSales[period].revenue / groupedSales[period].salesCount;
 			}
 		}
 

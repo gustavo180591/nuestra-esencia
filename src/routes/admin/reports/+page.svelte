@@ -49,8 +49,12 @@
 
 		try {
 			const [salesRes, productsRes, cashRes] = await Promise.all([
-				fetch(`/api/reports/sales?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&groupBy=${chartConfig.sales.groupBy}`),
-				fetch(`/api/reports/products?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&limit=${chartConfig.products.limit}`),
+				fetch(
+					`/api/reports/sales?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&groupBy=${chartConfig.sales.groupBy}`
+				),
+				fetch(
+					`/api/reports/products?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&limit=${chartConfig.products.limit}`
+				),
 				fetch(`/api/reports/cash?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`)
 			]);
 
@@ -66,7 +70,6 @@
 
 			if (cashResult.success) cashData = cashResult.data;
 			else error = cashResult.message;
-
 		} catch {
 			error = 'Error al cargar reportes';
 		} finally {
@@ -87,8 +90,8 @@
 
 	function getPaymentMethodLabel(method: string) {
 		const labels: Record<string, string> = {
-			'EFECTIVO': 'Efectivo',
-			'TRANSFERENCIA': 'Transferencia'
+			EFECTIVO: 'Efectivo',
+			TRANSFERENCIA: 'Transferencia'
 		};
 		return labels[method] || method;
 	}
@@ -99,52 +102,60 @@
 </script>
 
 <div class="min-h-screen bg-gray-50 p-6">
-	<div class="max-w-7xl mx-auto">
+	<div class="mx-auto max-w-7xl">
 		<div class="mb-6">
 			<h1 class="text-3xl font-bold text-gray-900">Reportes y Estadísticas</h1>
-			<p class="text-gray-600 mt-2">Análisis detallado de ventas, productos y caja</p>
+			<p class="mt-2 text-gray-600">Análisis detallado de ventas, productos y caja</p>
 		</div>
 
 		<!-- Filtros -->
-		<div class="bg-white rounded-lg shadow p-4 mb-6">
-			<div class="flex flex-wrap gap-4 items-end">
+		<div class="mb-6 rounded-lg bg-white p-4 shadow">
+			<div class="flex flex-wrap items-end gap-4">
 				<div>
-					<label for="start-date" class="block text-sm font-medium text-gray-700 mb-1">
+					<label for="start-date" class="mb-1 block text-sm font-medium text-gray-700">
 						Fecha Inicio
 					</label>
 					<input
 						id="start-date"
 						type="date"
 						bind:value={dateRange.startDate}
-						class="px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+						class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 					/>
 				</div>
 				<div>
-					<label for="end-date" class="block text-sm font-medium text-gray-700 mb-1">
+					<label for="end-date" class="mb-1 block text-sm font-medium text-gray-700">
 						Fecha Fin
 					</label>
 					<input
 						id="end-date"
 						type="date"
 						bind:value={dateRange.endDate}
-						class="px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+						class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 					/>
 				</div>
 				<div>
-					<label for="sales-group" class="block text-sm font-medium text-gray-700 mb-1">
+					<label for="sales-group" class="mb-1 block text-sm font-medium text-gray-700">
 						Agrupar Ventas por
 					</label>
-					<select id="sales-group" bind:value={chartConfig.sales.groupBy} class="px-3 py-2 border border-gray-300 rounded-md text-gray-900">
+					<select
+						id="sales-group"
+						bind:value={chartConfig.sales.groupBy}
+						class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+					>
 						<option value="day">Día</option>
 						<option value="week">Semana</option>
 						<option value="month">Mes</option>
 					</select>
 				</div>
 				<div>
-					<label for="products-limit" class="block text-sm font-medium text-gray-700 mb-1">
+					<label for="products-limit" class="mb-1 block text-sm font-medium text-gray-700">
 						Top Productos
 					</label>
-					<select id="products-limit" bind:value={chartConfig.products.limit} class="px-3 py-2 border border-gray-300 rounded-md text-gray-900">
+					<select
+						id="products-limit"
+						bind:value={chartConfig.products.limit}
+						class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+					>
 						<option value="10">Top 10</option>
 						<option value="20">Top 20</option>
 						<option value="50">Top 50</option>
@@ -152,7 +163,7 @@
 				</div>
 				<button
 					onclick={loadReports}
-					class="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700"
+					class="rounded-md bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"
 				>
 					Actualizar Reportes
 				</button>
@@ -160,35 +171,39 @@
 		</div>
 
 		{#if loading}
-			<div class="text-center py-8">
+			<div class="py-8 text-center">
 				<div class="text-gray-500">Cargando reportes...</div>
 			</div>
 		{:else if error}
-			<div class="bg-red-50 border border-red-200 rounded-lg p-4">
+			<div class="rounded-lg border border-red-200 bg-red-50 p-4">
 				<div class="text-red-600">{error}</div>
-				<button onclick={loadReports} class="mt-2 text-red-600 underline">
-					Reintentar
-				</button>
+				<button onclick={loadReports} class="mt-2 text-red-600 underline"> Reintentar </button>
 			</div>
 		{:else}
 			<!-- Tabs -->
-			<div class="border-b border-gray-200 mb-6">
+			<div class="mb-6 border-b border-gray-200">
 				<nav class="flex space-x-8">
 					<button
-						onclick={() => activeTab = 'sales'}
-						class="py-2 px-1 border-b-2 font-medium text-sm {activeTab === 'sales' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700'}"
+						onclick={() => (activeTab = 'sales')}
+						class="border-b-2 px-1 py-2 text-sm font-medium {activeTab === 'sales'
+							? 'border-amber-500 text-amber-600'
+							: 'border-transparent text-gray-500 hover:text-gray-700'}"
 					>
 						Ventas por Día
 					</button>
 					<button
-						onclick={() => activeTab = 'products'}
-						class="py-2 px-1 border-b-2 font-medium text-sm {activeTab === 'products' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700'}"
+						onclick={() => (activeTab = 'products')}
+						class="border-b-2 px-1 py-2 text-sm font-medium {activeTab === 'products'
+							? 'border-amber-500 text-amber-600'
+							: 'border-transparent text-gray-500 hover:text-gray-700'}"
 					>
 						Productos más Vendidos
 					</button>
 					<button
-						onclick={() => activeTab = 'cash'}
-						class="py-2 px-1 border-b-2 font-medium text-sm {activeTab === 'cash' ? 'border-amber-500 text-amber-600' : 'border-transparent text-gray-500 hover:text-gray-700'}"
+						onclick={() => (activeTab = 'cash')}
+						class="border-b-2 px-1 py-2 text-sm font-medium {activeTab === 'cash'
+							? 'border-amber-500 text-amber-600'
+							: 'border-transparent text-gray-500 hover:text-gray-700'}"
 					>
 						Caja Diaria
 					</button>
@@ -199,29 +214,43 @@
 			{#if activeTab === 'sales' && salesData}
 				<div class="space-y-6">
 					<!-- Summary Cards -->
-					<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-						<div class="bg-white rounded-lg shadow p-6">
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+						<div class="rounded-lg bg-white p-6 shadow">
 							<div class="text-sm font-medium text-gray-600">Total Ventas</div>
-							<div class="text-2xl font-bold text-gray-900">{formatNumber(salesData.summary.totalSales)}</div>
+							<div class="text-2xl font-bold text-gray-900">
+								{formatNumber(salesData.summary.totalSales)}
+							</div>
 						</div>
-						<div class="bg-white rounded-lg shadow p-6">
+						<div class="rounded-lg bg-white p-6 shadow">
 							<div class="text-sm font-medium text-gray-600">Ingresos Totales</div>
-							<div class="text-2xl font-bold text-green-600">{formatCurrency(salesData.summary.totalRevenue)}</div>
+							<div class="text-2xl font-bold text-green-600">
+								{formatCurrency(salesData.summary.totalRevenue)}
+							</div>
 						</div>
-						<div class="bg-white rounded-lg shadow p-6">
+						<div class="rounded-lg bg-white p-6 shadow">
 							<div class="text-sm font-medium text-gray-600">Tickets Promedio</div>
-							<div class="text-2xl font-bold text-blue-600">{formatCurrency(salesData.summary.averageTicket)}</div>
+							<div class="text-2xl font-bold text-blue-600">
+								{formatCurrency(salesData.summary.averageTicket)}
+							</div>
 						</div>
-						<div class="bg-white rounded-lg shadow p-6">
+						<div class="rounded-lg bg-white p-6 shadow">
 							<div class="text-sm font-medium text-gray-600">Unidades Vendidas</div>
-							<div class="text-2xl font-bold text-purple-600">{formatNumber(salesData.summary.totalItems)}</div>
+							<div class="text-2xl font-bold text-purple-600">
+								{formatNumber(salesData.summary.totalItems)}
+							</div>
 						</div>
 					</div>
 
 					<!-- Sales Table -->
-					<div class="bg-white shadow rounded-lg overflow-hidden">
-						<div class="px-6 py-4 border-b border-gray-200">
-							<h2 class="text-lg font-semibold text-gray-900">Ventas por {chartConfig.sales.groupBy === 'day' ? 'Día' : chartConfig.sales.groupBy === 'week' ? 'Semana' : 'Mes'}</h2>
+					<div class="overflow-hidden rounded-lg bg-white shadow">
+						<div class="border-b border-gray-200 px-6 py-4">
+							<h2 class="text-lg font-semibold text-gray-900">
+								Ventas por {chartConfig.sales.groupBy === 'day'
+									? 'Día'
+									: chartConfig.sales.groupBy === 'week'
+										? 'Semana'
+										: 'Mes'}
+							</h2>
 						</div>
 						<div class="overflow-x-auto">
 							<table class="min-w-full divide-y divide-gray-200">
@@ -244,22 +273,22 @@
 										</th>
 									</tr>
 								</thead>
-								<tbody class="bg-white divide-y divide-gray-200">
+								<tbody class="divide-y divide-gray-200 bg-white">
 									{#each salesData.dailyData as day (day.period)}
 										<tr class="hover:bg-gray-50">
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 												{day.period}
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 												{formatNumber(day.salesCount)}
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+											<td class="px-6 py-4 text-sm font-medium whitespace-nowrap text-green-600">
 												{formatCurrency(day.revenue)}
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-blue-600">
 												{formatCurrency(day.averageTicket)}
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-purple-600">
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-purple-600">
 												{formatNumber(day.itemsSold)}
 											</td>
 										</tr>
@@ -272,29 +301,39 @@
 			{:else if activeTab === 'products' && productsData}
 				<div class="space-y-6">
 					<!-- Summary Cards -->
-					<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-						<div class="bg-white rounded-lg shadow p-6">
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+						<div class="rounded-lg bg-white p-6 shadow">
 							<div class="text-sm font-medium text-gray-600">Productos Vendidos</div>
-							<div class="text-2xl font-bold text-gray-900">{formatNumber(productsData.summary.totalProducts)}</div>
+							<div class="text-2xl font-bold text-gray-900">
+								{formatNumber(productsData.summary.totalProducts)}
+							</div>
 						</div>
-						<div class="bg-white rounded-lg shadow p-6">
+						<div class="rounded-lg bg-white p-6 shadow">
 							<div class="text-sm font-medium text-gray-600">Total Unidades</div>
-							<div class="text-2xl font-bold text-purple-600">{formatNumber(productsData.summary.totalUnits)}</div>
+							<div class="text-2xl font-bold text-purple-600">
+								{formatNumber(productsData.summary.totalUnits)}
+							</div>
 						</div>
-						<div class="bg-white rounded-lg shadow p-6">
+						<div class="rounded-lg bg-white p-6 shadow">
 							<div class="text-sm font-medium text-gray-600">Ingresos Totales</div>
-							<div class="text-2xl font-bold text-green-600">{formatCurrency(productsData.summary.totalRevenue)}</div>
+							<div class="text-2xl font-bold text-green-600">
+								{formatCurrency(productsData.summary.totalRevenue)}
+							</div>
 						</div>
-						<div class="bg-white rounded-lg shadow p-6">
+						<div class="rounded-lg bg-white p-6 shadow">
 							<div class="text-sm font-medium text-gray-600">Promedio por Producto</div>
-							<div class="text-2xl font-bold text-blue-600">{formatCurrency(productsData.summary.averageRevenuePerProduct)}</div>
+							<div class="text-2xl font-bold text-blue-600">
+								{formatCurrency(productsData.summary.averageRevenuePerProduct)}
+							</div>
 						</div>
 					</div>
 
 					<!-- Top Products Table -->
-					<div class="bg-white shadow rounded-lg overflow-hidden">
-						<div class="px-6 py-4 border-b border-gray-200">
-							<h2 class="text-lg font-semibold text-gray-900">Top {chartConfig.products.limit} Productos más Vendidos</h2>
+					<div class="overflow-hidden rounded-lg bg-white shadow">
+						<div class="border-b border-gray-200 px-6 py-4">
+							<h2 class="text-lg font-semibold text-gray-900">
+								Top {chartConfig.products.limit} Productos más Vendidos
+							</h2>
 						</div>
 						<div class="overflow-x-auto">
 							<table class="min-w-full divide-y divide-gray-200">
@@ -320,27 +359,29 @@
 										</th>
 									</tr>
 								</thead>
-								<tbody class="bg-white divide-y divide-gray-200">
+								<tbody class="divide-y divide-gray-200 bg-white">
 									{#each productsData.topProducts as product (product.id)}
 										<tr class="hover:bg-gray-50">
 											<td class="px-6 py-4 whitespace-nowrap">
 												<div class="text-sm font-medium text-gray-900">{product.name}</div>
 											</td>
 											<td class="px-6 py-4 whitespace-nowrap">
-												<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+												<span
+													class="inline-flex rounded-full bg-blue-100 px-2 text-xs leading-5 font-semibold text-blue-800"
+												>
 													{product.category}
 												</span>
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-purple-600">
+											<td class="px-6 py-4 text-sm font-medium whitespace-nowrap text-purple-600">
 												{formatNumber(product.totalQuantity)}
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+											<td class="px-6 py-4 text-sm font-medium whitespace-nowrap text-green-600">
 												{formatCurrency(product.totalRevenue)}
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-blue-600">
 												{formatCurrency(product.averagePrice)}
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-600">
 												{product.quantityPercentage.toFixed(1)}%
 											</td>
 										</tr>
@@ -353,35 +394,43 @@
 			{:else if activeTab === 'cash' && cashData}
 				<div class="space-y-6">
 					<!-- Summary Cards -->
-					<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-						<div class="bg-white rounded-lg shadow p-6">
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+						<div class="rounded-lg bg-white p-6 shadow">
 							<div class="text-sm font-medium text-gray-600">Total Ventas</div>
-							<div class="text-2xl font-bold text-gray-900">{formatNumber(cashData.summary.totalSales)}</div>
+							<div class="text-2xl font-bold text-gray-900">
+								{formatNumber(cashData.summary.totalSales)}
+							</div>
 						</div>
-						<div class="bg-white rounded-lg shadow p-6">
+						<div class="rounded-lg bg-white p-6 shadow">
 							<div class="text-sm font-medium text-gray-600">Ingresos Totales</div>
-							<div class="text-2xl font-bold text-green-600">{formatCurrency(cashData.summary.totalRevenue)}</div>
+							<div class="text-2xl font-bold text-green-600">
+								{formatCurrency(cashData.summary.totalRevenue)}
+							</div>
 						</div>
-						<div class="bg-white rounded-lg shadow p-6">
+						<div class="rounded-lg bg-white p-6 shadow">
 							<div class="text-sm font-medium text-gray-600">Ticket Promedio</div>
-							<div class="text-2xl font-bold text-blue-600">{formatCurrency(cashData.summary.averageTicket)}</div>
+							<div class="text-2xl font-bold text-blue-600">
+								{formatCurrency(cashData.summary.averageTicket)}
+							</div>
 						</div>
-						<div class="bg-white rounded-lg shadow p-6">
+						<div class="rounded-lg bg-white p-6 shadow">
 							<div class="text-sm font-medium text-gray-600">Unidades Vendidas</div>
-							<div class="text-2xl font-bold text-purple-600">{formatNumber(cashData.summary.totalItems)}</div>
+							<div class="text-2xl font-bold text-purple-600">
+								{formatNumber(cashData.summary.totalItems)}
+							</div>
 						</div>
 					</div>
 
 					<!-- Payment Methods -->
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<div class="bg-white shadow rounded-lg overflow-hidden">
-							<div class="px-6 py-4 border-b border-gray-200">
+					<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+						<div class="overflow-hidden rounded-lg bg-white shadow">
+							<div class="border-b border-gray-200 px-6 py-4">
 								<h2 class="text-lg font-semibold text-gray-900">Métodos de Pago</h2>
 							</div>
 							<div class="p-6">
 								{#each Object.entries(cashData.summary.paymentMethods) as [method, stats]}
 									{@const color = getPaymentMethodColor(method)}
-									<div class="flex justify-between items-center mb-3">
+									<div class="mb-3 flex items-center justify-between">
 										<span class="text-sm font-medium text-gray-900">
 											{getPaymentMethodLabel(method)}
 										</span>
@@ -398,13 +447,13 @@
 							</div>
 						</div>
 
-						<div class="bg-white shadow rounded-lg overflow-hidden">
-							<div class="px-6 py-4 border-b border-gray-200">
+						<div class="overflow-hidden rounded-lg bg-white shadow">
+							<div class="border-b border-gray-200 px-6 py-4">
 								<h2 class="text-lg font-semibold text-gray-900">Top Vendedores</h2>
 							</div>
 							<div class="p-6">
 								{#each cashData.summary.topSellers as seller}
-									<div class="flex justify-between items-center mb-3">
+									<div class="mb-3 flex items-center justify-between">
 										<span class="text-sm font-medium text-gray-900">{seller.name}</span>
 										<div class="text-right">
 											<div class="text-sm font-bold text-green-600">
@@ -421,8 +470,8 @@
 					</div>
 
 					<!-- Daily Cash Table -->
-					<div class="bg-white shadow rounded-lg overflow-hidden">
-						<div class="px-6 py-4 border-b border-gray-200">
+					<div class="overflow-hidden rounded-lg bg-white shadow">
+						<div class="border-b border-gray-200 px-6 py-4">
 							<h2 class="text-lg font-semibold text-gray-900">Resumen Diario de Caja</h2>
 						</div>
 						<div class="overflow-x-auto">
@@ -449,25 +498,25 @@
 										</th>
 									</tr>
 								</thead>
-								<tbody class="bg-white divide-y divide-gray-200">
+								<tbody class="divide-y divide-gray-200 bg-white">
 									{#each cashData.dailyData as day (day.date)}
 										<tr class="hover:bg-gray-50">
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 												{day.date}
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 												{formatNumber(day.salesCount)}
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+											<td class="px-6 py-4 text-sm font-medium whitespace-nowrap text-green-600">
 												{formatCurrency(day.revenue)}
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-green-600">
 												{formatCurrency(day.cashRevenue)}
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-blue-600">
 												{formatCurrency(day.transferRevenue)}
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
+											<td class="px-6 py-4 text-sm whitespace-nowrap text-blue-600">
 												{formatCurrency(day.averageTicket)}
 											</td>
 										</tr>
