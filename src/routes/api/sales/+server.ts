@@ -140,7 +140,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				data: {
 					saleNumber,
 					status: 'COMPLETADA',
-					userId: 'cmnkn12i00000vihrexc2rift', // Usuario admin del seed
+					userId: 'cmnmlamaf0000vikcqdxl4iz9', // Usuario admin Gustavo Faccendini
 					subtotal,
 					discount,
 					total,
@@ -174,7 +174,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						previousStock,
 						newStock,
 						saleId: sale.id,
-						userId: 'cmnkn12i00000vihrexc2rift' // Usuario admin del seed
+						userId: 'cmnmlamaf0000vikcqdxl4iz9' // Usuario admin Gustavo Faccendini
 					}
 				});
 			}

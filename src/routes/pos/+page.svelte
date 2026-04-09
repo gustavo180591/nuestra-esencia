@@ -211,9 +211,15 @@
 			return;
 		}
 
-		if (paymentMethod === 'EFECTIVO' && cashReceived < total) {
-			alert('El efectivo recibido es insuficiente');
-			return;
+		// En efectivo, si no se ingresó monto, asumir que se recibe exacto
+		if (paymentMethod === 'EFECTIVO') {
+			if (cashReceived === 0) {
+				cashReceived = total;
+			}
+			if (cashReceived < total) {
+				alert('El efectivo recibido es insuficiente');
+				return;
+			}
 		}
 
 		try {
@@ -370,9 +376,9 @@
 							{#each cart as item, index (item.productId + '-' + item.productSaleFormatId)}
 								<div class="flex items-center justify-between rounded bg-gray-50 p-3">
 									<div class="flex-1">
-										<div class="font-medium">{item.productName}</div>
-										<div class="text-sm text-gray-900">{item.formatLabel}</div>
-										<div class="text-sm font-bold">${item.unitPrice} c/u</div>
+										<div class="font-medium" style="color: #000">{item.productName}</div>
+										<div class="text-sm" style="color: #000">{item.formatLabel}</div>
+										<div class="text-sm font-bold" style="color: #000">${item.unitPrice} c/u</div>
 									</div>
 									<div class="flex items-center space-x-2">
 										<button
@@ -381,14 +387,14 @@
 										>
 											-
 										</button>
-										<span class="w-8 text-center">{item.quantity}</span>
+										<span class="w-8 text-center" style="color: #000">{item.quantity}</span>
 										<button
 											class="h-8 w-8 rounded bg-green-100 text-green-600 hover:bg-green-200"
 											onclick={() => updateQuantity(index, item.quantity + 1)}
 										>
 											+
 										</button>
-										<div class="w-16 text-right font-bold">
+										<div class="w-16 text-right font-bold" style="color: #000">
 											${item.subtotal}
 										</div>
 									</div>
@@ -400,11 +406,11 @@
 					<!-- Resumen de totales -->
 					<div class="space-y-2 border-t pt-4">
 						<div class="flex justify-between">
-							<span>Subtotal:</span>
-							<span>${cart.reduce((sum, item) => sum + item.subtotal, 0)}</span>
+							<span style="color: #000">Subtotal:</span>
+							<span style="color: #000">${cart.reduce((sum, item) => sum + item.subtotal, 0)}</span>
 						</div>
 						<div class="flex justify-between">
-							<span>Descuento:</span>
+							<span style="color: #000">Descuento:</span>
 							<input
 								type="number"
 								bind:value={discount}
@@ -412,11 +418,12 @@
 								placeholder="0"
 								readonly
 								onclick={() => openKeypad('discount')}
+								style="color: #000"
 							/>
 						</div>
 						<div class="flex justify-between text-lg font-bold">
-							<span>Total:</span>
-							<span class="text-amber-600">${total}</span>
+							<span style="color: #000">Total:</span>
+							<span class="text-amber-600" style="color: #000">${total}</span>
 						</div>
 					</div>
 
@@ -448,7 +455,6 @@
 								bind:value={cashReceived}
 								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 								placeholder="0.00"
-								readonly
 								onclick={() => openKeypad('cash')}
 							/>
 							{#if cashReceived > 0}
@@ -465,7 +471,7 @@
 						<button
 							class="w-full rounded-lg bg-amber-600 py-3 font-medium text-white hover:bg-amber-700 disabled:bg-gray-400"
 							onclick={processSale}
-							disabled={cart.length === 0 || (paymentMethod === 'EFECTIVO' && cashReceived < total)}
+							disabled={cart.length === 0}
 						>
 							Cobrar ${total}
 						</button>
