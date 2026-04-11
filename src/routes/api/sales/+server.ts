@@ -1,6 +1,7 @@
 import { db } from '$lib/server/db';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import type { Prisma } from '@prisma/client';
 
 interface SaleItemRequest {
 	productId: string;
@@ -64,16 +65,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		// Calcular totales y validar stock
 		let subtotal = 0;
-		const saleItems: Array<{
-			productId: string;
-			productSaleFormatId: string;
-			productNameSnapshot: string;
-			formatLabelSnapshot: string;
-			unitMeasure: string;
-			quantity: number;
-			unitPrice: number;
-			subtotal: number;
-		}> = [];
+		const saleItems: Prisma.SaleItemUncheckedCreateWithoutSaleInput[] = [];
 
 		for (const item of body.items) {
 			const product = products.find((p) => p.id === item.productId);
