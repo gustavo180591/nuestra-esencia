@@ -106,12 +106,23 @@
 			stockMin: Number(product.stockMin),
 			isPerishable: product.isPerishable,
 			status: product.status,
-			saleFormats: product.saleFormats.map((format) => ({
-				id: format.id,
-				unitMeasure: format.unitMeasure,
-				label: format.label || '',
-				price: Number(format.price)
-			}))
+			saleFormats: product.saleFormats.map((format) => {
+				const baseFormat = {
+					id: format.id,
+					unitMeasure: format.unitMeasure,
+					label: format.label || '',
+					price: Number(format.price)
+				};
+				// Para KILOGRAMO, inicializar cantidad y precio total para edición
+				if (format.unitMeasure === 'KILOGRAMO') {
+					return {
+						...baseFormat,
+						cantidadTotal: 1, // 1 kg por defecto
+						precioTotal: Number(format.price) // precio por kg × 1 kg
+					};
+				}
+				return baseFormat;
+			})
 		};
 		showEditModal = true;
 	}
@@ -135,12 +146,25 @@
 			const url = showEditModal ? `/api/products/${selectedProduct?.id}` : '/api/products';
 			const method = showEditModal ? 'PUT' : 'POST';
 
+			// Transformar formatos para calcular price correcto
+			const dataToSend = {
+				...formData,
+				saleFormats: formData.saleFormats.map((format) => ({
+					id: format.id,
+					unitMeasure: format.unitMeasure,
+					label: format.label,
+					price: format.unitMeasure === 'KILOGRAMO' && format.cantidadTotal && format.precioTotal
+						? Number((format.precioTotal / format.cantidadTotal).toFixed(2))
+						: format.price
+				}))
+			};
+
 			const response = await fetch(url, {
 				method,
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(formData)
+				body: JSON.stringify(dataToSend)
 			});
 
 			const result = await response.json();
@@ -310,7 +334,8 @@
 								<td class="px-6 py-4 whitespace-nowrap">
 									<div class="text-sm text-gray-900">
 										{#each product.saleFormats as format}
-											<div>{format.label}: ${format.price}</div>
+											{@const formatName = format.label || format.unitMeasure.toLowerCase().replace('_', ' ')}
+											<div>{formatName}: ${format.price}</div>
 										{/each}
 									</div>
 								</td>
@@ -496,18 +521,12 @@
 										<option value="PORCION">Porción</option>
 									</select>
 
-									<input
-										type="text"
-										bind:value={format.label}
-										placeholder="Etiqueta"
-										class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-									/>
-
 									{#if format.unitMeasure === 'KILOGRAMO'}
 										<div class="flex-1 grid grid-cols-2 gap-2 rounded-lg bg-amber-50 p-2 border border-amber-200">
 											<div>
-												<label class="text-xs text-amber-700 font-medium">Cantidad (kg)</label>
+												<label for="cantidad-{index}" class="text-xs text-amber-700 font-medium">Cantidad (kg)</label>
 												<input
+													id="cantidad-{index}"
 													type="number"
 													min="0.001"
 													step="0.001"
@@ -517,8 +536,9 @@
 												/>
 											</div>
 											<div>
-												<label class="text-xs text-amber-700 font-medium">Precio Total ($)</label>
+												<label for="precio-{index}" class="text-xs text-amber-700 font-medium">Precio Total ($)</label>
 												<input
+													id="precio-{index}"
 													type="number"
 													min="0.01"
 													step="0.01"
