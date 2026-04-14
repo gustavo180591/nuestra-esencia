@@ -63,7 +63,7 @@
 	// Teclado numérico
 	function openKeypad(inputType: 'discount' | 'cash') {
 		activeInput = inputType;
-		keypadValue = inputType === 'discount' ? discount.toString() : cashReceived.toString();
+		keypadValue = '';
 		showKeypad = true;
 	}
 
@@ -495,12 +495,12 @@
 		<div class="w-full max-w-sm rounded-lg bg-white shadow-xl">
 			<div class="border-b p-4">
 				<div class="flex items-center justify-between">
-					<h3 class="text-lg font-semibold">
+					<h3 class="text-lg font-semibold text-black">
 						{activeInput === 'discount' ? 'Descuento' : 'Efectivo Recibido'}
 					</h3>
 					<button onclick={closeKeypad} class="text-gray-900 hover:text-gray-900"> ✕ </button>
 				</div>
-				<div class="mt-2 text-2xl font-bold text-amber-600">
+				<div class="mt-2 text-2xl font-bold text-black">
 					${keypadValue || '0'}
 				</div>
 			</div>
@@ -510,19 +510,19 @@
 					<!-- Números 7-9 -->
 					<button
 						onclick={() => appendToKeypad('7')}
-						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold text-black hover:bg-gray-200 active:bg-gray-300"
 					>
 						7
 					</button>
 					<button
 						onclick={() => appendToKeypad('8')}
-						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold text-black hover:bg-gray-200 active:bg-gray-300"
 					>
 						8
 					</button>
 					<button
 						onclick={() => appendToKeypad('9')}
-						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold text-black hover:bg-gray-200 active:bg-gray-300"
 					>
 						9
 					</button>
@@ -530,19 +530,19 @@
 					<!-- Números 4-6 -->
 					<button
 						onclick={() => appendToKeypad('4')}
-						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold text-black hover:bg-gray-200 active:bg-gray-300"
 					>
 						4
 					</button>
 					<button
 						onclick={() => appendToKeypad('5')}
-						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold text-black hover:bg-gray-200 active:bg-gray-300"
 					>
 						5
 					</button>
 					<button
 						onclick={() => appendToKeypad('6')}
-						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold text-black hover:bg-gray-200 active:bg-gray-300"
 					>
 						6
 					</button>
@@ -550,19 +550,19 @@
 					<!-- Números 1-3 -->
 					<button
 						onclick={() => appendToKeypad('1')}
-						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold text-black hover:bg-gray-200 active:bg-gray-300"
 					>
 						1
 					</button>
 					<button
 						onclick={() => appendToKeypad('2')}
-						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold text-black hover:bg-gray-200 active:bg-gray-300"
 					>
 						2
 					</button>
 					<button
 						onclick={() => appendToKeypad('3')}
-						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold text-black hover:bg-gray-200 active:bg-gray-300"
 					>
 						3
 					</button>
@@ -570,13 +570,13 @@
 					<!-- 0, punto, borrar -->
 					<button
 						onclick={() => appendToKeypad('0')}
-						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold text-black hover:bg-gray-200 active:bg-gray-300"
 					>
 						0
 					</button>
 					<button
 						onclick={() => appendToKeypad('.')}
-						class="rounded bg-gray-100 p-4 text-lg font-semibold hover:bg-gray-200 active:bg-gray-300"
+						class="rounded bg-gray-100 p-4 text-lg font-semibold text-black hover:bg-gray-200 active:bg-gray-300"
 					>
 						.
 					</button>

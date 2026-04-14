@@ -10,8 +10,8 @@
 	let showEditModal = $state(false);
 	let selectedProduct = $state<Product | null>(null);
 
-	// Form data
-	let formData = $state<{
+// Form data
+				let formData = $state<{
 		name: string;
 		description: string;
 		categoryId: string;
@@ -24,6 +24,8 @@
 			unitMeasure: 'UNIDAD' | 'DOCENA' | 'MEDIA_DOCENA' | 'KILOGRAMO' | 'PORCION';
 			label: string;
 			price: number;
+			cantidadTotal?: number;
+			precioTotal?: number;
 		}>;
 	}>({
 		name: '',
@@ -466,7 +468,7 @@
 
 						<div class="space-y-3">
 							{#each formData.saleFormats as format, index}
-								<div class="flex items-center gap-2">
+								<div class="flex flex-col md:flex-row md:items-center gap-2">
 									<select
 										bind:value={format.unitMeasure}
 										class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
@@ -485,13 +487,46 @@
 										class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 									/>
 
-									<input
-										type="number"
-										step="0.01"
-										bind:value={format.price}
-										placeholder="Precio"
-										class="w-24 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-									/>
+									{#if format.unitMeasure === 'KILOGRAMO'}
+										<input
+											type="number"
+											min="0.001"
+											step="0.001"
+											bind:value={format.cantidadTotal}
+											placeholder="Cantidad kg"
+											class="w-28 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+										/>
+										<input
+											type="number"
+											min="0.01"
+											step="0.01"
+											bind:value={format.precioTotal}
+											placeholder="Precio total $"
+											class="w-28 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+										/>
+										<input
+											type="number"
+											value={format.cantidadTotal && format.precioTotal ? (format.precioTotal / (format.cantidadTotal * 1000)).toFixed(2) : ''}
+											readonly
+											placeholder="$/gr"
+											class="w-20 rounded-md border border-gray-300 px-3 py-2 text-gray-900 bg-gray-100"
+										/>
+										<input
+											type="number"
+											value={format.cantidadTotal && format.precioTotal ? (format.precioTotal / (format.cantidadTotal * 10)).toFixed(2) : ''}
+											readonly
+											placeholder="$/100gr"
+											class="w-24 rounded-md border border-gray-300 px-3 py-2 text-gray-900 bg-gray-100"
+										/>
+									{:else}
+										<input
+											type="number"
+											step="0.01"
+											bind:value={format.price}
+											placeholder="Precio"
+											class="w-24 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+										/>
+									{/if}
 
 									{#if formData.saleFormats.length > 1}
 										<button
@@ -519,12 +554,6 @@
 							class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
 						>
 							Cancelar
-						</button>
-						<button
-							type="submit"
-							class="rounded-md bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"
-						>
-							{showEditModal ? 'Actualizar' : 'Crear'}
 						</button>
 					</div>
 				</form>
