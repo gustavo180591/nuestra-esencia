@@ -357,6 +357,10 @@
 				</h2>
 
 				<form onsubmit={saveProduct}>
+					<!-- Sección: Información General -->
+					<div class="mb-4 border-b pb-2">
+						<h3 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Información General</h3>
+					</div>
 					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<div class="md:col-span-2">
 							<label for="product-name" class="mb-1 block text-sm font-medium text-gray-900">
@@ -414,7 +418,14 @@
 								</select>
 							</div>
 						{/if}
+					</div>
 
+					<!-- Sección: Inventario -->
+					<div class="mb-4 mt-4 border-b pb-2 md:col-span-2">
+						<h3 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Inventario</h3>
+					</div>
+
+					<div class="md:col-span-2 grid grid-cols-1 gap-4 md:grid-cols-2">
 						<div>
 							<label for="product-stock" class="mb-1 block text-sm font-medium text-gray-900">
 								Stock Actual
@@ -454,9 +465,14 @@
 						</div>
 					</div>
 
-					<div class="mt-6">
+					<!-- Sección: Formatos de Venta -->
+					<div class="mb-4 mt-4 border-b pb-2">
+						<h3 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Formatos de Venta</h3>
+					</div>
+
+					<div class="mt-4">
 						<div class="mb-3 flex items-center justify-between">
-							<h3 class="text-lg font-medium text-gray-900">Formatos de Venta</h3>
+							<h4 class="text-base font-medium text-gray-900">Configurar presentaciones</h4>
 							<button
 								type="button"
 								onclick={addSaleFormat}
@@ -488,36 +504,46 @@
 									/>
 
 									{#if format.unitMeasure === 'KILOGRAMO'}
-										<input
-											type="number"
-											min="0.001"
-											step="0.001"
-											bind:value={format.cantidadTotal}
-											placeholder="Cantidad kg"
-											class="w-28 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-										/>
-										<input
-											type="number"
-											min="0.01"
-											step="0.01"
-											bind:value={format.precioTotal}
-											placeholder="Precio total $"
-											class="w-28 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-										/>
-										<input
-											type="number"
-											value={format.cantidadTotal && format.precioTotal ? (format.precioTotal / (format.cantidadTotal * 1000)).toFixed(2) : ''}
-											readonly
-											placeholder="$/gr"
-											class="w-20 rounded-md border border-gray-300 px-3 py-2 text-gray-900 bg-gray-100"
-										/>
-										<input
-											type="number"
-											value={format.cantidadTotal && format.precioTotal ? (format.precioTotal / (format.cantidadTotal * 10)).toFixed(2) : ''}
-											readonly
-											placeholder="$/100gr"
-											class="w-24 rounded-md border border-gray-300 px-3 py-2 text-gray-900 bg-gray-100"
-										/>
+										<div class="flex-1 grid grid-cols-2 gap-2 rounded-lg bg-amber-50 p-2 border border-amber-200">
+											<div>
+												<label class="text-xs text-amber-700 font-medium">Cantidad (kg)</label>
+												<input
+													type="number"
+													min="0.001"
+													step="0.001"
+													bind:value={format.cantidadTotal}
+													placeholder="Ej: 1.5"
+													class="w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900"
+												/>
+											</div>
+											<div>
+												<label class="text-xs text-amber-700 font-medium">Precio Total ($)</label>
+												<input
+													type="number"
+													min="0.01"
+													step="0.01"
+													bind:value={format.precioTotal}
+													placeholder="Ej: 1500"
+													class="w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900"
+												/>
+											</div>
+											{#if format.cantidadTotal && format.precioTotal}
+												<div class="col-span-2 grid grid-cols-2 gap-2">
+													<div class="rounded bg-white p-1 text-center">
+														<div class="text-xs text-gray-500">$/gr</div>
+														<div class="font-semibold text-gray-900">
+															${(format.precioTotal / (format.cantidadTotal * 1000)).toFixed(2)}
+														</div>
+													</div>
+													<div class="rounded bg-white p-1 text-center">
+														<div class="text-xs text-gray-500">$/100gr</div>
+														<div class="font-semibold text-gray-900">
+															${(format.precioTotal / (format.cantidadTotal * 10)).toFixed(2)}
+														</div>
+													</div>
+												</div>
+											{/if}
+										</div>
 									{:else}
 										<input
 											type="number"
@@ -542,7 +568,7 @@
 						</div>
 					</div>
 
-					<div class="mt-6 flex justify-end gap-3">
+					<div class="mt-8 flex justify-end gap-3 border-t pt-4">
 						<button
 							type="button"
 							onclick={() => {
@@ -551,9 +577,15 @@
 								selectedProduct = null;
 								resetForm();
 							}}
-							class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
+							class="rounded-md border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
 						>
 							Cancelar
+						</button>
+						<button
+							type="submit"
+							class="rounded-md bg-amber-600 px-6 py-2 font-medium text-white hover:bg-amber-700 shadow-sm"
+						>
+							{showEditModal ? 'Guardar Cambios' : 'Crear Producto'}
 						</button>
 					</div>
 				</form>
