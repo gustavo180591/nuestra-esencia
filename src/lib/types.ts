@@ -78,6 +78,7 @@ export interface PurchaseItem {
 		name: string;
 	};
 	productNameSnapshot: string;
+	unitMeasure: 'UNIDAD' | 'KILOGRAMO' | 'DOCENA' | 'MEDIA_DOCENA' | 'PORCION';
 	quantity: string;
 	unitCost: string;
 	subtotal: string;

@@ -377,36 +377,49 @@
 								<div class="flex items-center justify-between rounded bg-gray-50 p-3">
 									<div class="flex-1">
 										<div class="font-medium" style="color: #000">{item.productName}</div>
-										<div class="text-sm" style="color: #000">{item.formatLabel} {item.unitMeasure === 'KILOGRAMO' ? '(kg)' : ''}</div>
+										<div class="text-sm" style="color: #000">
+											{item.formatLabel}
+											{item.unitMeasure === 'KILOGRAMO' ? '(kg)' : ''}
+										</div>
 										<div class="text-sm font-bold" style="color: #000">${item.unitPrice} c/u</div>
 									</div>
 									<div class="flex items-center space-x-2">
 										<button
-										class="h-8 w-8 rounded bg-red-100 text-red-600 hover:bg-red-200"
-										onclick={() => updateQuantity(index, item.quantity - (item.unitMeasure === 'KILOGRAMO' ? 0.1 : 1))}
-									>
-										-
-									</button>
-									<input
-										type="number"
-										class="w-16 rounded border px-1 py-1 text-center text-sm text-black"
-										value={item.unitMeasure === 'KILOGRAMO' ? Math.round(item.quantity * 1000) : item.quantity}
-										min="0.001"
-										step={item.unitMeasure === 'KILOGRAMO' ? '100' : '1'}
-										onchange={(e) => {
-											const val = parseFloat(e.currentTarget.value);
-											updateQuantity(index, item.unitMeasure === 'KILOGRAMO' ? val / 1000 : val);
-										}}
-									/>
-									<button
-										class="h-8 w-8 rounded bg-green-100 text-green-600 hover:bg-green-200"
-										onclick={() => updateQuantity(index, item.quantity + (item.unitMeasure === 'KILOGRAMO' ? 0.1 : 1))}
-									>
-										+
-									</button>
+											class="h-8 w-8 rounded bg-red-100 text-red-600 hover:bg-red-200"
+											onclick={() =>
+												updateQuantity(
+													index,
+													item.quantity - (item.unitMeasure === 'KILOGRAMO' ? 0.1 : 1)
+												)}
+										>
+											-
+										</button>
+										<input
+											type="number"
+											class="w-16 rounded border px-1 py-1 text-center text-sm text-black"
+											value={item.unitMeasure === 'KILOGRAMO'
+												? Math.round(item.quantity * 1000)
+												: item.quantity}
+											min="0.001"
+											step={item.unitMeasure === 'KILOGRAMO' ? '100' : '1'}
+											onchange={(e) => {
+												const val = parseFloat(e.currentTarget.value);
+												updateQuantity(index, item.unitMeasure === 'KILOGRAMO' ? val / 1000 : val);
+											}}
+										/>
+										<button
+											class="h-8 w-8 rounded bg-green-100 text-green-600 hover:bg-green-200"
+											onclick={() =>
+												updateQuantity(
+													index,
+													item.quantity + (item.unitMeasure === 'KILOGRAMO' ? 0.1 : 1)
+												)}
+										>
+											+
+										</button>
 										<div class="w-16 text-right font-bold" style="color: #000">
-												${item.subtotal.toFixed(2)}
-											</div>
+											${item.subtotal.toFixed(2)}
+										</div>
 									</div>
 								</div>
 							{/each}
@@ -417,7 +430,9 @@
 					<div class="space-y-2 border-t pt-4">
 						<div class="flex justify-between">
 							<span style="color: #000">Subtotal:</span>
-							<span style="color: #000">${cart.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2)}</span>
+							<span style="color: #000"
+								>${cart.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2)}</span
+							>
 						</div>
 						<div class="flex justify-between">
 							<span style="color: #000">Descuento:</span>

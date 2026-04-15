@@ -136,8 +136,11 @@ export const POST: RequestHandler = async ({ request }) => {
 			// Crear compra
 			const purchase = await tx.purchase.create({
 				data: {
-					supplierId,
-					userId: 'system', // TODO: Add user authentication
+					supplier: {
+						connect: {
+							id: supplierId
+						}
+					},
 					subtotal: total.toString(),
 					total: total.toString(),
 					status: 'REGISTRADA',
@@ -171,6 +174,7 @@ export const POST: RequestHandler = async ({ request }) => {
 									purchaseId: purchase.id,
 									productId: item.productId,
 									productNameSnapshot: product.name,
+									unitMeasure: item.unitMeasure || 'UNIDAD',
 									quantity: item.quantity,
 									unitCost: item.unitPrice,
 									subtotal: (Number(item.quantity) * Number(item.unitPrice)).toString()
@@ -204,8 +208,7 @@ export const POST: RequestHandler = async ({ request }) => {
 							previousStock: product.stock,
 							newStock: newStock.toString(),
 							reason: `Compra #${purchase.purchaseNumber}`,
-							purchaseId: purchase.id,
-							userId: null // TODO: Add user authentication
+							purchaseId: purchase.id
 						}
 					});
 				}

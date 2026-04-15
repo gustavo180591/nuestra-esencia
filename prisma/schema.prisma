@@ -139,7 +139,7 @@ model Purchase {
   purchaseNumber Int             @unique @default(autoincrement())
   status         PurchaseStatus  @default(REGISTRADA)
   supplierId     String
-  userId         String
+  userId         String?
   subtotal       Decimal         @db.Decimal(12, 2)
   total          Decimal         @db.Decimal(12, 2)
   notes          String?
@@ -147,7 +147,7 @@ model Purchase {
   updatedAt      DateTime        @updatedAt
   items          PurchaseItem[]
   supplier       Supplier        @relation(fields: [supplierId], references: [id])
-  user           User            @relation(fields: [userId], references: [id])
+  user           User?           @relation(fields: [userId], references: [id])
   stockMoves     StockMovement[]
 
   @@index([createdAt])
@@ -156,17 +156,18 @@ model Purchase {
 }
 
 model PurchaseItem {
-  id                  String   @id @default(cuid())
+  id                  String      @id @default(cuid())
   purchaseId          String
   productId           String
   productNameSnapshot String
-  quantity            Decimal  @db.Decimal(10, 3)
-  unitCost            Decimal  @db.Decimal(10, 2)
-  subtotal            Decimal  @db.Decimal(12, 2)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  product             Product  @relation(fields: [productId], references: [id])
-  purchase            Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  unitMeasure         UnitMeasure
+  quantity            Decimal     @db.Decimal(10, 3)
+  unitCost            Decimal     @db.Decimal(10, 2)
+  subtotal            Decimal     @db.Decimal(12, 2)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  product             Product     @relation(fields: [productId], references: [id])
+  purchase            Purchase    @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
 
   @@index([purchaseId])
   @@index([productId])

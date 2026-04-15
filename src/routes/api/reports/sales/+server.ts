@@ -70,7 +70,28 @@ export const GET: RequestHandler = async ({ url }) => {
 		});
 
 		// Agrupar ventas por período
-		const groupedSales: Record<string, any> = {};
+		interface GroupedSale {
+			period: string;
+			salesCount: number;
+			revenue: number;
+			itemsSold: number;
+			averageTicket: number;
+			sales: Array<{
+				id: string;
+				saleNumber: number;
+				total: string;
+				items: number;
+				user: string | undefined;
+				createdAt: Date;
+				saleItems: Array<{
+					productName: string;
+					quantity: number;
+					unitPrice: number;
+					subtotal: number;
+				}>;
+			}>;
+		}
+		const groupedSales: Record<string, GroupedSale> = {};
 		let totalRevenue = 0;
 		let totalSales = 0;
 		let totalItems = 0;
@@ -90,7 +111,10 @@ export const GET: RequestHandler = async ({ url }) => {
 			}
 
 			const saleRevenue = Number(sale.total);
-			const saleItems = sale.items.reduce((sum, item) => sum + Number(item.quantity), 0);
+			const saleItems = sale.items.reduce(
+				(sum: number, item: (typeof sale.items)[0]) => sum + Number(item.quantity),
+				0
+			);
 
 			groupedSales[period].salesCount += 1;
 			groupedSales[period].revenue += saleRevenue;
@@ -101,7 +125,13 @@ export const GET: RequestHandler = async ({ url }) => {
 				total: sale.total,
 				items: sale.items.length,
 				user: sale.user?.name,
-				createdAt: sale.createdAt
+				createdAt: sale.createdAt,
+				saleItems: sale.items.map((item: (typeof sale.items)[0]) => ({
+					productName: item.product?.name || 'Producto',
+					quantity: Number(item.quantity),
+					unitPrice: Number(item.unitPrice),
+					subtotal: Number(item.subtotal)
+				}))
 			});
 
 			totalRevenue += saleRevenue;

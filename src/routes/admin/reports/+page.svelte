@@ -26,6 +26,13 @@
 		}
 	});
 
+	// Fila expandida en reportes
+	let expandedPeriod = $state<string | null>(null);
+
+	function togglePeriod(period: string) {
+		expandedPeriod = expandedPeriod === period ? null : period;
+	}
+
 	onMount(() => {
 		// Establecer fechas por defecto (últimos 30 días)
 		const today = new Date();
@@ -275,9 +282,21 @@
 								</thead>
 								<tbody class="divide-y divide-gray-200 bg-white">
 									{#each salesData.dailyData as day (day.period)}
-										<tr class="hover:bg-gray-50">
+										<tr
+											class="cursor-pointer hover:bg-gray-50 {expandedPeriod === day.period
+												? 'bg-amber-50'
+												: ''}"
+											onclick={() => togglePeriod(day.period)}
+										>
 											<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-												{day.period}
+												<div class="flex items-center gap-2">
+													<span
+														class="transform transition-transform {expandedPeriod === day.period
+															? 'rotate-90'
+															: ''}">▶</span
+													>
+													{day.period}
+												</div>
 											</td>
 											<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 												{formatNumber(day.salesCount)}
@@ -292,6 +311,42 @@
 												{formatNumber(day.itemsSold)}
 											</td>
 										</tr>
+										{#if expandedPeriod === day.period}
+											<tr class="bg-gray-50">
+												<td colspan="5" class="px-6 py-4">
+													<div class="space-y-3">
+														<div class="mb-2 text-sm font-medium text-gray-700">
+															Ventas del {day.period} ({day.sales.length} ventas)
+														</div>
+														<div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+															{#each day.sales as sale (sale.id)}
+																<div class="rounded-lg border bg-white p-3 shadow-sm">
+																	<div class="mb-2 flex items-center justify-between">
+																		<span class="font-medium text-gray-800">
+																			Venta #{sale.saleNumber}
+																		</span>
+																		<span class="text-sm font-medium text-green-600">
+																			{formatCurrency(sale.total)}
+																		</span>
+																	</div>
+																	<div class="mb-2 text-xs text-gray-500">
+																		Vendedor: {sale.user}
+																	</div>
+																	<div class="space-y-1 border-t pt-2">
+																		{#each sale.saleItems as item (item.productName + item.quantity)}
+																			<div class="flex items-center justify-between text-xs">
+																				<span class="text-gray-700">{item.productName}</span>
+																				<span class="text-gray-500">×{item.quantity}</span>
+																			</div>
+																		{/each}
+																	</div>
+																</div>
+															{/each}
+														</div>
+													</div>
+												</td>
+											</tr>
+										{/if}
 									{/each}
 								</tbody>
 							</table>
@@ -452,7 +507,7 @@
 								<h2 class="text-lg font-semibold text-gray-900">Top Vendedores</h2>
 							</div>
 							<div class="p-6">
-								{#each cashData.summary.topSellers as seller}
+								{#each cashData.summary.topSellers as seller (seller.name)}
 									<div class="mb-3 flex items-center justify-between">
 										<span class="text-sm font-medium text-gray-900">{seller.name}</span>
 										<div class="text-right">

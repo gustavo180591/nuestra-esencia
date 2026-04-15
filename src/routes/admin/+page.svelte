@@ -9,9 +9,10 @@
 	let showCreateModal = $state(false);
 	let showEditModal = $state(false);
 	let selectedProduct = $state<Product | null>(null);
+	let shouldRedirectToPurchases = $state(false);
 
-// Form data
-				let formData = $state<{
+	// Form data
+	let formData = $state<{
 		name: string;
 		description: string;
 		categoryId: string;
@@ -153,9 +154,10 @@
 					id: format.id,
 					unitMeasure: format.unitMeasure,
 					label: format.label,
-					price: format.unitMeasure === 'KILOGRAMO' && format.cantidadTotal && format.precioTotal
-						? Number((format.precioTotal / format.cantidadTotal).toFixed(2))
-						: format.price
+					price:
+						format.unitMeasure === 'KILOGRAMO' && format.cantidadTotal && format.precioTotal
+							? Number((format.precioTotal / format.cantidadTotal).toFixed(2))
+							: format.price
 				}))
 			};
 
@@ -176,6 +178,11 @@
 				selectedProduct = null;
 				resetForm();
 				alert(result.message);
+
+				// Redirect to purchases if we came from there
+				if (shouldRedirectToPurchases) {
+					window.location.href = '/admin/purchases';
+				}
 			} else {
 				alert(result.message);
 			}
@@ -208,6 +215,17 @@
 	onMount(async () => {
 		await Promise.all([loadProducts(), loadCategories()]);
 		loading = false;
+
+		// Check if newProduct parameter is present
+		const urlParams = new URLSearchParams(window.location.search);
+		if (urlParams.get('newProduct') === 'true') {
+			showCreateModal = true;
+		}
+
+		// Check if we should redirect to purchases after saving
+		if (urlParams.get('redirectTo') === 'purchases') {
+			shouldRedirectToPurchases = true;
+		}
 	});
 </script>
 
@@ -293,7 +311,12 @@
 							<th
 								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-900 uppercase"
 							>
-								Precios
+								Unidad de Medida
+							</th>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-900 uppercase"
+							>
+								Precio
 							</th>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-900 uppercase"
@@ -334,8 +357,16 @@
 								<td class="px-6 py-4 whitespace-nowrap">
 									<div class="text-sm text-gray-900">
 										{#each product.saleFormats as format}
-											{@const formatName = format.label || format.unitMeasure.toLowerCase().replace('_', ' ')}
-											<div>{formatName}: ${format.price}</div>
+											{@const formatName =
+												format.label || format.unitMeasure.toLowerCase().replace('_', ' ')}
+											<div>{formatName}</div>
+										{/each}
+									</div>
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap">
+									<div class="text-sm text-gray-900">
+										{#each product.saleFormats as format}
+											<div>${format.price}</div>
 										{/each}
 									</div>
 								</td>
@@ -384,7 +415,9 @@
 				<form onsubmit={saveProduct}>
 					<!-- Sección: Información General -->
 					<div class="mb-4 border-b pb-2">
-						<h3 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Información General</h3>
+						<h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">
+							Información General
+						</h3>
 					</div>
 					<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 						<div class="md:col-span-2">
@@ -446,11 +479,11 @@
 					</div>
 
 					<!-- Sección: Inventario -->
-					<div class="mb-4 mt-4 border-b pb-2 md:col-span-2">
-						<h3 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Inventario</h3>
+					<div class="mt-4 mb-4 border-b pb-2 md:col-span-2">
+						<h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">Inventario</h3>
 					</div>
 
-					<div class="md:col-span-2 grid grid-cols-1 gap-4 md:grid-cols-2">
+					<div class="grid grid-cols-1 gap-4 md:col-span-2 md:grid-cols-2">
 						<div>
 							<label for="product-stock" class="mb-1 block text-sm font-medium text-gray-900">
 								Stock Actual
@@ -491,8 +524,10 @@
 					</div>
 
 					<!-- Sección: Formatos de Venta -->
-					<div class="mb-4 mt-4 border-b pb-2">
-						<h3 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Formatos de Venta</h3>
+					<div class="mt-4 mb-4 border-b pb-2">
+						<h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">
+							Formatos de Venta
+						</h3>
 					</div>
 
 					<div class="mt-4">
@@ -509,7 +544,7 @@
 
 						<div class="space-y-3">
 							{#each formData.saleFormats as format, index}
-								<div class="flex flex-col md:flex-row md:items-center gap-2">
+								<div class="flex flex-col gap-2 md:flex-row md:items-center">
 									<select
 										bind:value={format.unitMeasure}
 										class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
@@ -522,9 +557,13 @@
 									</select>
 
 									{#if format.unitMeasure === 'KILOGRAMO'}
-										<div class="flex-1 grid grid-cols-2 gap-2 rounded-lg bg-amber-50 p-2 border border-amber-200">
+										<div
+											class="grid flex-1 grid-cols-2 gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2"
+										>
 											<div>
-												<label for="cantidad-{index}" class="text-xs text-amber-700 font-medium">Cantidad (kg)</label>
+												<label for="cantidad-{index}" class="text-xs font-medium text-amber-700"
+													>Cantidad (kg)</label
+												>
 												<input
 													id="cantidad-{index}"
 													type="number"
@@ -536,7 +575,9 @@
 												/>
 											</div>
 											<div>
-												<label for="precio-{index}" class="text-xs text-amber-700 font-medium">Precio Total ($)</label>
+												<label for="precio-{index}" class="text-xs font-medium text-amber-700"
+													>Precio Total ($)</label
+												>
 												<input
 													id="precio-{index}"
 													type="number"
@@ -603,7 +644,7 @@
 						</button>
 						<button
 							type="submit"
-							class="rounded-md bg-amber-600 px-6 py-2 font-medium text-white hover:bg-amber-700 shadow-sm"
+							class="rounded-md bg-amber-600 px-6 py-2 font-medium text-white shadow-sm hover:bg-amber-700"
 						>
 							{showEditModal ? 'Guardar Cambios' : 'Crear Producto'}
 						</button>
