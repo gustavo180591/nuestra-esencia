@@ -63,8 +63,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		let totalRevenue = 0;
 		let totalSales = 0;
 		let totalItems = 0;
-		let totalCash = 0;
-		let totalTransfer = 0;
+		const totalCash = 0;
+		const totalTransfer = 0;
 
 		// Estadísticas por método de pago
 		const paymentStats: Record<string, any> = {};

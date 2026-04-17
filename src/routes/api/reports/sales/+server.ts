@@ -19,27 +19,47 @@ export const GET: RequestHandler = async ({ url }) => {
 			);
 		}
 
-		const start = new Date(startDate);
-		const end = new Date(endDate);
-		end.setHours(23, 59, 59, 999); // Incluir todo el día final
+		// Crear fechas con zona horaria consistente (Buenos Aires)
+		const timeZone = 'America/Argentina/Buenos_Aires';
 
-		// Función para formatear fecha según agrupación
+		// Convertir a Date en zona horaria local
+		const start = new Date(startDate + 'T00:00:00.000-03:00');
+		const end = new Date(endDate + 'T23:59:59.999-03:00');
+
+		// Para debugging: log de las fechas
+		console.log('Fechas de filtrado:', {
+			startDateParam: startDate,
+			endDateParam: endDate,
+			startUTC: start.toISOString(),
+			endUTC: end.toISOString(),
+			startLocal: start.toLocaleString('es-AR', { timeZone }),
+			endLocal: end.toLocaleString('es-AR', { timeZone })
+		});
+
+		// Función para formatear fecha según agrupación (consistente)
 		function formatDate(date: Date, group: string): string {
+			// Usar siempre la fecha local de Buenos Aires
+			const localDate = new Date(
+				date.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' })
+			);
+
 			if (group === 'day') {
-				return date.toISOString().split('T')[0];
+				return localDate.toISOString().split('T')[0];
 			} else if (group === 'week') {
-				const startOfWeek = new Date(date);
+				const startOfWeek = new Date(localDate);
 				const day = startOfWeek.getDay();
 				const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
 				startOfWeek.setDate(diff);
 				return startOfWeek.toISOString().split('T')[0];
 			} else if (group === 'month') {
-				return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+				return `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}`;
 			}
-			return date.toISOString().split('T')[0];
+			return localDate.toISOString().split('T')[0];
 		}
 
-		// Obtener ventas agrupadas
+		// Obtener ventas con filtrado preciso
+		console.log('Buscando ventas entre:', start.toISOString(), 'y', end.toISOString());
+
 		const sales = await db.sale.findMany({
 			where: {
 				status: 'COMPLETADA',
@@ -79,7 +99,7 @@ export const GET: RequestHandler = async ({ url }) => {
 			sales: Array<{
 				id: string;
 				saleNumber: number;
-				total: string;
+				total: number;
 				items: number;
 				user: string | undefined;
 				createdAt: Date;
@@ -96,18 +116,78 @@ export const GET: RequestHandler = async ({ url }) => {
 		let totalSales = 0;
 		let totalItems = 0;
 
-		for (const sale of sales) {
-			const period = formatDate(new Date(sale.createdAt), groupBy);
+		// Generar todos los períodos en el rango de fechas
+		function generateAllPeriods(startDate: Date, endDate: Date, group: string): string[] {
+			const periods: string[] = [];
+			const current = new Date(startDate);
 
+			if (group === 'day') {
+				while (current <= endDate) {
+					periods.push(formatDate(new Date(current), group));
+					current.setDate(current.getDate() + 1);
+				}
+			} else if (group === 'week') {
+				while (current <= endDate) {
+					const weekStart = new Date(current);
+					const day = weekStart.getDay();
+					const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1);
+					weekStart.setDate(diff);
+					const weekKey = formatDate(weekStart, group);
+					if (!periods.includes(weekKey)) {
+						periods.push(weekKey);
+					}
+					current.setDate(current.getDate() + 7);
+				}
+			} else if (group === 'month') {
+				while (current <= endDate) {
+					const monthKey = formatDate(new Date(current), group);
+					if (!periods.includes(monthKey)) {
+						periods.push(monthKey);
+					}
+					current.setMonth(current.getMonth() + 1);
+					current.setDate(1);
+				}
+			}
+
+			return periods;
+		}
+
+		// Inicializar todos los períodos con valores en cero
+		const allPeriods = generateAllPeriods(start, end, groupBy);
+		for (const period of allPeriods) {
+			groupedSales[period] = {
+				period,
+				salesCount: 0,
+				revenue: 0,
+				itemsSold: 0,
+				averageTicket: 0,
+				sales: []
+			};
+		}
+
+		// Debug: mostrar ventas encontradas
+		console.log(`Ventas encontradas: ${sales.length}`);
+		console.log('Primera venta:', sales[0] ? new Date(sales[0].createdAt).toISOString() : 'N/A');
+		console.log(
+			'Última venta:',
+			sales[sales.length - 1] ? new Date(sales[sales.length - 1].createdAt).toISOString() : 'N/A'
+		);
+
+		// Procesar las ventas y agruparlas
+		for (const sale of sales) {
+			const saleDate = new Date(sale.createdAt);
+			const period = formatDate(saleDate, groupBy);
+
+			// Debug para cada venta
+			if (sales.indexOf(sale) < 5) {
+				console.log(`Venta ${sale.saleNumber}: fecha=${saleDate.toISOString()}, periodo=${period}`);
+			}
+
+			// Verificar que el período exista en groupedSales
 			if (!groupedSales[period]) {
-				groupedSales[period] = {
-					period,
-					salesCount: 0,
-					revenue: 0,
-					itemsSold: 0,
-					averageTicket: 0,
-					sales: []
-				};
+				console.error(`Error: período ${period} no encontrado en groupedSales`);
+				console.error('Períodos disponibles:', Object.keys(groupedSales));
+				continue;
 			}
 
 			const saleRevenue = Number(sale.total);
@@ -122,7 +202,7 @@ export const GET: RequestHandler = async ({ url }) => {
 			groupedSales[period].sales.push({
 				id: sale.id,
 				saleNumber: sale.saleNumber,
-				total: sale.total,
+				total: Number(sale.total),
 				items: sale.items.length,
 				user: sale.user?.name,
 				createdAt: sale.createdAt,

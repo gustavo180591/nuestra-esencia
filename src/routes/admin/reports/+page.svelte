@@ -11,6 +11,19 @@
 		endDate: ''
 	});
 
+	// Opciones de fecha predefinidas
+	const datePresets = [
+		{ label: 'Hoy', days: 0 },
+		{ label: 'Ayer', days: 1 },
+		{ label: 'Últimos 3 días', days: 3 },
+		{ label: 'Últimos 7 días', days: 7 },
+		{ label: 'Últimos 15 días', days: 15 },
+		{ label: 'Últimos 30 días', days: 30 },
+		{ label: 'Este mes', days: 'month' },
+		{ label: 'Mes pasado', days: 'lastMonth' },
+		{ label: 'Este año', days: 'year' }
+	];
+
 	// Datos de reportes
 	let salesData = $state<any>(null);
 	let productsData = $state<any>(null);
@@ -33,17 +46,66 @@
 		expandedPeriod = expandedPeriod === period ? null : period;
 	}
 
-	onMount(() => {
-		// Establecer fechas por defecto (últimos 30 días)
+	// Función para aplicar preset de fecha
+	function applyDatePreset(preset: (typeof datePresets)[0]) {
 		const today = new Date();
-		const thirtyDaysAgo = new Date(today);
-		thirtyDaysAgo.setDate(today.getDate() - 30);
+		today.setHours(0, 0, 0, 0);
 
-		dateRange.startDate = thirtyDaysAgo.toISOString().split('T')[0];
-		dateRange.endDate = today.toISOString().split('T')[0];
+		if (preset.days === 'month') {
+			// Primer día del mes actual
+			const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+			dateRange.startDate = firstDay.toISOString().split('T')[0];
+			dateRange.endDate = today.toISOString().split('T')[0];
+		} else if (preset.days === 'lastMonth') {
+			// Mes pasado
+			const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+			const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+			dateRange.startDate = lastMonth.toISOString().split('T')[0];
+			dateRange.endDate = lastMonthEnd.toISOString().split('T')[0];
+		} else if (preset.days === 'year') {
+			// Año actual
+			const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+			dateRange.startDate = firstDayOfYear.toISOString().split('T')[0];
+			dateRange.endDate = today.toISOString().split('T')[0];
+		} else {
+			// Días específicos
+			const startDate = new Date(today);
+			startDate.setDate(today.getDate() - (preset.days as number));
+			dateRange.startDate = startDate.toISOString().split('T')[0];
+			dateRange.endDate = today.toISOString().split('T')[0];
+		}
 
 		loadReports();
+	}
+
+	onMount(() => {
+		// Establecer fechas por defecto (últimos 7 días para incluir hoy)
+		applyDatePreset({ label: 'Últimos 7 días', days: 7 });
+
+		// Actualizar fecha y hora actual cada segundo
+		updateDateTime();
+		setInterval(updateDateTime, 1000);
 	});
+
+	function updateDateTime() {
+		const now = new Date();
+		// Formatear para Buenos Aires (UTC-3)
+		const options: Intl.DateTimeFormatOptions = {
+			timeZone: 'America/Argentina/Buenos_Aires',
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+			hour12: false
+		};
+
+		const dateTimeElement = document.getElementById('current-datetime');
+		if (dateTimeElement) {
+			dateTimeElement.textContent = now.toLocaleString('es-AR', options);
+		}
+	}
 
 	async function loadReports() {
 		if (!dateRange.startDate || !dateRange.endDate) {
@@ -111,69 +173,94 @@
 <div class="min-h-screen bg-gray-50 p-6">
 	<div class="mx-auto max-w-7xl">
 		<div class="mb-6">
-			<h1 class="text-3xl font-bold text-gray-900">Reportes y Estadísticas</h1>
-			<p class="mt-2 text-gray-600">Análisis detallado de ventas, productos y caja</p>
+			<div class="flex items-center justify-between">
+				<div>
+					<h1 class="text-3xl font-bold text-gray-900">Reportes y Estadísticas</h1>
+					<p class="mt-2 text-gray-600">Análisis detallado de ventas, productos y caja</p>
+				</div>
+				<div class="text-right">
+					<div class="text-sm text-gray-500">Fecha y hora actual (Buenos Aires)</div>
+					<div class="text-lg font-semibold text-gray-700" id="current-datetime"></div>
+				</div>
+			</div>
 		</div>
 
 		<!-- Filtros -->
 		<div class="mb-6 rounded-lg bg-white p-4 shadow">
-			<div class="flex flex-wrap items-end gap-4">
-				<div>
-					<label for="start-date" class="mb-1 block text-sm font-medium text-gray-700">
-						Fecha Inicio
-					</label>
-					<input
-						id="start-date"
-						type="date"
-						bind:value={dateRange.startDate}
-						class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-					/>
+			<div class="mb-4">
+				<h3 class="mb-3 text-sm font-semibold text-gray-900">Período Rápido</h3>
+				<div class="flex flex-wrap gap-2">
+					{#each datePresets as preset}
+						<button
+							onclick={() => applyDatePreset(preset)}
+							class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-700 transition-colors hover:border-amber-500 hover:bg-gray-50 hover:text-amber-700"
+						>
+							{preset.label}
+						</button>
+					{/each}
 				</div>
-				<div>
-					<label for="end-date" class="mb-1 block text-sm font-medium text-gray-700">
-						Fecha Fin
-					</label>
-					<input
-						id="end-date"
-						type="date"
-						bind:value={dateRange.endDate}
-						class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-					/>
-				</div>
-				<div>
-					<label for="sales-group" class="mb-1 block text-sm font-medium text-gray-700">
-						Agrupar Ventas por
-					</label>
-					<select
-						id="sales-group"
-						bind:value={chartConfig.sales.groupBy}
-						class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+			</div>
+
+			<div class="border-t pt-4">
+				<h3 class="mb-3 text-sm font-semibold text-gray-900">Filtros Personalizados</h3>
+				<div class="flex flex-wrap items-end gap-4">
+					<div>
+						<label for="start-date" class="mb-1 block text-sm font-medium text-gray-700">
+							Fecha Inicio
+						</label>
+						<input
+							id="start-date"
+							type="date"
+							bind:value={dateRange.startDate}
+							class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+						/>
+					</div>
+					<div>
+						<label for="end-date" class="mb-1 block text-sm font-medium text-gray-700">
+							Fecha Fin
+						</label>
+						<input
+							id="end-date"
+							type="date"
+							bind:value={dateRange.endDate}
+							class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+						/>
+					</div>
+					<div>
+						<label for="sales-group" class="mb-1 block text-sm font-medium text-gray-700">
+							Agrupar Ventas por
+						</label>
+						<select
+							id="sales-group"
+							bind:value={chartConfig.sales.groupBy}
+							class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+						>
+							<option value="day">Día</option>
+							<option value="week">Semana</option>
+							<option value="month">Mes</option>
+						</select>
+					</div>
+					<div>
+						<label for="products-limit" class="mb-1 block text-sm font-medium text-gray-700">
+							Top Productos
+						</label>
+						<select
+							id="products-limit"
+							bind:value={chartConfig.products.limit}
+							class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+						>
+							<option value="10">Top 10</option>
+							<option value="20">Top 20</option>
+							<option value="50">Top 50</option>
+						</select>
+					</div>
+					<button
+						onclick={loadReports}
+						class="rounded-md bg-amber-600 px-4 py-2 text-white transition-colors hover:bg-amber-700"
 					>
-						<option value="day">Día</option>
-						<option value="week">Semana</option>
-						<option value="month">Mes</option>
-					</select>
+						Actualizar Reportes
+					</button>
 				</div>
-				<div>
-					<label for="products-limit" class="mb-1 block text-sm font-medium text-gray-700">
-						Top Productos
-					</label>
-					<select
-						id="products-limit"
-						bind:value={chartConfig.products.limit}
-						class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-					>
-						<option value="10">Top 10</option>
-						<option value="20">Top 20</option>
-						<option value="50">Top 50</option>
-					</select>
-				</div>
-				<button
-					onclick={loadReports}
-					class="rounded-md bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"
-				>
-					Actualizar Reportes
-				</button>
 			</div>
 		</div>
 
@@ -298,17 +385,29 @@
 													{day.period}
 												</div>
 											</td>
-											<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
-												{formatNumber(day.salesCount)}
+											<td class="px-6 py-4 text-sm whitespace-nowrap">
+												<span
+													class={day.salesCount === 0
+														? 'font-medium text-gray-400'
+														: 'text-gray-900'}
+												>
+													{formatNumber(day.salesCount)}
+												</span>
 											</td>
-											<td class="px-6 py-4 text-sm font-medium whitespace-nowrap text-green-600">
-												{formatCurrency(day.revenue)}
+											<td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
+												<span class={day.revenue === 0 ? 'text-gray-400' : 'text-green-600'}>
+													{formatCurrency(day.revenue)}
+												</span>
 											</td>
-											<td class="px-6 py-4 text-sm whitespace-nowrap text-blue-600">
-												{formatCurrency(day.averageTicket)}
+											<td class="px-6 py-4 text-sm whitespace-nowrap">
+												<span class={day.averageTicket === 0 ? 'text-gray-400' : 'text-blue-600'}>
+													{formatCurrency(day.averageTicket)}
+												</span>
 											</td>
-											<td class="px-6 py-4 text-sm whitespace-nowrap text-purple-600">
-												{formatNumber(day.itemsSold)}
+											<td class="px-6 py-4 text-sm whitespace-nowrap">
+												<span class={day.itemsSold === 0 ? 'text-gray-400' : 'text-purple-600'}>
+													{formatNumber(day.itemsSold)}
+												</span>
 											</td>
 										</tr>
 										{#if expandedPeriod === day.period}
