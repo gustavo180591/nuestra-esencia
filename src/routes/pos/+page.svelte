@@ -417,7 +417,7 @@
 												</button>
 												<input
 													type="number"
-													class="w-16 rounded border px-1 py-1 text-center text-sm text-black"
+													class="w-20 rounded border px-1 py-1 text-center text-sm text-black"
 													value={item.unitMeasure === 'KILOGRAMO'
 														? Math.round(item.quantity * 1000)
 														: item.quantity}
@@ -445,7 +445,7 @@
 											{#if editingSubtotalIndex === index}
 												<input
 													type="number"
-													class="mt-1 w-16 rounded border px-1 py-1 text-right text-sm font-bold text-black"
+													class="mt-1 w-20 rounded border px-1 py-1 text-right text-sm font-bold text-black"
 													bind:value={subtotalEditValue}
 													min="0"
 													step="0.01"
@@ -455,11 +455,10 @@
 															applySubtotalEdit(index);
 														}
 													}}
-													autofocus
 												/>
 											{:else}
 												<button
-													class="mt-1 w-16 text-right font-bold hover:text-amber-600"
+													class="mt-1 w-20 text-right font-bold hover:text-amber-600"
 													style="color: #000"
 													onclick={() => startEditingSubtotal(index, item.subtotal)}
 													title="Click para editar monto"
