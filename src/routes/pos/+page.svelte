@@ -28,9 +28,12 @@
 
 	// Teclado numérico
 	let showKeypad = $state(false);
-	let activeInput = $state<'discount' | 'cash' | 'subtotal' | null>(null);
+	let activeInput = $state<'discount' | 'cash' | null>(null);
 	let keypadValue = $state('');
-	let activeCartIndex = $state<number | null>(null);
+
+	// Subtotal editable
+	let editingSubtotalIndex = $state<number | null>(null);
+	let subtotalEditValue = $state('');
 
 	// Cargar productos desde la API
 	onMount(() => {
@@ -65,15 +68,22 @@
 	function openKeypad(inputType: 'discount' | 'cash') {
 		activeInput = inputType;
 		keypadValue = '';
-		activeCartIndex = null;
 		showKeypad = true;
 	}
 
-	function openSubtotalKeypad(index: number, currentSubtotal: number) {
-		activeInput = 'subtotal';
-		activeCartIndex = index;
-		keypadValue = currentSubtotal.toString();
-		showKeypad = true;
+	function startEditingSubtotal(index: number, currentSubtotal: number) {
+		editingSubtotalIndex = index;
+		subtotalEditValue = currentSubtotal.toFixed(2);
+	}
+
+	function applySubtotalEdit(index: number) {
+		const desiredSubtotal = parseFloat(subtotalEditValue) || 0;
+		const unitPrice = cart[index].unitPrice;
+		const newQuantity = unitPrice > 0 ? desiredSubtotal / unitPrice : 0;
+		cart[index].quantity = newQuantity;
+		cart[index].subtotal = newQuantity * unitPrice;
+		updateTotals();
+		editingSubtotalIndex = null;
 	}
 
 	function closeKeypad() {
@@ -101,16 +111,6 @@
 			discount = numValue;
 		} else if (activeInput === 'cash') {
 			cashReceived = numValue;
-		} else if (activeInput === 'subtotal' && activeCartIndex !== null) {
-			// Calcular cantidad basada en el subtotal deseado
-			const desiredSubtotal = numValue;
-			const unitPrice = cart[activeCartIndex].unitPrice;
-			const newQuantity = unitPrice > 0 ? desiredSubtotal / unitPrice : 0;
-
-			// Actualizar cantidad y recalcular subtotal
-			cart[activeCartIndex].quantity = newQuantity;
-			cart[activeCartIndex].subtotal = newQuantity * unitPrice;
-			updateTotals();
 		}
 
 		closeKeypad();
@@ -403,47 +403,71 @@
 										<div class="text-sm font-bold" style="color: #000">${item.unitPrice} c/u</div>
 									</div>
 									<div class="flex items-center space-x-2">
-										<button
-											class="h-8 w-8 rounded bg-red-100 text-red-600 hover:bg-red-200"
-											onclick={() =>
-												updateQuantity(
-													index,
-													item.quantity - (item.unitMeasure === 'KILOGRAMO' ? 0.1 : 1)
-												)}
-										>
-											-
-										</button>
-										<input
-											type="number"
-											class="w-16 rounded border px-1 py-1 text-center text-sm text-black"
-											value={item.unitMeasure === 'KILOGRAMO'
-												? Math.round(item.quantity * 1000)
-												: item.quantity}
-											min="0.001"
-											step={item.unitMeasure === 'KILOGRAMO' ? '100' : '1'}
-											onchange={(e) => {
-												const val = parseFloat(e.currentTarget.value);
-												updateQuantity(index, item.unitMeasure === 'KILOGRAMO' ? val / 1000 : val);
-											}}
-										/>
-										<button
-											class="h-8 w-8 rounded bg-green-100 text-green-600 hover:bg-green-200"
-											onclick={() =>
-												updateQuantity(
-													index,
-													item.quantity + (item.unitMeasure === 'KILOGRAMO' ? 0.1 : 1)
-												)}
-										>
-											+
-										</button>
-										<button
-											class="w-16 text-right font-bold hover:text-amber-600"
-											style="color: #000"
-											onclick={() => openSubtotalKeypad(index, item.subtotal)}
-											title="Click para editar monto total"
-										>
-											${item.subtotal.toFixed(2)}
-										</button>
+										<div class="flex flex-col items-center">
+											<div class="flex items-center space-x-2">
+												<button
+													class="h-8 w-8 rounded bg-red-100 text-red-600 hover:bg-red-200"
+													onclick={() =>
+														updateQuantity(
+															index,
+															item.quantity - (item.unitMeasure === 'KILOGRAMO' ? 0.1 : 1)
+														)}
+												>
+													-
+												</button>
+												<input
+													type="number"
+													class="w-16 rounded border px-1 py-1 text-center text-sm text-black"
+													value={item.unitMeasure === 'KILOGRAMO'
+														? Math.round(item.quantity * 1000)
+														: item.quantity}
+													min="0.001"
+													step={item.unitMeasure === 'KILOGRAMO' ? '100' : '1'}
+													onchange={(e) => {
+														const val = parseFloat(e.currentTarget.value);
+														updateQuantity(
+															index,
+															item.unitMeasure === 'KILOGRAMO' ? val / 1000 : val
+														);
+													}}
+												/>
+												<button
+													class="h-8 w-8 rounded bg-green-100 text-green-600 hover:bg-green-200"
+													onclick={() =>
+														updateQuantity(
+															index,
+															item.quantity + (item.unitMeasure === 'KILOGRAMO' ? 0.1 : 1)
+														)}
+												>
+													+
+												</button>
+											</div>
+											{#if editingSubtotalIndex === index}
+												<input
+													type="number"
+													class="mt-1 w-16 rounded border px-1 py-1 text-right text-sm font-bold text-black"
+													bind:value={subtotalEditValue}
+													min="0"
+													step="0.01"
+													onblur={() => applySubtotalEdit(index)}
+													onkeydown={(e) => {
+														if (e.key === 'Enter') {
+															applySubtotalEdit(index);
+														}
+													}}
+													autofocus
+												/>
+											{:else}
+												<button
+													class="mt-1 w-16 text-right font-bold hover:text-amber-600"
+													style="color: #000"
+													onclick={() => startEditingSubtotal(index, item.subtotal)}
+													title="Click para editar monto"
+												>
+													${item.subtotal.toFixed(2)}
+												</button>
+											{/if}
+										</div>
 									</div>
 								</div>
 							{/each}
@@ -545,11 +569,7 @@
 			<div class="border-b p-4">
 				<div class="flex items-center justify-between">
 					<h3 class="text-lg font-semibold text-black">
-						{activeInput === 'discount'
-							? 'Descuento'
-							: activeInput === 'subtotal'
-								? 'Monto Total'
-								: 'Efectivo Recibido'}
+						{activeInput === 'discount' ? 'Descuento' : 'Efectivo Recibido'}
 					</h3>
 					<button onclick={closeKeypad} class="text-gray-900 hover:text-gray-900"> ✕ </button>
 				</div>
