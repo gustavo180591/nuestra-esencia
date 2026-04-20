@@ -28,8 +28,9 @@
 
 	// Teclado numérico
 	let showKeypad = $state(false);
-	let activeInput = $state<'discount' | 'cash' | null>(null);
+	let activeInput = $state<'discount' | 'cash' | 'subtotal' | null>(null);
 	let keypadValue = $state('');
+	let activeCartIndex = $state<number | null>(null);
 
 	// Cargar productos desde la API
 	onMount(() => {
@@ -64,6 +65,14 @@
 	function openKeypad(inputType: 'discount' | 'cash') {
 		activeInput = inputType;
 		keypadValue = '';
+		activeCartIndex = null;
+		showKeypad = true;
+	}
+
+	function openSubtotalKeypad(index: number, currentSubtotal: number) {
+		activeInput = 'subtotal';
+		activeCartIndex = index;
+		keypadValue = currentSubtotal.toString();
 		showKeypad = true;
 	}
 
@@ -92,6 +101,16 @@
 			discount = numValue;
 		} else if (activeInput === 'cash') {
 			cashReceived = numValue;
+		} else if (activeInput === 'subtotal' && activeCartIndex !== null) {
+			// Calcular cantidad basada en el subtotal deseado
+			const desiredSubtotal = numValue;
+			const unitPrice = cart[activeCartIndex].unitPrice;
+			const newQuantity = unitPrice > 0 ? desiredSubtotal / unitPrice : 0;
+
+			// Actualizar cantidad y recalcular subtotal
+			cart[activeCartIndex].quantity = newQuantity;
+			cart[activeCartIndex].subtotal = newQuantity * unitPrice;
+			updateTotals();
 		}
 
 		closeKeypad();
@@ -417,9 +436,14 @@
 										>
 											+
 										</button>
-										<div class="w-16 text-right font-bold" style="color: #000">
+										<button
+											class="w-16 text-right font-bold hover:text-amber-600"
+											style="color: #000"
+											onclick={() => openSubtotalKeypad(index, item.subtotal)}
+											title="Click para editar monto total"
+										>
 											${item.subtotal.toFixed(2)}
-										</div>
+										</button>
 									</div>
 								</div>
 							{/each}
@@ -521,7 +545,11 @@
 			<div class="border-b p-4">
 				<div class="flex items-center justify-between">
 					<h3 class="text-lg font-semibold text-black">
-						{activeInput === 'discount' ? 'Descuento' : 'Efectivo Recibido'}
+						{activeInput === 'discount'
+							? 'Descuento'
+							: activeInput === 'subtotal'
+								? 'Monto Total'
+								: 'Efectivo Recibido'}
 					</h3>
 					<button onclick={closeKeypad} class="text-gray-900 hover:text-gray-900"> ✕ </button>
 				</div>
