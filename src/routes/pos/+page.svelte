@@ -327,7 +327,7 @@
 		// En efectivo, si no se ingresó monto, asumir que se recibe exacto
 		if (paymentMethod === 'EFECTIVO') {
 			if (cashReceived === 0) {
-				cashReceived = total;
+				cashReceived = Math.round(total * 100) / 100;
 			}
 			if (cashReceived < total) {
 				alert('El efectivo recibido es insuficiente');
