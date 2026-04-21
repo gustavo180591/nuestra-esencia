@@ -2,6 +2,16 @@
 	import { onMount } from 'svelte';
 	import type { Product, ProductSaleFormat } from '$lib/types';
 
+	// Helper para formatear números con separadores de miles (formato argentino: $12.000,00)
+	function formatCurrency(value: number): string {
+		return value.toLocaleString('es-AR', {
+			style: 'currency',
+			currency: 'ARS',
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2
+		});
+	}
+
 	let products = $state<Product[]>([]);
 	let loading = $state(true);
 	let error = $state('');
@@ -35,17 +45,51 @@
 	let editingSubtotalIndex = $state<number | null>(null);
 	let subtotalEditValue = $state('');
 
+	// Edición de cantidad en gramos (para productos por peso)
+	let editingGramsIndex = $state<number | null>(null);
+	let gramsEditValue = $state('');
+
+	// Edición de precio (para calcular cantidad en productos por peso)
+	let editingPriceIndex = $state<number | null>(null);
+	let priceEditValue = $state('');
+
 	// Cargar productos desde la API
 	onMount(() => {
 		loadProducts();
 		// Agregar event listener para atajos de teclado
 		window.addEventListener('keydown', handleKeyboardShortcuts);
+		// Agregar event listener para cerrar ediciones al hacer click fuera
+		window.addEventListener('click', handleClickOutside);
 
 		// Limpiar event listener al desmontar
 		return () => {
 			window.removeEventListener('keydown', handleKeyboardShortcuts);
+			window.removeEventListener('click', handleClickOutside);
 		};
 	});
+
+	// Cerrar ediciones al hacer click fuera de los inputs
+	function handleClickOutside(event: MouseEvent) {
+		const target = event.target as HTMLElement;
+		const isEditingInput = target.closest('input[type="number"]') !== null;
+		const isEditButton =
+			target.closest('button[title="Click para editar gramos"]') !== null ||
+			target.closest('button[title="Click para editar precio"]') !== null ||
+			target.closest('button[title="Click para editar subtotal"]') !== null;
+
+		// Si no se hizo click en un input de edición ni en botones de edición, cerrar las ediciones activas
+		if (!isEditingInput && !isEditButton) {
+			if (editingGramsIndex !== null) {
+				applyGramsEdit(editingGramsIndex);
+			}
+			if (editingPriceIndex !== null) {
+				applyPriceEdit(editingPriceIndex);
+			}
+			if (editingSubtotalIndex !== null) {
+				applySubtotalEdit(editingSubtotalIndex);
+			}
+		}
+	}
 
 	async function loadProducts() {
 		try {
@@ -72,6 +116,13 @@
 	}
 
 	function startEditingSubtotal(index: number, currentSubtotal: number) {
+		// Cerrar otras ediciones si están abiertas
+		if (editingGramsIndex !== null) {
+			applyGramsEdit(editingGramsIndex);
+		}
+		if (editingPriceIndex !== null) {
+			applyPriceEdit(editingPriceIndex);
+		}
 		editingSubtotalIndex = index;
 		subtotalEditValue = currentSubtotal.toFixed(2);
 	}
@@ -84,6 +135,49 @@
 		cart[index].subtotal = newQuantity * unitPrice;
 		updateTotals();
 		editingSubtotalIndex = null;
+	}
+
+	function startEditingGrams(index: number, currentGrams: number) {
+		// Cerrar otras ediciones si están abiertas
+		if (editingPriceIndex !== null) {
+			applyPriceEdit(editingPriceIndex);
+		}
+		if (editingSubtotalIndex !== null) {
+			applySubtotalEdit(editingSubtotalIndex);
+		}
+		editingGramsIndex = index;
+		gramsEditValue = currentGrams.toFixed(0);
+	}
+
+	function applyGramsEdit(index: number) {
+		const grams = parseFloat(gramsEditValue) || 0;
+		const newQuantity = grams / 1000; // convertir a kg
+		cart[index].quantity = newQuantity;
+		cart[index].subtotal = newQuantity * cart[index].unitPrice;
+		updateTotals();
+		editingGramsIndex = null;
+	}
+
+	function startEditingPrice(index: number, currentSubtotal: number) {
+		// Cerrar otras ediciones si están abiertas
+		if (editingGramsIndex !== null) {
+			applyGramsEdit(editingGramsIndex);
+		}
+		if (editingSubtotalIndex !== null) {
+			applySubtotalEdit(editingSubtotalIndex);
+		}
+		editingPriceIndex = index;
+		priceEditValue = currentSubtotal.toFixed(2);
+	}
+
+	function applyPriceEdit(index: number) {
+		const desiredSubtotal = parseFloat(priceEditValue) || 0;
+		const unitPrice = cart[index].unitPrice;
+		const newQuantity = unitPrice > 0 ? desiredSubtotal / unitPrice : 0;
+		cart[index].quantity = newQuantity;
+		cart[index].subtotal = desiredSubtotal;
+		updateTotals();
+		editingPriceIndex = null;
 	}
 
 	function closeKeypad() {
@@ -393,78 +487,157 @@
 							<div class="py-4 text-center text-gray-900">El carrito está vacío</div>
 						{:else}
 							{#each cart as item, index (item.productId + '-' + item.productSaleFormatId)}
+								{@const isWeightBased = item.unitMeasure === 'KILOGRAMO'}
 								<div class="flex items-center justify-between rounded bg-gray-50 p-3">
 									<div class="flex-1">
 										<div class="font-medium" style="color: #000">{item.productName}</div>
-										<div class="text-sm" style="color: #000">
-											{item.formatLabel}
-											{item.unitMeasure === 'KILOGRAMO' ? '(kg)' : ''}
+										{#if item.formatLabel}
+											<div class="text-sm text-gray-600" style="color: #666">
+												{item.formatLabel}
+											</div>
+										{/if}
+										<div class="text-sm font-bold" style="color: #000">
+											{#if isWeightBased}
+												${item.unitPrice} / kg
+											{:else}
+												${item.unitPrice} c/u
+											{/if}
 										</div>
-										<div class="text-sm font-bold" style="color: #000">${item.unitPrice} c/u</div>
 									</div>
 									<div class="flex items-center space-x-2">
-										<div class="flex flex-col items-center">
-											<div class="flex items-center space-x-2">
-												<button
-													class="h-8 w-8 rounded bg-red-100 text-red-600 hover:bg-red-200"
-													onclick={() =>
-														updateQuantity(
-															index,
-															item.quantity - (item.unitMeasure === 'KILOGRAMO' ? 0.1 : 1)
-														)}
-												>
-													-
-												</button>
-												<input
-													type="number"
-													class="w-20 rounded border px-1 py-1 text-center text-sm text-black"
-													value={item.unitMeasure === 'KILOGRAMO'
-														? Math.round(item.quantity * 1000)
-														: item.quantity}
-													min="0.001"
-													step={item.unitMeasure === 'KILOGRAMO' ? '100' : '1'}
-													onchange={(e) => {
-														const val = parseFloat(e.currentTarget.value);
-														updateQuantity(
-															index,
-															item.unitMeasure === 'KILOGRAMO' ? val / 1000 : val
-														);
-													}}
-												/>
-												<button
-													class="h-8 w-8 rounded bg-green-100 text-green-600 hover:bg-green-200"
-													onclick={() =>
-														updateQuantity(
-															index,
-															item.quantity + (item.unitMeasure === 'KILOGRAMO' ? 0.1 : 1)
-														)}
-												>
-													+
-												</button>
-											</div>
-											{#if editingSubtotalIndex === index}
-												<input
-													type="number"
-													class="mt-1 w-20 rounded border px-1 py-1 text-right text-sm font-bold text-black"
-													bind:value={subtotalEditValue}
-													min="0"
-													step="0.01"
-													onblur={() => applySubtotalEdit(index)}
-													onkeydown={(e) => {
-														if (e.key === 'Enter') {
-															applySubtotalEdit(index);
-														}
-													}}
-												/>
+										<div class="flex flex-col items-end">
+											{#if isWeightBased}
+												<!-- Producto por peso: botones rápidos -->
+												<div class="flex items-center gap-1">
+													<button
+														class="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
+														onclick={() => updateQuantity(index, item.quantity + 0.1)}
+													>
+														100g
+													</button>
+													<button
+														class="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
+														onclick={() => updateQuantity(index, item.quantity + 0.2)}
+													>
+														200g
+													</button>
+													<button
+														class="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
+														onclick={() => updateQuantity(index, item.quantity + 0.5)}
+													>
+														500g
+													</button>
+													<button
+														class="h-7 w-7 rounded bg-red-100 text-red-600 hover:bg-red-200"
+														onclick={() => updateQuantity(index, item.quantity - 0.1)}
+														disabled={item.quantity <= 0.1}
+													>
+														-
+													</button>
+												</div>
+												<div class="mt-1 text-right text-sm">
+													{#if editingGramsIndex === index}
+														<input
+															type="number"
+															class="w-16 rounded border px-1 py-1 text-center text-sm font-medium text-black"
+															bind:value={gramsEditValue}
+															min="1"
+															step="1"
+															onblur={() => applyGramsEdit(index)}
+															onkeydown={(e) => {
+																if (e.key === 'Enter') {
+																	applyGramsEdit(index);
+																}
+															}}
+														/>
+													{:else}
+														<button
+															class="font-medium hover:text-amber-600"
+															style="color: #000"
+															onclick={() => startEditingGrams(index, item.quantity * 1000)}
+															title="Click para editar gramos"
+														>
+															{(item.quantity * 1000).toFixed(0)}g
+														</button>
+													{/if}
+													<span class="text-gray-500">= </span>
+													{#if editingPriceIndex === index}
+														<input
+															type="number"
+															class="w-24 rounded border px-1 py-1 text-right text-sm font-medium text-black"
+															bind:value={priceEditValue}
+															min="0"
+															step="0.01"
+															onblur={() => applyPriceEdit(index)}
+															onkeydown={(e) => {
+																if (e.key === 'Enter') {
+																	applyPriceEdit(index);
+																}
+															}}
+														/>
+													{:else}
+														<button
+															class="text-gray-500 hover:text-amber-600"
+															onclick={() => startEditingPrice(index, item.subtotal)}
+															title="Click para editar precio"
+														>
+															{formatCurrency(item.subtotal)}
+														</button>
+													{/if}
+												</div>
 											{:else}
-												<button
-													class="mt-1 w-20 text-right font-bold hover:text-amber-600"
-													style="color: #000"
-													onclick={() => startEditingSubtotal(index, item.subtotal)}
-													title="Click para editar monto"
-												>
-													${item.subtotal.toFixed(2)}
-												</button>
+												<!-- Producto por unidad: input numérico -->
+												<div class="flex items-center space-x-2">
+													<button
+														class="h-8 w-8 rounded bg-red-100 text-red-600 hover:bg-red-200"
+														onclick={() => updateQuantity(index, item.quantity - 1)}
+													>
+														-
+													</button>
+													<input
+														type="number"
+														class="w-16 rounded border px-1 py-1 text-center text-sm text-black"
+														value={item.quantity}
+														min="1"
+														step="1"
+														onchange={(e) => {
+															const val = parseInt(e.currentTarget.value) || 1;
+															updateQuantity(index, val);
+														}}
+													/>
+													<button
+														class="h-8 w-8 rounded bg-green-100 text-green-600 hover:bg-green-200"
+														onclick={() => updateQuantity(index, item.quantity + 1)}
+													>
+														+
+													</button>
+												</div>
+												<div class="mt-1 text-right font-bold" style="color: #000">
+													{#if editingSubtotalIndex === index}
+														<input
+															type="number"
+															class="w-24 rounded border px-1 py-1 text-right text-sm font-medium text-black"
+															bind:value={subtotalEditValue}
+															min="0"
+															step="0.01"
+															onblur={() => applySubtotalEdit(index)}
+															onkeydown={(e) => {
+																if (e.key === 'Enter') {
+																	applySubtotalEdit(index);
+																}
+															}}
+														/>
+													{:else}
+														<button
+															class="hover:text-amber-600"
+															style="color: #000"
+															onclick={() => startEditingSubtotal(index, item.subtotal)}
+															title="Click para editar subtotal"
+														>
+															{formatCurrency(item.subtotal)}
+														</button>
+													{/if}
+												</div>
 											{/if}
 										</div>
 									</div>
@@ -478,7 +651,7 @@
 						<div class="flex justify-between">
 							<span style="color: #000">Subtotal:</span>
 							<span style="color: #000"
-								>${cart.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2)}</span
+								>{formatCurrency(cart.reduce((sum, item) => sum + item.subtotal, 0))}</span
 							>
 						</div>
 						<div class="flex justify-between">
@@ -495,7 +668,7 @@
 						</div>
 						<div class="flex justify-between text-lg font-bold">
 							<span style="color: #000">Total:</span>
-							<span class="text-amber-600" style="color: #000">${total.toFixed(2)}</span>
+							<span class="text-amber-600" style="color: #000">{formatCurrency(total)}</span>
 						</div>
 					</div>
 
@@ -527,12 +700,13 @@
 								bind:value={cashReceived}
 								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 								placeholder="0.00"
-								onclick={() => openKeypad('cash')}
+								min="0"
+								step="0.01"
 							/>
 							{#if cashReceived > 0}
 								<div class="flex justify-between font-medium text-green-600">
 									<span>Cambio:</span>
-									<span>${changeGiven}</span>
+									<span>{formatCurrency(changeGiven)}</span>
 								</div>
 							{/if}
 						</div>
@@ -545,7 +719,7 @@
 							onclick={processSale}
 							disabled={cart.length === 0}
 						>
-							Cobrar ${total.toFixed(2)}
+							Cobrar {formatCurrency(total)}
 						</button>
 						<button
 							class="w-full rounded-lg bg-gray-200 py-2 text-gray-900 hover:bg-gray-300"
