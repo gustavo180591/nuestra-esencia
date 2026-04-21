@@ -84,3 +84,13 @@ export interface PurchaseItem {
 	subtotal: string;
 	createdAt: string;
 }
+
+export interface User {
+	id: string;
+	name: string;
+	email: string;
+	role: 'ADMIN' | 'CAJERO';
+	active: boolean;
+	createdAt: string;
+	updatedAt: string;
+}

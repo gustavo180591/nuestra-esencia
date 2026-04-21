@@ -266,14 +266,29 @@
 
 <div class="min-h-screen bg-gray-50 p-6">
 	<div class="mx-auto max-w-7xl">
-		<div class="mb-6 flex items-center justify-between">
-			<h1 class="text-3xl font-bold text-gray-900">Gestión de Compras</h1>
-			<button
-				onclick={openCreateModal}
-				class="rounded-lg bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"
-			>
-				Nueva Compra
-			</button>
+		<!-- Header con navegación de submenú -->
+		<div class="mb-6">
+			<div class="flex items-center justify-between">
+				<h1 class="text-3xl font-bold text-gray-900">Gestión de Compras</h1>
+				<button
+					onclick={openCreateModal}
+					class="rounded-lg bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"
+				>
+					Nueva Compra
+				</button>
+			</div>
+			<!-- Submenú de Compras -->
+			<div class="mt-4 flex gap-2 border-b border-gray-200 pb-2">
+				<span class="rounded-md bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800">
+					Compras
+				</span>
+				<a
+					href="/admin/suppliers"
+					class="rounded-md px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+				>
+					Proveedores
+				</a>
+			</div>
 		</div>
 
 		{#if loading}

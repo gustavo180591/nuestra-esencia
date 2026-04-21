@@ -18,11 +18,22 @@
 		error = '';
 
 		try {
-			// Simulación de login (en producción sería una API real)
-			await new Promise((resolve) => setTimeout(resolve, 1000));
+			const response = await fetch('/api/auth/login', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ email: username, password })
+			});
 
-			// Login exitoso - redirigir al dashboard
-			goto('/');
+			const result = await response.json();
+
+			if (result.success) {
+				// Login exitoso - redirigir al dashboard
+				goto('/');
+			} else {
+				error = result.message || 'Error al iniciar sesión';
+			}
 		} catch {
 			error = 'Error al iniciar sesión';
 		} finally {

@@ -200,9 +200,7 @@ model StockMovement {
 
 enum UserRole {
   ADMIN
-  VENDEDOR
-  COMPRAS
-  DUENO
+  CAJERO
 }
 
 enum ProductStatus {
