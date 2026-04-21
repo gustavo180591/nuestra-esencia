@@ -11,6 +11,12 @@
 	let selectedProduct = $state<Product | null>(null);
 	let shouldRedirectToPurchases = $state(false);
 
+	// Tipos de venta disponibles
+	const SALE_TYPES = [
+		{ value: 'UNIDAD', label: 'Por Unidad', formats: ['UNIDAD', 'DOCENA', 'MEDIA_DOCENA', 'PORCION'] },
+		{ value: 'PESO', label: 'Por Peso', formats: ['KILOGRAMO'] }
+	] as const;
+
 	// Form data
 	let formData = $state<{
 		name: string;
@@ -20,6 +26,7 @@
 		stockMin: number;
 		isPerishable: boolean;
 		status: 'ACTIVO' | 'INACTIVO';
+		saleType: 'UNIDAD' | 'PESO';
 		saleFormats: Array<{
 			id?: string;
 			unitMeasure: 'UNIDAD' | 'DOCENA' | 'MEDIA_DOCENA' | 'KILOGRAMO' | 'PORCION';
@@ -36,6 +43,7 @@
 		stockMin: 0,
 		isPerishable: false,
 		status: 'ACTIVO',
+		saleType: 'UNIDAD',
 		saleFormats: [
 			{
 				unitMeasure: 'UNIDAD',
@@ -82,6 +90,7 @@
 			stockMin: 0,
 			isPerishable: false,
 			status: 'ACTIVO',
+			saleType: 'UNIDAD',
 			saleFormats: [
 				{
 					unitMeasure: 'UNIDAD',
@@ -92,6 +101,25 @@
 		};
 	}
 
+	function handleSaleTypeChange() {
+		// Limpiar formatos al cambiar tipo de venta
+		if (formData.saleType === 'UNIDAD') {
+			formData.saleFormats = [{
+				unitMeasure: 'UNIDAD',
+				label: 'Unidad',
+				price: 0
+			}];
+		} else {
+			formData.saleFormats = [{
+				unitMeasure: 'KILOGRAMO',
+				label: 'Por kg',
+				price: 0,
+				cantidadTotal: 1,
+				precioTotal: 0
+			}];
+		}
+	}
+
 	function openCreateModal() {
 		resetForm();
 		showCreateModal = true;
@@ -99,6 +127,10 @@
 
 	function openEditModal(product: Product) {
 		selectedProduct = product;
+		// Detectar tipo de venta según los formatos existentes
+		const hasKilogramo = product.saleFormats.some(f => f.unitMeasure === 'KILOGRAMO');
+		const saleType: 'UNIDAD' | 'PESO' = hasKilogramo ? 'PESO' : 'UNIDAD';
+		
 		formData = {
 			name: product.name,
 			description: product.description || '',
@@ -107,6 +139,7 @@
 			stockMin: Number(product.stockMin),
 			isPerishable: product.isPerishable,
 			status: product.status,
+			saleType,
 			saleFormats: product.saleFormats.map((format) => {
 				const baseFormat = {
 					id: format.id,
@@ -129,10 +162,12 @@
 	}
 
 	function addSaleFormat() {
+		const isWeight = formData.saleType === 'PESO';
 		formData.saleFormats.push({
-			unitMeasure: 'UNIDAD',
-			label: '',
-			price: 0
+			unitMeasure: isWeight ? 'KILOGRAMO' : 'UNIDAD',
+			label: isWeight ? 'Por kg' : 'Unidad',
+			price: 0,
+			...(isWeight ? { cantidadTotal: 1, precioTotal: 0 } : {})
 		});
 	}
 
@@ -523,109 +558,144 @@
 						</div>
 					</div>
 
-					<!-- Sección: Formatos de Venta -->
+					<!-- Sección: Tipo de Venta y Formatos -->
 					<div class="mt-4 mb-4 border-b pb-2">
 						<h3 class="text-sm font-semibold tracking-wide text-gray-500 uppercase">
-							Formatos de Venta
+							Tipo de Venta y Formatos
 						</h3>
 					</div>
 
 					<div class="mt-4">
-						<div class="mb-3 flex items-center justify-between">
-							<h4 class="text-base font-medium text-gray-900">Configurar presentaciones</h4>
-							<button
-								type="button"
-								onclick={addSaleFormat}
-								class="text-sm text-amber-600 hover:text-amber-700"
+						<!-- Selector de tipo de venta -->
+						<div class="mb-4">
+							<label for="sale-type" class="mb-2 block text-sm font-medium text-gray-900">
+								¿Cómo se vende este producto? *
+							</label>
+							<select
+								id="sale-type"
+								bind:value={formData.saleType}
+								onchange={handleSaleTypeChange}
+								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 md:w-auto"
 							>
-								+ Agregar formato
-							</button>
+								{#each SALE_TYPES as type}
+									<option value={type.value}>{type.label}</option>
+								{/each}
+							</select>
+							<p class="mt-1 text-xs text-gray-500">
+								{formData.saleType === 'UNIDAD' 
+									? 'El producto se vende por unidades (ej: empanadas, bebidas)' 
+									: 'El producto se vende por peso (ej: chipa, panificados)'}
+							</p>
+						</div>
+
+						<div class="mb-3 flex items-center justify-between">
+							<h4 class="text-base font-medium text-gray-900">
+								{formData.saleType === 'UNIDAD' ? 'Presentaciones disponibles' : 'Precio por kilogramo'}
+							</h4>
+							{#if formData.saleType === 'UNIDAD'}
+								<button
+									type="button"
+									onclick={addSaleFormat}
+									class="text-sm text-amber-600 hover:text-amber-700"
+								>
+									+ Agregar presentación
+								</button>
+							{/if}
 						</div>
 
 						<div class="space-y-3">
 							{#each formData.saleFormats as format, index}
-								<div class="flex flex-col gap-2 md:flex-row md:items-center">
-									<select
-										bind:value={format.unitMeasure}
-										class="rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-									>
-										<option value="UNIDAD">Unidad</option>
-										<option value="DOCENA">Docena</option>
-										<option value="MEDIA_DOCENA">Media Docena</option>
-										<option value="KILOGRAMO">Kilogramo</option>
-										<option value="PORCION">Porción</option>
-									</select>
-
-									{#if format.unitMeasure === 'KILOGRAMO'}
-										<div
-											class="grid flex-1 grid-cols-2 gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2"
+								<div class="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 md:flex-row md:items-center">
+									<!-- Tipo de formato -->
+									<div class="flex-1">
+										<label class="mb-1 block text-xs font-medium text-gray-600">
+											Formato
+										</label>
+										<select
+											bind:value={format.unitMeasure}
+											class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 										>
-											<div>
-												<label for="cantidad-{index}" class="text-xs font-medium text-amber-700"
-													>Cantidad (kg)</label
-												>
+											{#if formData.saleType === 'UNIDAD'}
+												<option value="UNIDAD">Unidad</option>
+												<option value="DOCENA">Docena</option>
+												<option value="MEDIA_DOCENA">Media Docena</option>
+												<option value="PORCION">Porción</option>
+											{:else}
+												<option value="KILOGRAMO">Por Kilogramo (kg)</option>
+											{/if}
+										</select>
+									</div>
+
+									<!-- Precio -->
+									{#if format.unitMeasure === 'KILOGRAMO'}
+										<div class="flex-[2]">
+											<label class="mb-1 block text-xs font-medium text-gray-600">
+												Precio por kg
+											</label>
+											<div class="flex items-center">
+												<span class="rounded-l-md border border-r-0 border-gray-300 bg-gray-100 px-3 py-2 text-gray-600">
+													$
+												</span>
 												<input
-													id="cantidad-{index}"
-													type="number"
-													min="0.001"
-													step="0.001"
-													bind:value={format.cantidadTotal}
-													placeholder="Ej: 1.5"
-													class="w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900"
-												/>
-											</div>
-											<div>
-												<label for="precio-{index}" class="text-xs font-medium text-amber-700"
-													>Precio Total ($)</label
-												>
-												<input
-													id="precio-{index}"
 													type="number"
 													min="0.01"
 													step="0.01"
-													bind:value={format.precioTotal}
-													placeholder="Ej: 1500"
-													class="w-full rounded-md border border-gray-300 px-2 py-1 text-gray-900"
+													bind:value={format.price}
+													placeholder="0.00"
+													class="w-full rounded-r-md border border-gray-300 px-3 py-2 text-gray-900"
 												/>
 											</div>
-											{#if format.cantidadTotal && format.precioTotal}
-												<div class="col-span-2 grid grid-cols-2 gap-2">
-													<div class="rounded bg-white p-1 text-center">
-														<div class="text-xs text-gray-500">$/gr</div>
-														<div class="font-semibold text-gray-900">
-															${(format.precioTotal / (format.cantidadTotal * 1000)).toFixed(2)}
-														</div>
-													</div>
-													<div class="rounded bg-white p-1 text-center">
-														<div class="text-xs text-gray-500">$/100gr</div>
-														<div class="font-semibold text-gray-900">
-															${(format.precioTotal / (format.cantidadTotal * 10)).toFixed(2)}
-														</div>
-													</div>
-												</div>
-											{/if}
+											<p class="mt-1 text-xs text-gray-500">
+												Ej: $12.000 por kg → 100g = $1.200
+											</p>
 										</div>
 									{:else}
-										<input
-											type="number"
-											step="0.01"
-											bind:value={format.price}
-											placeholder="Precio"
-											class="w-24 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-										/>
+										<div class="flex-1">
+											<label class="mb-1 block text-xs font-medium text-gray-600">
+												Precio
+											</label>
+											<div class="flex items-center">
+												<span class="rounded-l-md border border-r-0 border-gray-300 bg-gray-100 px-3 py-2 text-gray-600">
+													$
+												</span>
+												<input
+													type="number"
+													min="0.01"
+													step="0.01"
+													bind:value={format.price}
+													placeholder="0.00"
+													class="w-full rounded-r-md border border-gray-300 px-3 py-2 text-gray-900"
+												/>
+											</div>
+										</div>
 									{/if}
 
-									{#if formData.saleFormats.length > 1}
-										<button
-											type="button"
-											onclick={() => removeSaleFormat(index)}
-											class="text-red-600 hover:text-red-700"
-										>
-											×
-										</button>
+									<!-- Eliminar -->
+									{#if formData.saleFormats.length > 1 && formData.saleType === 'UNIDAD'}
+										<div class="flex items-end">
+											<button
+												type="button"
+												onclick={() => removeSaleFormat(index)}
+												class="rounded-md p-2 text-red-600 hover:bg-red-50"
+												title="Eliminar presentación"
+											>
+												<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+												</svg>
+											</button>
+										</div>
 									{/if}
 								</div>
 							{/each}
+						</div>
+
+						<!-- Info de ayuda -->
+						<div class="mt-3 rounded-md bg-blue-50 p-3 text-sm text-blue-700">
+							{#if formData.saleType === 'UNIDAD'}
+								<p>💡 <strong>Ejemplo:</strong> Si vendes empanadas, podés tener: 1 unidad ($800), media docena ($4.500), docena ($8.500)</p>
+							{:else}
+								<p>💡 <strong>Ejemplo:</strong> Chipa a $12.000/kg → el cliente puede pedir 100g ($1.200), 250g ($3.000), etc.</p>
+							{/if}
 						</div>
 					</div>
 
