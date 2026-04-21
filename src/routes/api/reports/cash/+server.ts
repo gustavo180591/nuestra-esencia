@@ -7,29 +7,30 @@ export const GET: RequestHandler = async ({ url }) => {
 		const startDate = url.searchParams.get('startDate');
 		const endDate = url.searchParams.get('endDate');
 
-		// Validar parámetros de fecha
-		if (!startDate || !endDate) {
-			return json(
-				{
-					success: false,
-					message: 'Las fechas de inicio y fin son requeridas'
-				},
-				{ status: 400 }
-			);
-		}
+		let dateFilter = {};
+		let periodStart: Date;
+		let periodEnd: Date;
 
-		const start = new Date(startDate);
-		const end = new Date(endDate);
-		end.setHours(23, 59, 59, 999); // Incluir todo el día final
+		if (startDate && endDate) {
+			periodStart = new Date(startDate);
+			periodEnd = new Date(endDate);
+			periodEnd.setHours(23, 59, 59, 999);
+			dateFilter = {
+				createdAt: {
+					gte: periodStart,
+					lte: periodEnd
+				}
+			};
+		} else {
+			periodStart = new Date(0); // Epoch
+			periodEnd = new Date(); // Ahora
+		}
 
 		// Obtener ventas completadas en el período
 		const sales = await db.sale.findMany({
 			where: {
 				status: 'COMPLETADA',
-				createdAt: {
-					gte: start,
-					lte: end
-				}
+				...dateFilter
 			},
 			include: {
 				items: {
@@ -237,8 +238,8 @@ export const GET: RequestHandler = async ({ url }) => {
 			success: true,
 			data: {
 				period: {
-					startDate: start.toISOString().split('T')[0],
-					endDate: end.toISOString().split('T')[0]
+					startDate: periodStart.toISOString().split('T')[0],
+					endDate: periodEnd.toISOString().split('T')[0]
 				},
 				summary,
 				dailyData: reportData

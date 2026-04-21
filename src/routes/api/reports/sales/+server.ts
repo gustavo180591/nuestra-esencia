@@ -8,23 +8,42 @@ export const GET: RequestHandler = async ({ url }) => {
 		const endDate = url.searchParams.get('endDate');
 		const groupBy = url.searchParams.get('groupBy') || 'day'; // day, week, month
 
-		// Validar parámetros de fecha
-		if (!startDate || !endDate) {
-			return json(
-				{
-					success: false,
-					message: 'Las fechas de inicio y fin son requeridas'
-				},
-				{ status: 400 }
-			);
-		}
-
 		// Crear fechas con zona horaria consistente (Buenos Aires)
 		const timeZone = 'America/Argentina/Buenos_Aires';
 
-		// Convertir a Date en zona horaria local
-		const start = new Date(startDate + 'T00:00:00.000-03:00');
-		const end = new Date(endDate + 'T23:59:59.999-03:00');
+		// Si no hay fechas, buscar todas las ventas
+		let start: Date;
+		let end: Date;
+
+		if (!startDate || !endDate) {
+			// Buscar la primera y última venta para establecer rango
+			const firstSale = await db.sale.findFirst({
+				where: { status: 'COMPLETADA' },
+				orderBy: { createdAt: 'asc' }
+			});
+			const lastSale = await db.sale.findFirst({
+				where: { status: 'COMPLETADA' },
+				orderBy: { createdAt: 'desc' }
+			});
+
+			if (firstSale && lastSale) {
+				start = new Date(firstSale.createdAt);
+				start.setHours(0, 0, 0, 0);
+				end = new Date(lastSale.createdAt);
+				end.setHours(23, 59, 59, 999);
+			} else {
+				// No hay ventas, usar rango por defecto (últimos 30 días)
+				const today = new Date();
+				end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+				start = new Date(today);
+				start.setDate(start.getDate() - 30);
+				start.setHours(0, 0, 0, 0);
+			}
+		} else {
+			// Convertir a Date en zona horaria local
+			start = new Date(startDate + 'T00:00:00.000-03:00');
+			end = new Date(endDate + 'T23:59:59.999-03:00');
+		}
 
 		// Para debugging: log de las fechas
 		console.log('Fechas de filtrado:', {

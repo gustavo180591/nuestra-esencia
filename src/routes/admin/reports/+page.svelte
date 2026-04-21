@@ -79,8 +79,8 @@
 	}
 
 	onMount(() => {
-		// Establecer fechas por defecto (últimos 7 días para incluir hoy)
-		applyDatePreset({ label: 'Últimos 7 días', days: 7 });
+		// Cargar todas las ventas sin filtro de fecha
+		loadReports();
 
 		// Actualizar fecha y hora actual cada segundo
 		updateDateTime();
@@ -108,23 +108,23 @@
 	}
 
 	async function loadReports() {
-		if (!dateRange.startDate || !dateRange.endDate) {
-			error = 'Seleccione un rango de fechas';
-			return;
-		}
-
 		loading = true;
 		error = '';
 
 		try {
+			// Construir URLs con o sin filtros de fecha
+			const dateParams = dateRange.startDate && dateRange.endDate
+				? `startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
+				: '';
+
 			const [salesRes, productsRes, cashRes] = await Promise.all([
 				fetch(
-					`/api/reports/sales?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&groupBy=${chartConfig.sales.groupBy}`
+					`/api/reports/sales?${dateParams}&groupBy=${chartConfig.sales.groupBy}`
 				),
 				fetch(
-					`/api/reports/products?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&limit=${chartConfig.products.limit}`
+					`/api/reports/products?${dateParams}&limit=${chartConfig.products.limit}`
 				),
-				fetch(`/api/reports/cash?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`)
+				fetch(`/api/reports/cash?${dateParams}`)
 			]);
 
 			const salesResult = await salesRes.json();
@@ -202,7 +202,22 @@
 			</div>
 
 			<div class="border-t pt-4">
-				<h3 class="mb-3 text-sm font-semibold text-gray-900">Filtros Personalizados</h3>
+				<div class="mb-3 flex items-center justify-between">
+					<h3 class="text-sm font-semibold text-gray-900">Filtros Personalizados</h3>
+					{#if dateRange.startDate || dateRange.endDate}
+						<button
+							type="button"
+							onclick={() => {
+								dateRange.startDate = '';
+								dateRange.endDate = '';
+								loadReports();
+							}}
+							class="text-xs text-amber-600 hover:text-amber-700"
+						>
+							Limpiar filtros
+						</button>
+					{/if}
+				</div>
 				<div class="flex flex-wrap items-end gap-4">
 					<div>
 						<label for="start-date" class="mb-1 block text-sm font-medium text-gray-700">

@@ -608,10 +608,11 @@
 								<div class="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 md:flex-row md:items-center">
 									<!-- Tipo de formato -->
 									<div class="flex-1">
-										<label class="mb-1 block text-xs font-medium text-gray-600">
+										<label for="format-type-{index}" class="mb-1 block text-xs font-medium text-gray-600">
 											Formato
 										</label>
 										<select
+											id="format-type-{index}"
 											bind:value={format.unitMeasure}
 											class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 										>
@@ -628,8 +629,8 @@
 
 									<!-- Precio -->
 									{#if format.unitMeasure === 'KILOGRAMO'}
-										<div class="flex-[2]">
-											<label class="mb-1 block text-xs font-medium text-gray-600">
+										<div class="flex-2">
+											<label for="format-price-kg-{index}" class="mb-1 block text-xs font-medium text-gray-600">
 												Precio por kg
 											</label>
 											<div class="flex items-center">
@@ -637,6 +638,7 @@
 													$
 												</span>
 												<input
+													id="format-price-kg-{index}"
 													type="number"
 													min="0.01"
 													step="0.01"
@@ -651,7 +653,7 @@
 										</div>
 									{:else}
 										<div class="flex-1">
-											<label class="mb-1 block text-xs font-medium text-gray-600">
+											<label for="format-price-{index}" class="mb-1 block text-xs font-medium text-gray-600">
 												Precio
 											</label>
 											<div class="flex items-center">
@@ -659,6 +661,7 @@
 													$
 												</span>
 												<input
+													id="format-price-{index}"
 													type="number"
 													min="0.01"
 													step="0.01"
