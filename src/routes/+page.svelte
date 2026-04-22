@@ -11,6 +11,14 @@
 
 	let loading = $state(true);
 
+	// Formatear números argentino: 1.751,82 (punto miles, coma decimales)
+	function formatNumber(value: number, decimals = 2): string {
+		return value.toLocaleString('es-AR', {
+			minimumFractionDigits: decimals,
+			maximumFractionDigits: decimals
+		});
+	}
+
 	async function loadStats() {
 		try {
 			const response = await fetch('/api/products?includeInactive=true');
@@ -57,7 +65,7 @@
 					<div class="text-gray-600">Productos Activos</div>
 				</div>
 				<div class="rounded-lg bg-white p-6 shadow">
-					<div class="text-2xl font-bold text-blue-600">{stats.totalStock}</div>
+					<div class="text-2xl font-bold text-blue-600">{formatNumber(stats.totalStock)}</div>
 					<div class="text-gray-600">Total Stock</div>
 				</div>
 				<div class="rounded-lg bg-white p-6 shadow">
