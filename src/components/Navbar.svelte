@@ -4,9 +4,14 @@
 	import { darkMode } from '$lib/stores';
 
 	let mobileMenuOpen = $state(false);
-	let currentUser = $state({
+	let currentUser = $state<{
+		name: string;
+		avatar: null;
+		role: 'ADMIN' | 'CAJERO' | null;
+	}>({
 		name: 'Admin User',
-		avatar: null
+		avatar: null,
+		role: null
 	});
 
 	const navItems = [
@@ -21,7 +26,8 @@
 		// Simular usuario logueado (en producción vendría de auth)
 		currentUser = {
 			name: 'Administrador',
-			avatar: null
+			avatar: null,
+			role: 'ADMIN'
 		};
 	});
 
@@ -85,7 +91,17 @@
 								{currentUser.name.charAt(0).toUpperCase()}
 							</span>
 						</div>
-						<span class="text-sm text-gray-300">{currentUser.name}</span>
+						{#if currentUser.role === 'ADMIN'}
+							<a
+								href="/admin/users"
+								class="text-sm text-gray-300 hover:text-amber-200 hover:underline"
+								title="Gestionar usuarios"
+							>
+								{currentUser.name}
+							</a>
+						{:else}
+							<span class="text-sm text-gray-300">{currentUser.name}</span>
+						{/if}
 					</div>
 					<button
 						onclick={handleLogout}
@@ -149,8 +165,19 @@
 									</span>
 								</div>
 								<div>
-									<div class="text-sm font-medium text-white">{currentUser.name}</div>
-									<div class="text-xs text-gray-400">Administrador</div>
+									{#if currentUser.role === 'ADMIN'}
+										<a
+											href="/admin/users"
+											class="text-sm font-medium text-white hover:text-amber-200"
+											title="Gestionar usuarios"
+											onclick={closeMobileMenu}
+										>
+											{currentUser.name}
+										</a>
+									{:else}
+										<div class="text-sm font-medium text-white">{currentUser.name}</div>
+									{/if}
+									<div class="text-xs text-gray-400">{currentUser.role === 'ADMIN' ? 'Administrador' : 'Cajero'}</div>
 								</div>
 							</div>
 							<button
