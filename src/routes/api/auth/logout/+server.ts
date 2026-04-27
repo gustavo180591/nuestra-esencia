@@ -3,8 +3,13 @@ import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ cookies }) => {
 	try {
-		// Eliminar cookie de sesión
-		cookies.delete('session', { path: '/' });
+		// Eliminar cookie de sesión con las mismas opciones que al crearla
+		cookies.delete('session', {
+			path: '/',
+			httpOnly: true,
+			secure: false,
+			sameSite: 'lax'
+		});
 
 		return json({
 			success: true,
