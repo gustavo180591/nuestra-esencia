@@ -221,7 +221,16 @@ export const DELETE: RequestHandler = async ({ params }) => {
 	try {
 		// Verificar que el producto existe
 		const existingProduct = await db.product.findUnique({
-			where: { id: params.id }
+			where: { id: params.id },
+			include: {
+				_count: {
+					select: {
+						saleItems: true,
+						purchaseItems: true,
+						stockMoves: true
+					}
+				}
+			}
 		});
 
 		if (!existingProduct) {
@@ -234,13 +243,33 @@ export const DELETE: RequestHandler = async ({ params }) => {
 			);
 		}
 
-		// Soft delete - cambiar status a INACTIVO
-		await db.product.update({
+		// Verificar si tiene ventas o movimientos de stock asociados
+		const hasRelations =
+			(existingProduct._count.saleItems > 0 ||
+				existingProduct._count.purchaseItems > 0 ||
+				existingProduct._count.stockMoves > 0);
+
+		if (hasRelations) {
+			// Soft delete - cambiar status a INACTIVO si tiene relaciones
+			await db.product.update({
+				where: {
+					id: params.id
+				},
+				data: {
+					status: 'INACTIVO'
+				}
+			});
+
+			return json({
+				success: true,
+				message: 'Producto desactivado (tiene ventas asociadas)'
+			});
+		}
+
+		// Hard delete - eliminar completamente si no tiene relaciones
+		await db.product.delete({
 			where: {
 				id: params.id
-			},
-			data: {
-				status: 'INACTIVO'
 			}
 		});
 

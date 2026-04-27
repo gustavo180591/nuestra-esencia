@@ -39,9 +39,18 @@
 		mobileMenuOpen = false;
 	}
 
-	function handleLogout() {
-		// Lógica de logout
-		window.location.href = '/login';
+	async function handleLogout() {
+		try {
+			// Llamar a la API para cerrar sesión
+			await fetch('/api/auth/logout', {
+				method: 'POST'
+			});
+		} catch {
+			// Ignorar errores, igual redirigir
+		} finally {
+			// Redirigir al login
+			window.location.href = '/login';
+		}
 	}
 
 	const currentPath = $derived($page.url.pathname);
