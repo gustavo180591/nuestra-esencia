@@ -113,17 +113,14 @@
 
 		try {
 			// Construir URLs con o sin filtros de fecha
-			const dateParams = dateRange.startDate && dateRange.endDate
-				? `startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
-				: '';
+			const dateParams =
+				dateRange.startDate && dateRange.endDate
+					? `startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
+					: '';
 
 			const [salesRes, productsRes, cashRes] = await Promise.all([
-				fetch(
-					`/api/reports/sales?${dateParams}&groupBy=${chartConfig.sales.groupBy}`
-				),
-				fetch(
-					`/api/reports/products?${dateParams}&limit=${chartConfig.products.limit}`
-				),
+				fetch(`/api/reports/sales?${dateParams}&groupBy=${chartConfig.sales.groupBy}`),
+				fetch(`/api/reports/products?${dateParams}&limit=${chartConfig.products.limit}`),
 				fetch(`/api/reports/cash?${dateParams}`)
 			]);
 

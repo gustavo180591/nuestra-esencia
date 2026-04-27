@@ -225,10 +225,20 @@ export const DELETE: RequestHandler = async ({ params }) => {
 			include: {
 				_count: {
 					select: {
-						saleItems: true,
 						purchaseItems: true,
 						stockMoves: true
 					}
+				},
+				saleItems: {
+					where: {
+						sale: {
+							status: 'COMPLETADA'
+						}
+					},
+					select: {
+						id: true
+					},
+					take: 1
 				}
 			}
 		});
@@ -243,14 +253,14 @@ export const DELETE: RequestHandler = async ({ params }) => {
 			);
 		}
 
-		// Verificar si tiene ventas o movimientos de stock asociados
-		const hasRelations =
-			(existingProduct._count.saleItems > 0 ||
-				existingProduct._count.purchaseItems > 0 ||
-				existingProduct._count.stockMoves > 0);
+		// Verificar si tiene ventas completadas, compras o movimientos de stock asociados
+		const hasActiveRelations =
+			existingProduct.saleItems.length > 0 ||
+			existingProduct._count.purchaseItems > 0 ||
+			existingProduct._count.stockMoves > 0;
 
-		if (hasRelations) {
-			// Soft delete - cambiar status a INACTIVO si tiene relaciones
+		if (hasActiveRelations) {
+			// Soft delete - cambiar status a INACTIVO si tiene relaciones activas
 			await db.product.update({
 				where: {
 					id: params.id
@@ -262,11 +272,11 @@ export const DELETE: RequestHandler = async ({ params }) => {
 
 			return json({
 				success: true,
-				message: 'Producto desactivado (tiene ventas asociadas)'
+				message: 'Producto desactivado (tiene ventas/compras asociadas)'
 			});
 		}
 
-		// Hard delete - eliminar completamente si no tiene relaciones
+		// Hard delete - eliminar completamente si no tiene relaciones activas
 		await db.product.delete({
 			where: {
 				id: params.id

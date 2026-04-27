@@ -165,7 +165,10 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 			}
 		});
 
-		if (userWithRelations && (userWithRelations._count.sales > 0 || userWithRelations._count.purchases > 0)) {
+		if (
+			userWithRelations &&
+			(userWithRelations._count.sales > 0 || userWithRelations._count.purchases > 0)
+		) {
 			// En lugar de eliminar, desactivar el usuario
 			await db.user.update({
 				where: { id },

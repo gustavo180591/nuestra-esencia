@@ -16,7 +16,7 @@
 		password: '',
 		role: 'CAJERO' as 'ADMIN' | 'CAJERO',
 		active: true
-		});
+	});
 
 	async function loadUsers() {
 		try {
@@ -185,7 +185,8 @@
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
 									<span
-										class="inline-flex rounded-full px-2 text-xs leading-5 font-semibold {user.role === 'ADMIN'
+										class="inline-flex rounded-full px-2 text-xs leading-5 font-semibold {user.role ===
+										'ADMIN'
 											? 'bg-purple-100 text-purple-800'
 											: 'bg-blue-100 text-blue-800'}"
 									>
@@ -309,13 +310,13 @@
 								resetForm();
 							}}
 							class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
-							>
+						>
 							Cancelar
 						</button>
 						<button
 							type="submit"
 							class="rounded-md bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
-							>
+						>
 							{showEditModal ? 'Actualizar' : 'Crear'}
 						</button>
 					</div>

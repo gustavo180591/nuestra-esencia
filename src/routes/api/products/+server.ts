@@ -37,6 +37,24 @@ export const GET: RequestHandler = async ({ url }) => {
 					orderBy: {
 						price: 'asc'
 					}
+				},
+				_count: {
+					select: {
+						saleItems: true,
+						purchaseItems: true,
+						stockMoves: true
+					}
+				},
+				saleItems: {
+					where: {
+						sale: {
+							status: 'COMPLETADA'
+						}
+					},
+					select: {
+						id: true
+					},
+					take: 1
 				}
 			},
 			orderBy: [
@@ -51,9 +69,15 @@ export const GET: RequestHandler = async ({ url }) => {
 			]
 		});
 
+		// Transform data to include deletable flag
+		const productsWithDeletable = products.map((product) => ({
+			...product,
+			canDelete: product._count.saleItems === 0 || product.saleItems.length === 0
+		}));
+
 		return json({
 			success: true,
-			data: products,
+			data: productsWithDeletable,
 			count: products.length
 		});
 	} catch (error) {

@@ -1,18 +1,26 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
 	import { darkMode } from '$lib/stores';
 
-	let mobileMenuOpen = $state(false);
-	let currentUser = $state<{
+	interface User {
+		id: string;
 		name: string;
-		avatar: null;
-		role: 'ADMIN' | 'CAJERO' | null;
-	}>({
-		name: 'Admin User',
-		avatar: null,
-		role: null
-	});
+		email: string;
+		role: string;
+	}
+
+	let { user }: { user: User | null } = $props();
+
+	let mobileMenuOpen = $state(false);
+	let currentUser = $derived(
+		user
+			? {
+					name: user.name,
+					avatar: null,
+					role: user.role as 'ADMIN' | 'CAJERO'
+				}
+			: null
+	);
 
 	const navItems = [
 		{ href: '/pos', label: 'Caja', icon: '🏪' },
@@ -21,15 +29,6 @@
 		{ href: '/admin/purchases', label: 'Compras', icon: '🛒' },
 		{ href: '/admin/reports', label: 'Reportes', icon: '📈' }
 	];
-
-	onMount(() => {
-		// Simular usuario logueado (en producción vendría de auth)
-		currentUser = {
-			name: 'Administrador',
-			avatar: null,
-			role: 'ADMIN'
-		};
-	});
 
 	function toggleMobileMenu() {
 		mobileMenuOpen = !mobileMenuOpen;
@@ -74,50 +73,61 @@
 			</div>
 
 			<!-- Menú desktop -->
-			<div class="hidden items-center space-x-1 md:flex">
-				{#each navItems as item}
-					<a
-						href={item.href}
-						class="rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 {currentPath ===
-						item.href
-							? 'bg-amber-600 text-white shadow-lg'
-							: 'text-gray-300 hover:scale-105 hover:bg-gray-800 hover:text-amber-200'}"
-						onclick={closeMobileMenu}
-					>
-						<span class="mr-2">{item.icon}</span>
-						{item.label}
-					</a>
-				{/each}
-			</div>
+			{#if currentUser}
+				<div class="hidden items-center space-x-1 md:flex">
+					{#each navItems as item}
+						<a
+							href={item.href}
+							class="rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 {currentPath ===
+							item.href
+								? 'bg-amber-600 text-white shadow-lg'
+								: 'text-gray-300 hover:scale-105 hover:bg-gray-800 hover:text-amber-200'}"
+							onclick={closeMobileMenu}
+						>
+							<span class="mr-2">{item.icon}</span>
+							{item.label}
+						</a>
+					{/each}
+				</div>
+			{/if}
 
 			<!-- Usuario y acciones -->
 			<div class="flex items-center space-x-4">
 				<!-- Menu usuario desktop -->
 				<div class="hidden items-center space-x-3 md:flex">
-					<div class="flex items-center space-x-2">
-						<div class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-600">
-							<span class="text-sm font-bold text-white">
-								{currentUser.name.charAt(0).toUpperCase()}
-							</span>
+					{#if currentUser}
+						<div class="flex items-center space-x-2">
+							<div class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-600">
+								<span class="text-sm font-bold text-white">
+									{currentUser.name.charAt(0).toUpperCase()}
+								</span>
+							</div>
+							{#if currentUser.role === 'ADMIN'}
+								<a
+									href="/admin/users"
+									class="text-sm text-gray-300 hover:text-amber-200 hover:underline"
+									title="Gestionar usuarios"
+								>
+									{currentUser.name}
+								</a>
+							{:else}
+								<span class="text-sm text-gray-300">{currentUser.name}</span>
+							{/if}
 						</div>
-						{#if currentUser.role === 'ADMIN'}
-							<a
-								href="/admin/users"
-								class="text-sm text-gray-300 hover:text-amber-200 hover:underline"
-								title="Gestionar usuarios"
-							>
-								{currentUser.name}
-							</a>
-						{:else}
-							<span class="text-sm text-gray-300">{currentUser.name}</span>
-						{/if}
-					</div>
-					<button
-						onclick={handleLogout}
-						class="rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-red-700"
-					>
-						Cerrar sesión
-					</button>
+						<button
+							onclick={handleLogout}
+							class="rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-red-700"
+						>
+							Cerrar sesión
+						</button>
+					{:else}
+						<a
+							href="/login"
+							class="rounded-lg bg-amber-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-amber-700"
+						>
+							Iniciar sesión
+						</a>
+					{/if}
 				</div>
 
 				<!-- Botón hamburguesa mobile -->
@@ -150,52 +160,69 @@
 		{#if mobileMenuOpen}
 			<div class="border-t border-gray-800 bg-gray-900 md:hidden">
 				<div class="space-y-1 px-4 py-3">
-					{#each navItems as item}
-						<a
-							href={item.href}
-							class="flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 {currentPath ===
-							item.href
-								? 'bg-amber-600 text-white'
-								: 'text-gray-300 hover:bg-gray-800 hover:text-amber-200'}"
-							onclick={closeMobileMenu}
-						>
-							<span class="mr-3 text-lg">{item.icon}</span>
-							{item.label}
-						</a>
-					{/each}
+					{#if currentUser}
+						{#each navItems as item}
+							<a
+								href={item.href}
+								class="flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 {currentPath ===
+								item.href
+									? 'bg-amber-600 text-white'
+									: 'text-gray-300 hover:bg-gray-800 hover:text-amber-200'}"
+								onclick={closeMobileMenu}
+							>
+								<span class="mr-3 text-lg">{item.icon}</span>
+								{item.label}
+							</a>
+						{/each}
+					{/if}
 
 					<!-- Usuario mobile -->
 					<div class="mt-3 border-t border-gray-800 pt-3">
-						<div class="flex items-center justify-between px-4 py-3">
-							<div class="flex items-center space-x-3">
-								<div class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-600">
-									<span class="text-sm font-bold text-white">
-										{currentUser.name.charAt(0).toUpperCase()}
-									</span>
+						{#if currentUser}
+							<div class="flex items-center justify-between px-4 py-3">
+								<div class="flex items-center space-x-3">
+									<div class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-600">
+										<span class="text-sm font-bold text-white">
+											{currentUser?.name?.charAt(0).toUpperCase()}
+										</span>
+									</div>
+									<div>
+										{#if currentUser?.role === 'ADMIN'}
+											<a
+												href="/admin/users"
+												class="text-sm font-medium text-white hover:text-amber-200"
+												title="Gestionar usuarios"
+												onclick={closeMobileMenu}
+											>
+												{currentUser?.name}
+											</a>
+										{:else}
+											<div class="text-sm font-medium text-white">{currentUser?.name}</div>
+										{/if}
+										<div class="text-xs text-gray-400">
+											{currentUser?.role === 'ADMIN' ? 'Administrador' : 'Cajero'}
+										</div>
+									</div>
 								</div>
-								<div>
-									{#if currentUser.role === 'ADMIN'}
-										<a
-											href="/admin/users"
-											class="text-sm font-medium text-white hover:text-amber-200"
-											title="Gestionar usuarios"
-											onclick={closeMobileMenu}
-										>
-											{currentUser.name}
-										</a>
-									{:else}
-										<div class="text-sm font-medium text-white">{currentUser.name}</div>
-									{/if}
-									<div class="text-xs text-gray-400">{currentUser.role === 'ADMIN' ? 'Administrador' : 'Cajero'}</div>
-								</div>
+								<button
+									onclick={handleLogout}
+									class="rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-red-700"
+								>
+									Cerrar sesión
+								</button>
 							</div>
-							<button
-								onclick={handleLogout}
-								class="rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-red-700"
-							>
-								Cerrar sesión
-							</button>
-						</div>
+						{:else}
+							<div class="flex items-center justify-between px-4 py-3">
+								<span class="text-sm text-gray-400">No hay sesión iniciada</span>
+								<a
+									href="/login"
+									class="rounded-lg bg-amber-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-amber-700"
+									onclick={closeMobileMenu}
+								>
+									Iniciar sesión
+								</a>
+							</div>
+						{/if}
 					</div>
 				</div>
 			</div>

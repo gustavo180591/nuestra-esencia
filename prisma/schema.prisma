@@ -97,6 +97,8 @@ model Sale {
   cancelledAt        DateTime?
   cancelledById      String?
   cancellationReason String?
+  correctedAt        DateTime?
+  correctionReason   String?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   cashReceived       Decimal?        @db.Decimal(12, 2)
@@ -224,6 +226,7 @@ enum StockMovementType {
   AJUSTE_MANUAL
   REVERSO_VENTA
   REVERSO_COMPRA
+  CORRECCION_VENTA
 }
 
 enum UnitMeasure {

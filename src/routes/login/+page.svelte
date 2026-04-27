@@ -30,7 +30,7 @@
 
 			if (result.success) {
 				// Login exitoso - redirigir al dashboard
-				goto('/');
+				goto('/', { replaceState: true });
 			} else {
 				error = result.message || 'Error al iniciar sesión';
 			}
@@ -38,12 +38,6 @@
 			error = 'Error al iniciar sesión';
 		} finally {
 			loading = false;
-		}
-	}
-
-	function handleKeyPress(event: KeyboardEvent) {
-		if (event.key === 'Enter') {
-			handleLogin(event);
 		}
 	}
 </script>
@@ -54,16 +48,9 @@
 	<div class="w-full max-w-md space-y-8">
 		<div>
 			<!-- Logo -->
-			<div class="mx-auto flex h-12 w-12 items-center justify-center">
-				<div
-					class="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-amber-500 to-orange-600 shadow-lg"
-				>
-					<span class="text-lg font-bold text-white">NE</span>
-				</div>
+			<div class="mx-auto flex h-40 w-40 items-center justify-center">
+				<img src="/logo.svg" alt="Nuestra Esencia Logo" class="h-full w-full object-contain" />
 			</div>
-			<h2 class="mt-6 text-center text-3xl font-bold text-gray-900 dark:text-gray-100">
-				Nuestra Esencia
-			</h2>
 			<p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
 				Sistema de Gestión - Sabores al Paso
 			</p>
@@ -149,15 +136,6 @@
 							Iniciar Sesión
 						{/if}
 					</button>
-				</div>
-
-				<div class="mt-6 text-center">
-					<p class="text-sm text-gray-600 dark:text-gray-400">
-						Usuario demo: <span class="rounded bg-gray-100 px-2 py-1 font-mono">admin</span>
-					</p>
-					<p class="text-sm text-gray-600 dark:text-gray-400">
-						Contraseña demo: <span class="rounded bg-gray-100 px-2 py-1 font-mono">123456</span>
-					</p>
 				</div>
 			</form>
 		</div>

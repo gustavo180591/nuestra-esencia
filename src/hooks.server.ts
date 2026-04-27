@@ -21,7 +21,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// Verificar si la ruta requiere autenticación
 	const path = event.url.pathname;
-	const isPublicRoute = PUBLIC_ROUTES.some(route => path === route || path.startsWith(route));
+	const isPublicRoute = PUBLIC_ROUTES.some((route) => path === route || path.startsWith(route));
 
 	// Si no hay sesión y la ruta no es pública, redirigir al login
 	if (!event.locals.user && !isPublicRoute) {

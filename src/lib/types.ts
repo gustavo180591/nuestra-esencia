@@ -12,6 +12,7 @@ export interface Product {
 	stockMin: string;
 	isPerishable: boolean;
 	saleFormats: ProductSaleFormat[];
+	canDelete?: boolean;
 	createdAt: string;
 	updatedAt: string;
 }
