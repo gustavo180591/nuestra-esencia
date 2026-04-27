@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-
 	let username = $state('');
 	let password = $state('');
 	let loading = $state(false);
@@ -30,7 +28,7 @@
 
 			if (result.success) {
 				// Login exitoso - redirigir al dashboard
-				goto('/', { replaceState: true });
+				window.location.href = '/';
 			} else {
 				error = result.message || 'Error al iniciar sesión';
 			}
