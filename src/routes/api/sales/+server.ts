@@ -42,7 +42,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		// Obtener información de productos y validar stock
-		const productIds = body.items.map((item) => item.productId);
+		const productIds = [...new Set(body.items.map((item) => item.productId))]; // Remove duplicates
+		
 		const products = await db.product.findMany({
 			where: {
 				id: { in: productIds },
@@ -53,7 +54,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		});
 
-		if (products.length !== body.items.length) {
+		if (products.length !== productIds.length) {
 			return json(
 				{
 					success: false,
