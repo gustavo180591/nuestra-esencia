@@ -22,6 +22,7 @@ export interface ProductSaleFormat {
 	unitMeasure: 'UNIDAD' | 'DOCENA' | 'MEDIA_DOCENA' | 'KILOGRAMO' | 'PORCION';
 	label: string | null;
 	price: string;
+	quantity: number;
 	active: boolean;
 }
 

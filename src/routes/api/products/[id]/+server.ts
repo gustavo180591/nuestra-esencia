@@ -21,6 +21,7 @@ export const GET: RequestHandler = async ({ params }) => {
 						unitMeasure: true,
 						label: true,
 						price: true,
+						quantity: true,
 						active: true
 					},
 					orderBy: {
@@ -60,6 +61,8 @@ export const GET: RequestHandler = async ({ params }) => {
 export const PUT: RequestHandler = async ({ params, request }) => {
 	try {
 		const data = await request.json();
+
+		console.log('PUT request data:', JSON.stringify(data, null, 2));
 
 		const { name, description, categoryId, status, stock, stockMin, isPerishable, saleFormats } =
 			data;
@@ -137,16 +140,22 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 
 			// Crear o actualizar los formatos proporcionados
 			for (const format of saleFormats) {
-				if (format.id) {
-					// Actualizar formato existente
+				// Primero buscar si existe un formato con esta combinación productId + unitMeasure
+				const existingFormat = await db.productSaleFormat.findFirst({
+					where: {
+						productId: params.id,
+						unitMeasure: format.unitMeasure
+					}
+				});
+
+				if (existingFormat) {
+					// Actualizar el formato existente
 					await db.productSaleFormat.update({
-						where: {
-							id: format.id
-						},
+						where: { id: existingFormat.id },
 						data: {
-							unitMeasure: format.unitMeasure,
 							label: format.label,
 							price: format.price,
+							quantity: format.quantity || 1,
 							active: true
 						}
 					});
@@ -158,6 +167,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 							unitMeasure: format.unitMeasure,
 							label: format.label,
 							price: format.price,
+							quantity: format.quantity || 1,
 							active: true
 						}
 					});
@@ -180,6 +190,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 							unitMeasure: true,
 							label: true,
 							price: true,
+							quantity: true,
 							active: true
 						},
 						where: {

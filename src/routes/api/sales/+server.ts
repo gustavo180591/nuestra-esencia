@@ -6,6 +6,7 @@ interface SaleItemRequest {
 	productId: string;
 	productSaleFormatId: string;
 	quantity: number;
+	formatQuantity?: number;
 }
 
 interface SaleRequest {
@@ -64,12 +65,13 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		// Calcular totales y validar stock
 		let subtotal = 0;
+		type UnitMeasure = 'UNIDAD' | 'DOCENA' | 'MEDIA_DOCENA' | 'KILOGRAMO' | 'PORCION';
 		const saleItems: Array<{
 			productId: string;
 			productSaleFormatId: string;
 			productNameSnapshot: string;
 			formatLabelSnapshot: string;
-			unitMeasure: string;
+			unitMeasure: UnitMeasure;
 			quantity: number;
 			unitPrice: number;
 			subtotal: number;
@@ -91,12 +93,17 @@ export const POST: RequestHandler = async ({ request }) => {
 				);
 			}
 
+			// Calcular el stock real a descontar (cantidad vendida × cantidad del formato)
+			// Usar formatQuantity enviado desde el frontend, o el de la base de datos como fallback
+			const formatQuantity = item.formatQuantity || saleFormat.quantity || 1;
+			const stockToDeduct = item.quantity * formatQuantity;
+
 			// Validar stock disponible
-			if (Number(product.stock) < item.quantity) {
+			if (Number(product.stock) < stockToDeduct) {
 				return json(
 					{
 						success: false,
-						message: `Stock insuficiente para ${product.name}. Disponible: ${product.stock}, Solicitado: ${item.quantity}`
+						message: `Stock insuficiente para ${product.name}. Disponible: ${product.stock}, Solicitado: ${stockToDeduct} (${item.quantity} × ${formatQuantity})`
 					},
 					{ status: 400 }
 				);
@@ -109,7 +116,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				productId: product.id,
 				productSaleFormatId: saleFormat.id,
 				productNameSnapshot: product.name,
-				formatLabelSnapshot: saleFormat.label,
+				formatLabelSnapshot: saleFormat.label || '',
 				unitMeasure: saleFormat.unitMeasure,
 				quantity: item.quantity,
 				unitPrice: Number(saleFormat.price),
@@ -130,7 +137,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		// Crear la venta y actualizar stock en una transacción
-		const result = await db.$transaction(async (tx: typeof db) => {
+		const result = await db.$transaction(async (tx) => {
 			// Generar número de venta
 			const lastSale = await tx.sale.findFirst({
 				orderBy: { saleNumber: 'desc' }
@@ -148,18 +155,29 @@ export const POST: RequestHandler = async ({ request }) => {
 					total,
 					paymentMethod: body.paymentMethod,
 					cashReceived: cashReceived ? cashReceived : null,
-					changeGiven: changeGiven ? changeGiven : null,
-					items: {
-						create: saleItems
-					}
+					changeGiven: changeGiven ? changeGiven : null
 				}
+			});
+
+			// Crear items de venta
+			await tx.saleItem.createMany({
+				data: saleItems.map((item) => ({
+					...item,
+					saleId: sale.id
+				}))
 			});
 
 			// Actualizar stock y crear movimientos
 			for (const item of body.items) {
 				const product = products.find((p: (typeof products)[0]) => p.id === item.productId);
+				const saleFormat = product?.saleFormats.find(
+					(f: (typeof product.saleFormats)[0]) => f.id === item.productSaleFormatId
+				);
+				const formatQuantity = item.formatQuantity || saleFormat?.quantity || 1;
+				const stockToDeduct = item.quantity * formatQuantity;
+
 				const previousStock = Number(product!.stock);
-				const newStock = previousStock - item.quantity;
+				const newStock = previousStock - stockToDeduct;
 
 				// Actualizar stock del producto
 				await tx.product.update({
@@ -172,7 +190,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					data: {
 						productId: item.productId,
 						type: 'SALIDA_VENTA',
-						quantity: -item.quantity,
+						quantity: -stockToDeduct,
 						previousStock,
 						newStock,
 						saleId: sale.id,

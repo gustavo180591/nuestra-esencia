@@ -25,6 +25,7 @@
 			formatLabel: string | null;
 			unitMeasure: string;
 			quantity: number;
+			formatQuantity: number;
 			unitPrice: number;
 			subtotal: number;
 		}>
@@ -277,6 +278,7 @@
 				formatLabel: format.label,
 				unitMeasure: format.unitMeasure,
 				quantity: 1,
+				formatQuantity: format.quantity || 1,
 				unitPrice: Number(format.price),
 				subtotal: Number(format.price)
 			});
@@ -340,7 +342,8 @@
 				items: cart.map((item) => ({
 					productId: item.productId,
 					productSaleFormatId: item.productSaleFormatId,
-					quantity: item.quantity
+					quantity: item.quantity,
+					formatQuantity: item.formatQuantity
 				})),
 				discount: discount > 0 ? discount : undefined,
 				paymentMethod,

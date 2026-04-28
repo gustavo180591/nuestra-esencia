@@ -32,7 +32,8 @@ export const GET: RequestHandler = async ({ url }) => {
 						id: true,
 						unitMeasure: true,
 						label: true,
-						price: true
+						price: true,
+						quantity: true
 					},
 					orderBy: {
 						price: 'asc'
@@ -133,6 +134,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						unitMeasure: format.unitMeasure,
 						label: format.label,
 						price: format.price,
+						quantity: format.quantity || 1,
 						active: true
 					}))
 				}
@@ -149,7 +151,8 @@ export const POST: RequestHandler = async ({ request }) => {
 						id: true,
 						unitMeasure: true,
 						label: true,
-						price: true
+						price: true,
+						quantity: true
 					}
 				}
 			}

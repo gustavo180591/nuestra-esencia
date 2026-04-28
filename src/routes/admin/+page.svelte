@@ -94,6 +94,7 @@
 			unitMeasure: 'UNIDAD' | 'DOCENA' | 'MEDIA_DOCENA' | 'KILOGRAMO' | 'PORCION';
 			label: string;
 			price: number;
+			quantity: number;
 			cantidadTotal?: number;
 			precioTotal?: number;
 		}>;
@@ -110,7 +111,8 @@
 			{
 				unitMeasure: 'UNIDAD',
 				label: 'Unidad',
-				price: 0
+				price: 0,
+				quantity: 1
 			}
 		]
 	});
@@ -119,6 +121,8 @@
 		try {
 			const response = await fetch('/api/products?includeInactive=true');
 			const data = await response.json();
+
+			console.log('API response - first product saleFormats:', data.data?.[0]?.saleFormats);
 
 			if (data.success) {
 				products = data.data;
@@ -157,7 +161,8 @@
 				{
 					unitMeasure: 'UNIDAD',
 					label: 'Unidad',
-					price: 0
+					price: 0,
+					quantity: 1
 				}
 			]
 		};
@@ -170,7 +175,8 @@
 				{
 					unitMeasure: 'UNIDAD',
 					label: 'Unidad',
-					price: 0
+					price: 0,
+					quantity: 1
 				}
 			];
 		} else {
@@ -180,10 +186,57 @@
 					label: 'Por kg',
 					price: 0,
 					cantidadTotal: 1,
-					precioTotal: 0
+					precioTotal: 0,
+					quantity: 1
 				}
 			];
 		}
+	}
+
+	function updateFormatLabel(index: number) {
+		// Leer el valor actualizado del array (no del parámetro format que puede estar desactualizado)
+		const currentFormat = formData.saleFormats[index];
+		const unitMeasure = currentFormat.unitMeasure;
+
+		console.log('updateFormatLabel called:', { index, unitMeasure, currentQuantity: currentFormat.quantity });
+
+		// Actualizar el label y quantity según el unitMeasure seleccionado
+		let newLabel = currentFormat.label;
+		let newQuantity = currentFormat.quantity;
+
+		switch (unitMeasure) {
+			case 'UNIDAD':
+				newLabel = 'Unidad';
+				newQuantity = 1;
+				break;
+			case 'DOCENA':
+				newLabel = 'Docena';
+				newQuantity = 12;
+				break;
+			case 'MEDIA_DOCENA':
+				newLabel = 'Media Docena';
+				newQuantity = 6;
+				break;
+			case 'PORCION':
+				newLabel = 'Porción';
+				newQuantity = 1;
+				break;
+			case 'KILOGRAMO':
+				newLabel = 'Por kg';
+				newQuantity = 1;
+				break;
+		}
+
+		console.log('Setting new values:', { newLabel, newQuantity });
+
+		// Reasignar el objeto completo para activar reactividad en Svelte 5
+		formData.saleFormats[index] = {
+			...currentFormat,
+			label: newLabel,
+			quantity: newQuantity
+		};
+
+		console.log('After update:', formData.saleFormats[index]);
 	}
 
 	function openCreateModal() {
@@ -509,6 +562,8 @@
 		const hasKilogramo = product.saleFormats.some((f) => f.unitMeasure === 'KILOGRAMO');
 		const saleType: 'UNIDAD' | 'PESO' = hasKilogramo ? 'PESO' : 'UNIDAD';
 
+		console.log('Product saleFormats from API:', product.saleFormats);
+
 		formData = {
 			name: product.name,
 			description: product.description || '',
@@ -519,11 +574,13 @@
 			status: product.status,
 			saleType,
 			saleFormats: product.saleFormats.map((format) => {
+				console.log('Processing format:', format.unitMeasure, 'quantity:', format.quantity, 'type:', typeof format.quantity);
 				const baseFormat = {
 					id: format.id,
 					unitMeasure: format.unitMeasure,
 					label: format.label || '',
-					price: Number(format.price)
+					price: Number(format.price),
+					quantity: Number(format.quantity) || 1
 				};
 				// Para KILOGRAMO, inicializar cantidad y precio total para edición
 				if (format.unitMeasure === 'KILOGRAMO') {
@@ -545,6 +602,7 @@
 			unitMeasure: isWeight ? 'KILOGRAMO' : 'UNIDAD',
 			label: isWeight ? 'Por kg' : 'Unidad',
 			price: 0,
+			quantity: 1,
 			...(isWeight ? { cantidadTotal: 1, precioTotal: 0 } : {})
 		});
 	}
@@ -570,9 +628,12 @@
 					price:
 						format.unitMeasure === 'KILOGRAMO' && format.cantidadTotal && format.precioTotal
 							? Number((format.precioTotal / format.cantidadTotal).toFixed(2))
-							: format.price
+							: format.price,
+					quantity: format.quantity
 				}))
 			};
+
+			console.log('Sending to API:', JSON.stringify(dataToSend, null, 2));
 
 			const response = await fetch(url, {
 				method,
@@ -1010,7 +1071,8 @@
 										</label>
 										<select
 											id="format-type-{index}"
-											bind:value={format.unitMeasure}
+											bind:value={formData.saleFormats[index].unitMeasure}
+											onchange={() => updateFormatLabel(index)}
 											class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 										>
 											{#if formData.saleType === 'UNIDAD'}
@@ -1076,6 +1138,30 @@
 												/>
 											</div>
 										</div>
+											<div class="flex-1">
+												<label
+													for="format-quantity-{index}"
+													class="mb-1 block text-xs font-medium text-gray-600"
+												>
+													Cantidad de unidades
+												</label>
+												{#key `${formData.saleFormats[index].unitMeasure}-${formData.saleFormats[index].quantity}`}
+													<input
+														id="format-quantity-{index}"
+														type="number"
+														min="1"
+														step="1"
+														value={formData.saleFormats[index].quantity}
+														oninput={(e) => {
+															const val = parseInt(e.currentTarget.value) || 1;
+															formData.saleFormats[index].quantity = val;
+														}}
+														placeholder="1"
+														class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+													/>
+												{/key}
+												<p class="mt-1 text-xs text-gray-500">Ej: 12 para docena, 6 para media docena</p>
+											</div>
 									{/if}
 
 									<!-- Eliminar -->

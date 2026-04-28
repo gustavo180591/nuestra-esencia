@@ -60,6 +60,7 @@ model ProductSaleFormat {
   unitMeasure UnitMeasure
   label       String?
   price       Decimal     @db.Decimal(10, 2)
+  quantity    Int         @default(1)
   active      Boolean     @default(true)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
