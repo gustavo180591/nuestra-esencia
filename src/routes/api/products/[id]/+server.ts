@@ -62,8 +62,6 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	try {
 		const data = await request.json();
 
-		console.log('PUT request data:', JSON.stringify(data, null, 2));
-
 		const { name, description, categoryId, status, stock, stockMin, isPerishable, saleFormats } =
 			data;
 
