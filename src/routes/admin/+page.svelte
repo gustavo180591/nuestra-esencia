@@ -707,30 +707,6 @@
 				>
 					Gestionar Formatos
 				</a>
-				<a
-					href="/admin/stock"
-					class="rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-				>
-					Gestión de Stock
-				</a>
-				<a
-					href="/admin/purchases"
-					class="rounded-lg bg-teal-600 px-4 py-2 text-white hover:bg-teal-700"
-				>
-					Compras
-				</a>
-				<a
-					href="/admin/reports"
-					class="rounded-lg bg-orange-600 px-4 py-2 text-white hover:bg-orange-700"
-				>
-					Reportes
-				</a>
-				<a
-					href="/admin/users"
-					class="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700"
-				>
-					Usuarios
-				</a>
 				<button
 					onclick={openCreateModal}
 					class="rounded-lg bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"

@@ -61,7 +61,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const data = await request.json();
 
-		const { supplierId, items, notes } = data;
+		const { supplierId, items, notes, updatePrices, profitMargin, roundPrices } = data;
 
 		// Validaciones básicas
 		if (!supplierId) {
@@ -184,20 +184,44 @@ export const POST: RequestHandler = async ({ request }) => {
 				})
 			);
 
-			// Actualizar stock de los productos
+			// Actualizar stock y precios de los productos
 			for (const item of items) {
 				const product = await tx.product.findUnique({
-					where: { id: item.productId }
+					where: { id: item.productId },
+					include: { saleFormats: true }
 				});
 
 				if (product) {
 					const currentStock = Number(product.stock);
 					const newStock = currentStock + Number(item.quantity);
 
+					// Actualizar stock
 					await tx.product.update({
 						where: { id: item.productId },
 						data: { stock: newStock.toString() }
 					});
+
+					// Actualizar precios de venta si se solicita
+					if (updatePrices && profitMargin && product.saleFormats.length > 0) {
+						const costPrice = Number(item.unitPrice);
+						const marginMultiplier = 1 + Number(profitMargin) / 100;
+						let newPrice = costPrice * marginMultiplier;
+
+						// Redondear a centenas si se solicita
+						if (roundPrices) {
+							newPrice = Math.round(newPrice / 100) * 100;
+						} else {
+							newPrice = Number(newPrice.toFixed(2));
+						}
+
+						// Actualizar todos los formatos de venta del producto
+						for (const saleFormat of product.saleFormats) {
+							await tx.productSaleFormat.update({
+								where: { id: saleFormat.id },
+								data: { price: newPrice.toString() }
+							});
+						}
+					}
 
 					// Registrar movimiento de stock
 					await tx.stockMovement.create({

@@ -63,6 +63,7 @@ export interface Purchase {
 		name: string;
 	};
 	total: string;
+	notes?: string | null;
 	_count?: {
 		items: number;
 	};

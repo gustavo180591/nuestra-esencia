@@ -130,18 +130,6 @@
 					Nuevo Proveedor
 				</button>
 			</div>
-			<!-- Submenú de Compras -->
-			<div class="mt-4 flex gap-2 border-b border-gray-200 pb-2">
-				<a
-					href="/admin/purchases"
-					class="rounded-md px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-				>
-					Compras
-				</a>
-				<span class="rounded-md bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800">
-					Proveedores
-				</span>
-			</div>
 		</div>
 
 		{#if loading}

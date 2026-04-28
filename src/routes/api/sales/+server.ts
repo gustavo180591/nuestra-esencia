@@ -43,7 +43,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		// Obtener información de productos y validar stock
 		const productIds = [...new Set(body.items.map((item) => item.productId))]; // Remove duplicates
-		
+
 		const products = await db.product.findMany({
 			where: {
 				id: { in: productIds },
@@ -230,6 +230,42 @@ export const POST: RequestHandler = async ({ request }) => {
 			{
 				success: false,
 				message: 'Error al registrar la venta',
+				error: error instanceof Error ? error.message : 'Unknown error'
+			},
+			{ status: 500 }
+		);
+	}
+};
+
+export const GET: RequestHandler = async () => {
+	try {
+		const sales = await db.sale.findMany({
+			orderBy: {
+				createdAt: 'desc'
+			},
+			include: {
+				items: {
+					select: {
+						id: true,
+						productNameSnapshot: true,
+						quantity: true,
+						unitPrice: true,
+						subtotal: true
+					}
+				}
+			}
+		});
+
+		return json({
+			success: true,
+			data: sales
+		});
+	} catch (error) {
+		console.error('Error fetching sales:', error);
+		return json(
+			{
+				success: false,
+				message: 'Error al obtener ventas',
 				error: error instanceof Error ? error.message : 'Unknown error'
 			},
 			{ status: 500 }

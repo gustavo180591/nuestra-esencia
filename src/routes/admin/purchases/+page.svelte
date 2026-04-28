@@ -2,12 +2,25 @@
 	import { onMount } from 'svelte';
 	import type { Purchase, Supplier, Product } from '$lib/types';
 
+	interface PurchaseItemDetail {
+		id: string;
+		productNameSnapshot: string;
+		unitMeasure: string;
+		quantity: number;
+		unitCost: number;
+		subtotal: number;
+	}
+
 	let purchases = $state<Purchase[]>([]);
 	let suppliers = $state<Supplier[]>([]);
 	let products = $state<Product[]>([]);
 	let loading = $state(true);
 	let error = $state('');
 	let showCreateModal = $state(false);
+	let showDetailModal = $state(false);
+	let selectedPurchase = $state<Purchase | null>(null);
+	let purchaseItems = $state<PurchaseItemDetail[]>([]);
+	let loadingItems = $state(false);
 
 	// Form data
 	let formData = $state({
@@ -21,7 +34,8 @@
 			totalPrice: number;
 		}>,
 		profitMargin: 40, // Margen de ganancia por defecto 40%
-		roundPrices: false // Redondear a enteros
+		roundPrices: false, // Redondear a centenas
+		updatePrices: true // Actualizar precios de venta al registrar compra
 	});
 
 	async function loadData() {
@@ -29,7 +43,7 @@
 			const [purchasesRes, suppliersRes, productsRes] = await Promise.all([
 				fetch('/api/purchases'),
 				fetch('/api/suppliers'),
-				fetch('/api/products')
+				fetch('/api/products?includeInactive=true')
 			]);
 
 			const purchasesData = await purchasesRes.json();
@@ -50,7 +64,8 @@
 			notes: '',
 			items: [],
 			profitMargin: 40,
-			roundPrices: false
+			roundPrices: false,
+			updatePrices: true
 		};
 	}
 
@@ -78,7 +93,10 @@
 
 	function calculateSellingPrice(costPrice: number): number {
 		const withMargin = costPrice * (1 + formData.profitMargin / 100);
-		return formData.roundPrices ? Math.round(withMargin) : Number(withMargin.toFixed(2));
+		// Redondear a centenas (ej: 1230 → 1200, 1260 → 1300)
+		return formData.roundPrices
+			? Math.round(withMargin / 100) * 100
+			: Number(withMargin.toFixed(2));
 	}
 
 	function onProductChange(index: number) {
@@ -220,10 +238,14 @@
 			const dataToSend = {
 				supplierId: formData.supplierId,
 				notes: formData.notes,
+				updatePrices: formData.updatePrices,
+				profitMargin: formData.profitMargin,
+				roundPrices: formData.roundPrices,
 				items: formData.items.map((item) => ({
 					productId: item.productId,
 					quantity: item.quantity,
-					unitPrice: item.unitPrice
+					unitPrice: item.unitPrice,
+					unitMeasure: item.unitMeasure
 				}))
 			};
 
@@ -258,6 +280,33 @@
 		return status === 'REGISTRADA' ? 'Registrada' : 'Cancelada';
 	}
 
+	async function loadPurchaseItems(purchaseId: string) {
+		loadingItems = true;
+		try {
+			const response = await fetch(`/api/purchases/${purchaseId}/items`);
+			const data = await response.json();
+			if (data.success) {
+				purchaseItems = data.data;
+			}
+		} catch {
+			purchaseItems = [];
+		} finally {
+			loadingItems = false;
+		}
+	}
+
+	function openDetailModal(purchase: Purchase) {
+		selectedPurchase = purchase;
+		showDetailModal = true;
+		loadPurchaseItems(purchase.id);
+	}
+
+	function closeDetailModal() {
+		showDetailModal = false;
+		selectedPurchase = null;
+		purchaseItems = [];
+	}
+
 	onMount(async () => {
 		await loadData();
 		loading = false;
@@ -276,18 +325,6 @@
 				>
 					Nueva Compra
 				</button>
-			</div>
-			<!-- Submenú de Compras -->
-			<div class="mt-4 flex gap-2 border-b border-gray-200 pb-2">
-				<span class="rounded-md bg-amber-100 px-4 py-2 text-sm font-medium text-amber-800">
-					Compras
-				</span>
-				<a
-					href="/admin/suppliers"
-					class="rounded-md px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-				>
-					Proveedores
-				</a>
 			</div>
 		</div>
 
@@ -335,6 +372,11 @@
 							>
 								Fecha
 							</th>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-900 uppercase"
+							>
+								Acciones
+							</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-gray-200 bg-white">
@@ -367,6 +409,14 @@
 								</td>
 								<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 									{new Date(purchase.createdAt).toLocaleDateString('es-AR')}
+								</td>
+								<td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
+									<button
+										onclick={() => openDetailModal(purchase)}
+										class="text-amber-600 hover:text-amber-900"
+									>
+										Ver
+									</button>
 								</td>
 							</tr>
 						{/each}
@@ -422,7 +472,7 @@
 						<div class="mb-3 text-sm font-medium text-blue-900">
 							Configuración de Precios de Venta
 						</div>
-						<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+						<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 							<div>
 								<label for="profit-margin" class="mb-1 block text-sm font-medium text-gray-900">
 									Margen de Ganancia (%)
@@ -439,13 +489,19 @@
 							<div class="flex items-center gap-3">
 								<label class="flex items-center gap-2">
 									<input type="checkbox" bind:checked={formData.roundPrices} class="h-4 w-4" />
-									<span class="text-sm font-medium text-gray-900">Redondear a enteros</span>
+									<span class="text-sm font-medium text-gray-900">Redondear a centenas</span>
+								</label>
+							</div>
+							<div class="flex items-center gap-3">
+								<label class="flex items-center gap-2">
+									<input type="checkbox" bind:checked={formData.updatePrices} class="h-4 w-4" />
+									<span class="text-sm font-medium text-gray-900">Actualizar precios de venta</span>
 								</label>
 							</div>
 						</div>
 						<div class="mt-2 text-xs text-blue-700">
 							Precio de venta = Costo + {formData.profitMargin}% margen
-							{formData.roundPrices ? '(redondeado)' : ''}
+							{formData.roundPrices ? '(redondeado a centenas)' : ''}
 						</div>
 					</div>
 
@@ -591,6 +647,134 @@
 						</button>
 					</div>
 				</form>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Modal Detalle de Compra -->
+{#if showDetailModal && selectedPurchase}
+	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+		<div class="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white">
+			<div class="p-6">
+				<div class="mb-4 flex items-center justify-between">
+					<h2 class="text-xl font-semibold text-gray-900">
+						Compra #{selectedPurchase.purchaseNumber}
+					</h2>
+					<button onclick={closeDetailModal} class="text-2xl text-gray-400 hover:text-gray-600">
+						×
+					</button>
+				</div>
+
+				<!-- Info general -->
+				<div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+					<div>
+						<div class="text-xs text-gray-500">Proveedor</div>
+						<div class="text-sm font-medium text-gray-900">{selectedPurchase.supplier?.name}</div>
+					</div>
+					<div>
+						<div class="text-xs text-gray-500">Estado</div>
+						<span
+							class="inline-flex rounded-full px-2 text-xs leading-5 font-semibold bg-{getPurchaseStatusColor(
+								selectedPurchase.status
+							)}-100 text-{getPurchaseStatusColor(selectedPurchase.status)}-800"
+						>
+							{getPurchaseStatusLabel(selectedPurchase.status)}
+						</span>
+					</div>
+					<div>
+						<div class="text-xs text-gray-500">Fecha</div>
+						<div class="text-sm font-medium text-gray-900">
+							{new Date(selectedPurchase.createdAt).toLocaleDateString('es-AR')}
+						</div>
+					</div>
+					<div>
+						<div class="text-xs text-gray-500">Total</div>
+						<div class="text-lg font-bold text-gray-900">${selectedPurchase.total}</div>
+					</div>
+				</div>
+
+				{#if selectedPurchase.notes}
+					<div class="mb-4 rounded-lg bg-gray-50 p-3">
+						<div class="text-xs text-gray-500">Notas</div>
+						<div class="text-sm text-gray-900">{selectedPurchase.notes}</div>
+					</div>
+				{/if}
+
+				<!-- Items de la compra -->
+				<h3 class="mb-3 text-lg font-medium text-gray-900">Detalle de Items</h3>
+
+				{#if loadingItems}
+					<div class="py-4 text-center text-gray-500">Cargando items...</div>
+				{:else if purchaseItems.length === 0}
+					<div class="py-4 text-center text-gray-500">No hay items para mostrar</div>
+				{:else}
+					<div class="overflow-hidden rounded-lg border">
+						<table class="min-w-full divide-y divide-gray-200">
+							<thead class="bg-gray-50">
+								<tr>
+									<th
+										class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-900 uppercase"
+									>
+										Producto
+									</th>
+									<th
+										class="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-900 uppercase"
+									>
+										Unidad
+									</th>
+									<th
+										class="px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-900 uppercase"
+									>
+										Cantidad
+									</th>
+									<th
+										class="px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-900 uppercase"
+									>
+										Costo Unit.
+									</th>
+									<th
+										class="px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-900 uppercase"
+									>
+										Subtotal
+									</th>
+								</tr>
+							</thead>
+							<tbody class="divide-y divide-gray-200 bg-white">
+								{#each purchaseItems as item (item.id)}
+									<tr class="hover:bg-gray-50">
+										<td class="px-4 py-3 whitespace-nowrap">
+											<div class="text-sm font-medium text-gray-900">
+												{item.productNameSnapshot}
+											</div>
+										</td>
+										<td class="px-4 py-3 whitespace-nowrap">
+											<div class="text-sm text-gray-900">{item.unitMeasure}</div>
+										</td>
+										<td class="px-4 py-3 text-right whitespace-nowrap">
+											<div class="text-sm text-gray-900">{item.quantity}</div>
+										</td>
+										<td class="px-4 py-3 text-right whitespace-nowrap">
+											<div class="text-sm text-gray-900">${item.unitCost}</div>
+										</td>
+										<td class="px-4 py-3 text-right whitespace-nowrap">
+											<div class="text-sm font-medium text-gray-900">${item.subtotal}</div>
+										</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
+				{/if}
+
+				<div class="mt-6 flex justify-end">
+					<button
+						onclick={closeDetailModal}
+						class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
+					>
+						Cerrar
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
