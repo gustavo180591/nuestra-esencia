@@ -3,8 +3,15 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 // Cancelar o eliminar una compra (DELETE /api/purchases/[id])
-export const DELETE: RequestHandler = async ({ params, request }) => {
+export const DELETE: RequestHandler = async ({ params, request, locals }) => {
 	try {
+		// 🔐 Obtener usuario autenticado
+		const userId = locals.user?.id;
+
+		if (!userId) {
+			return json({ success: false, message: 'Usuario no autenticado' }, { status: 401 });
+		}
+
 		const body = await request.json().catch(() => ({ reason: '', permanent: false }));
 		const { reason, permanent } = body;
 
@@ -100,7 +107,7 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 						previousStock: previousStock.toString(),
 						newStock: newStock.toString(),
 						purchaseId: purchase.id,
-						userId: 'cmnmlamaf0000vikcqdxl4iz9', // Usuario admin Gustavo Faccendini
+						userId,
 						reason: reason || `Cancelación de compra #${purchase.purchaseNumber}`
 					}
 				});

@@ -3,8 +3,15 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 // Cancelar o eliminar una venta (DELETE /api/sales/[id])
-export const DELETE: RequestHandler = async ({ params, request }) => {
+export const DELETE: RequestHandler = async ({ params, request, locals }) => {
 	try {
+		// 🔐 Obtener usuario autenticado
+		const userId = locals.user?.id;
+
+		if (!userId) {
+			return json({ success: false, message: 'Usuario no autenticado' }, { status: 401 });
+		}
+
 		const body = await request.json().catch(() => ({ reason: '', permanent: false }));
 		const { reason, permanent } = body;
 
@@ -76,7 +83,7 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 					status: 'CANCELADA',
 					cancelledAt: new Date(),
 					cancellationReason: reason || null,
-					cancelledById: 'cmnmlamaf0000vikcqdxl4iz9' // Usuario admin Gustavo Faccendini
+					cancelledById: userId
 				}
 			});
 
@@ -100,7 +107,7 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 						previousStock,
 						newStock,
 						saleId: sale.id,
-						userId: 'cmnmlamaf0000vikcqdxl4iz9', // Usuario admin Gustavo Faccendini
+						userId,
 						reason: reason || `Cancelación de venta #${sale.saleNumber}`
 					}
 				});
@@ -126,8 +133,15 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 };
 
 // Corregir una venta cancelada (PATCH /api/sales/[id])
-export const PATCH: RequestHandler = async ({ params, request }) => {
+export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	try {
+		// 🔐 Obtener usuario autenticado
+		const userId = locals.user?.id;
+
+		if (!userId) {
+			return json({ success: false, message: 'Usuario no autenticado' }, { status: 401 });
+		}
+
 		const { reason, status } = await request.json();
 
 		if (status !== 'COMPLETADA') {
@@ -206,7 +220,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 						previousStock,
 						newStock,
 						saleId: sale.id,
-						userId: 'cmnmlamaf0000vikcqdxl4iz9', // Usuario admin Gustavo Faccendini
+						userId,
 						reason: reason || `Corrección de venta #${sale.saleNumber}`
 					}
 				});
