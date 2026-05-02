@@ -219,3 +219,70 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		);
 	}
 };
+
+// Endpoint GET para listar ventas con filtros
+export const GET: RequestHandler = async ({ url }) => {
+	try {
+		const dateFrom = url.searchParams.get('dateFrom');
+		const dateTo = url.searchParams.get('dateTo');
+		const status = url.searchParams.get('status');
+		const paymentMethod = url.searchParams.get('paymentMethod');
+		const saleNumber = url.searchParams.get('saleNumber');
+
+		const whereClause: any = {};
+
+		if (dateFrom) {
+			whereClause.createdAt = { ...whereClause.createdAt, gte: new Date(dateFrom) };
+		}
+
+		if (dateTo) {
+			whereClause.createdAt = { ...whereClause.createdAt, lte: new Date(dateTo + 'T23:59:59') };
+		}
+
+		if (status) {
+			whereClause.status = status;
+		}
+
+		if (paymentMethod) {
+			whereClause.paymentMethod = paymentMethod;
+		}
+
+		if (saleNumber) {
+			whereClause.saleNumber = Number(saleNumber);
+		}
+
+		const sales = await db.sale.findMany({
+			where: whereClause,
+			orderBy: {
+				createdAt: 'desc'
+			},
+			include: {
+				items: {
+					select: {
+						id: true,
+						productNameSnapshot: true,
+						quantity: true,
+						unitPrice: true,
+						unitCost: true,
+						subtotal: true
+					}
+				}
+			}
+		});
+
+		return json({
+			success: true,
+			data: sales
+		});
+	} catch (error) {
+		console.error('Error fetching sales:', error);
+		return json(
+			{
+				success: false,
+				message: 'Error al obtener ventas',
+				error: error instanceof Error ? error.message : 'Unknown error'
+			},
+			{ status: 500 }
+		);
+	}
+};
