@@ -32,6 +32,7 @@
 			quantity: number;
 			unitPrice: number;
 			totalPrice: number;
+			applySuggestedPrice: boolean;
 		}>,
 		profitMargin: 40, // Margen de ganancia por defecto 40%
 		roundPrices: false, // Redondear a centenas
@@ -80,7 +81,8 @@
 			unitMeasure: 'UNIDAD',
 			quantity: 1,
 			unitPrice: 0,
-			totalPrice: 0
+			totalPrice: 0,
+			applySuggestedPrice: false
 		});
 	}
 
@@ -245,7 +247,8 @@
 					productId: item.productId,
 					quantity: item.quantity,
 					unitPrice: item.unitPrice,
-					unitMeasure: item.unitMeasure
+					unitMeasure: item.unitMeasure,
+					applySuggestedPrice: item.applySuggestedPrice
 				}))
 			};
 
@@ -614,6 +617,14 @@
 													calculateSellingPrice(item.unitPrice) - item.unitPrice
 												)}
 											</span>
+											<label class="ml-2 flex cursor-pointer items-center gap-1">
+												<input
+													type="checkbox"
+													bind:checked={item.applySuggestedPrice}
+													class="h-4 w-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+												/>
+												<span class="text-xs text-gray-600">Aplicar</span>
+											</label>
 										</div>
 									{/if}
 								</div>

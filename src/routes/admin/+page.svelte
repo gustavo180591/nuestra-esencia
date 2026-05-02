@@ -614,10 +614,7 @@
 					id: format.id,
 					unitMeasure: format.unitMeasure,
 					label: format.label,
-					price:
-						format.unitMeasure === 'KILOGRAMO' && format.cantidadTotal && format.precioTotal
-							? Number((format.precioTotal / format.cantidadTotal).toFixed(2))
-							: format.price,
+					price: format.price,
 					quantity: format.quantity
 				}))
 			};

@@ -102,7 +102,7 @@
 		</div>
 
 		<div class="mt-12 text-center text-gray-500">
-			<p>© 2026 Nuestra Esencia - Sistema de Gestión</p>
+			<p>© 2026 Nuestra Esencia - Sistema de Gestión - v1.0</p>
 		</div>
 	</div>
 </div>

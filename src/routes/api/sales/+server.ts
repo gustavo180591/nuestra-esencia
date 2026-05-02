@@ -54,6 +54,33 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		});
 
+		// Obtener último costo de cada producto desde compras
+		const purchaseItems = await db.purchaseItem.findMany({
+			where: {
+				productId: { in: productIds }
+			},
+			include: {
+				purchase: {
+					select: {
+						createdAt: true
+					}
+				}
+			},
+			orderBy: {
+				purchase: {
+					createdAt: 'desc'
+				}
+			}
+		});
+
+		// Crear mapa de último costo por producto
+		const productCosts = new Map<string, number>();
+		for (const purchaseItem of purchaseItems) {
+			if (!productCosts.has(purchaseItem.productId)) {
+				productCosts.set(purchaseItem.productId, Number(purchaseItem.unitCost));
+			}
+		}
+
 		if (products.length !== productIds.length) {
 			return json(
 				{
@@ -75,6 +102,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			unitMeasure: UnitMeasure;
 			quantity: number;
 			unitPrice: number;
+			unitCost: number;
 			subtotal: number;
 		}> = [];
 
@@ -121,6 +149,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				unitMeasure: saleFormat.unitMeasure,
 				quantity: item.quantity,
 				unitPrice: Number(saleFormat.price),
+				unitCost: productCosts.get(product.id) || 0,
 				subtotal: itemSubtotal
 			});
 		}
@@ -237,9 +266,38 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 };
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ url }) => {
 	try {
+		const dateFrom = url.searchParams.get('dateFrom');
+		const dateTo = url.searchParams.get('dateTo');
+		const status = url.searchParams.get('status');
+		const paymentMethod = url.searchParams.get('paymentMethod');
+		const saleNumber = url.searchParams.get('saleNumber');
+
+		const whereClause: any = {};
+
+		if (dateFrom) {
+			whereClause.createdAt = { ...whereClause.createdAt, gte: new Date(dateFrom) };
+		}
+
+		if (dateTo) {
+			whereClause.createdAt = { ...whereClause.createdAt, lte: new Date(dateTo + 'T23:59:59') };
+		}
+
+		if (status) {
+			whereClause.status = status;
+		}
+
+		if (paymentMethod) {
+			whereClause.paymentMethod = paymentMethod;
+		}
+
+		if (saleNumber) {
+			whereClause.saleNumber = Number(saleNumber);
+		}
+
 		const sales = await db.sale.findMany({
+			where: whereClause,
 			orderBy: {
 				createdAt: 'desc'
 			},
@@ -250,6 +308,7 @@ export const GET: RequestHandler = async () => {
 						productNameSnapshot: true,
 						quantity: true,
 						unitPrice: true,
+						unitCost: true,
 						subtotal: true
 					}
 				}
@@ -266,6 +325,76 @@ export const GET: RequestHandler = async () => {
 			{
 				success: false,
 				message: 'Error al obtener ventas',
+				error: error instanceof Error ? error.message : 'Unknown error'
+			},
+			{ status: 500 }
+		);
+	}
+};
+
+// Endpoint para recalcular costos de ventas existentes
+export const PATCH: RequestHandler = async ({ request }) => {
+	try {
+		const { saleIds } = await request.json();
+
+		// Obtener ventas con sus items
+		const whereClause = saleIds?.length > 0 ? { id: { in: saleIds } } : {};
+
+		const sales = await db.sale.findMany({
+			where: whereClause,
+			include: {
+				items: true
+			}
+		});
+
+		let updatedCount = 0;
+
+		for (const sale of sales) {
+			for (const item of sale.items) {
+				// Buscar el costo de la compra más reciente de este producto
+				const purchaseItem = await db.purchaseItem.findFirst({
+					where: {
+						productId: item.productId
+					},
+					include: {
+						purchase: {
+							select: {
+								createdAt: true
+							}
+						}
+					},
+					orderBy: {
+						purchase: {
+							createdAt: 'desc'
+						}
+					}
+				});
+
+				if (purchaseItem) {
+					// Actualizar el costo del item de venta
+					await db.saleItem.update({
+						where: { id: item.id },
+						data: {
+							unitCost: purchaseItem.unitCost
+						}
+					});
+					updatedCount++;
+				}
+			}
+		}
+
+		return json({
+			success: true,
+			message: `Actualizados ${updatedCount} items de ${sales.length} ventas`,
+			updatedCount,
+			salesProcessed: sales.length
+		});
+	} catch (error) {
+		console.error('Error recalculando costos:', error);
+		return json(
+			{
+				success: false,
+				message: 'Error al recalcular costos',
 				error: error instanceof Error ? error.message : 'Unknown error'
 			},
 			{ status: 500 }

@@ -28,9 +28,12 @@ export const GET: RequestHandler = async ({ url }) => {
 						name: true
 					}
 				},
-				_count: {
+				items: {
 					select: {
-						items: true
+						productNameSnapshot: true,
+						quantity: true,
+						unitCost: true,
+						subtotal: true
 					}
 				}
 			},
@@ -201,8 +204,11 @@ export const POST: RequestHandler = async ({ request }) => {
 						data: { stock: newStock.toString() }
 					});
 
-					// Actualizar precios de venta si se solicita
-					if (updatePrices && profitMargin && product.saleFormats.length > 0) {
+					// Actualizar precios de venta si se solicita globalmente o por item específico
+					if (
+						(updatePrices && profitMargin && product.saleFormats.length > 0) ||
+						item.applySuggestedPrice
+					) {
 						const costPrice = Number(item.unitPrice);
 						const marginMultiplier = 1 + Number(profitMargin) / 100;
 						let newPrice = costPrice * marginMultiplier;
