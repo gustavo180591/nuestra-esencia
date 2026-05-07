@@ -19,6 +19,8 @@ model User {
   purchases      Purchase[]
   cancelledSales Sale[]          @relation("SaleCancelledBy")
   sales          Sale[]
+  openedCashRegisters CashRegister[] @relation("CashOpenedBy")
+  closedCashRegisters CashRegister[] @relation("CashClosedBy")
   stockMoves     StockMovement[]
 }
 
@@ -40,7 +42,9 @@ model Product {
   categoryId    String?
   stock         Decimal             @db.Decimal(10, 3)
   stockMin      Decimal             @default(0) @db.Decimal(10, 3)
+  stockUnit     UnitMeasure         @default(UNIDAD)
   isPerishable  Boolean             @default(false)
+  isCombo       Boolean             @default(false)
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
   saleFormats   ProductSaleFormat[]
@@ -48,10 +52,29 @@ model Product {
   purchaseItems PurchaseItem[]
   saleItems     SaleItem[]
   stockMoves    StockMovement[]
+  comboItems    ProductComboItem[]  @relation("ComboParent")
+  comboParents  ProductComboItem[]  @relation("ComboComponent")
 
   @@index([name])
   @@index([status])
+  @@index([isCombo])
   @@map("products")
+}
+
+model ProductComboItem {
+  id               String  @id @default(cuid())
+  comboProductId   String
+  componentId      String
+  quantity         Decimal @db.Decimal(10, 3)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  comboProduct     Product @relation("ComboParent", fields: [comboProductId], references: [id], onDelete: Cascade)
+  component        Product @relation("ComboComponent", fields: [componentId], references: [id], onDelete: Cascade)
+
+  @@unique([comboProductId, componentId])
+  @@index([comboProductId])
+  @@index([componentId])
+  @@map("product_combo_items")
 }
 
 model ProductSaleFormat {
@@ -104,7 +127,10 @@ model Sale {
   updatedAt          DateTime        @updatedAt
   cashReceived       Decimal?        @db.Decimal(12, 2)
   changeGiven        Decimal?        @db.Decimal(12, 2)
-  paymentMethod      PaymentMethod
+  paymentMethodId    String
+  paymentMethod      PaymentMethodConfig @relation(fields: [paymentMethodId], references: [id])
+  cashRegisterId     String?
+  cashRegister       CashRegister?   @relation(fields: [cashRegisterId], references: [id])
   items              SaleItem[]
   cancelledBy        User?           @relation("SaleCancelledBy", fields: [cancelledById], references: [id])
   user               User            @relation(fields: [userId], references: [id])
@@ -178,6 +204,34 @@ model PurchaseItem {
   @@map("purchase_items")
 }
 
+model CashRegister {
+  id               String         @id @default(cuid())
+  status           CashStatus     @default(ABIERTA)
+  openedAt         DateTime       @default(now())
+  closedAt         DateTime?
+  openedById       String
+  closedById       String?
+  initialAmount    Decimal        @db.Decimal(12, 2)
+  expectedAmount   Decimal?       @db.Decimal(12, 2) // Calculado: inicial + ventas en efectivo
+  actualAmount     Decimal?       @db.Decimal(12, 2) // Conteo físico al cerrar
+  difference       Decimal?       @db.Decimal(12, 2) // Diferencia para arqueo
+  notes            String?        // Observaciones al cerrar
+  sales            Sale[]
+  openedBy         User           @relation("CashOpenedBy", fields: [openedById], references: [id])
+  closedBy         User?          @relation("CashClosedBy", fields: [closedById], references: [id])
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([status])
+  @@index([openedAt])
+  @@map("cash_registers")
+}
+
+enum CashStatus {
+  ABIERTA
+  CERRADA
+}
+
 model StockMovement {
   id            String            @id @default(cuid())
   productId     String
@@ -239,8 +293,19 @@ enum UnitMeasure {
   PORCION
 }
 
-enum PaymentMethod {
-  EFECTIVO
-  TRANSFERENCIA
-  TARJETA
+model PaymentMethodConfig {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  icon        String?  // emoji o icono
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sales       Sale[]
+
+  @@index([active])
+  @@index([sortOrder])
+  @@map("payment_methods")
 }

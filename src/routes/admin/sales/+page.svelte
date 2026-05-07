@@ -6,7 +6,12 @@
 		saleNumber: number;
 		status: 'COMPLETADA' | 'CANCELADA';
 		total: string;
-		paymentMethod: 'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA';
+		paymentMethodId: string;
+		paymentMethod?: {
+			code: string;
+			name: string;
+			icon: string;
+		};
 		items: Array<{
 			id: string;
 			productNameSnapshot: string;
@@ -48,7 +53,7 @@
 		dateFrom: '',
 		dateTo: '',
 		status: '',
-		paymentMethod: '',
+		paymentMethodId: '',
 		saleNumber: ''
 	});
 
@@ -59,7 +64,7 @@
 			if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
 			if (filters.dateTo) params.append('dateTo', filters.dateTo);
 			if (filters.status) params.append('status', filters.status);
-			if (filters.paymentMethod) params.append('paymentMethod', filters.paymentMethod);
+			if (filters.paymentMethodId) params.append('paymentMethodId', filters.paymentMethodId);
 			if (filters.saleNumber) params.append('saleNumber', filters.saleNumber);
 
 			const [salesRes, purchasesRes] = await Promise.all([
@@ -92,7 +97,7 @@
 			dateFrom: '',
 			dateTo: '',
 			status: '',
-			paymentMethod: '',
+			paymentMethodId: '',
 			saleNumber: ''
 		};
 		loadSales();
@@ -155,13 +160,9 @@
 		}
 	}
 
-	function getPaymentMethodLabel(method: string) {
-		const labels: Record<string, string> = {
-			EFECTIVO: 'Efectivo',
-			TRANSFERENCIA: 'Transferencia',
-			TARJETA: 'Tarjeta'
-		};
-		return labels[method] || method;
+	function getPaymentMethodLabel(method: { code: string; name: string; icon: string } | undefined) {
+		if (!method) return '-';
+		return `${method.icon} ${method.name}`;
 	}
 
 	function getStatusColor(status: string) {
@@ -278,7 +279,7 @@
 					>
 					<select
 						id="paymentMethod"
-						bind:value={filters.paymentMethod}
+						bind:value={filters.paymentMethodId}
 						class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900"
 					>
 						<option value="">Todos</option>
@@ -460,6 +461,20 @@
 					<div>
 						<div class="text-xs text-gray-500">Total</div>
 						<div class="text-lg font-bold">${selectedSale.total}</div>
+					</div>
+					<div>
+						<div class="text-xs text-gray-500">Método de pago</div>
+						<div class="text-sm font-medium">
+							{getPaymentMethodLabel(selectedSale.paymentMethod)}
+						</div>
+					</div>
+					<div>
+						<div class="text-xs text-gray-500">Estado</div>
+						<div class="text-sm font-medium">
+							<span class={`inline-flex rounded-full px-2 py-1 text-xs font-medium text-${getStatusColor(selectedSale.status)}-800 bg-${getStatusColor(selectedSale.status)}-100`}
+								>{selectedSale.status}</span
+							>
+						</div>
 					</div>
 				</div>
 

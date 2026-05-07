@@ -10,6 +10,7 @@ export interface Product {
 	} | null;
 	stock: string;
 	stockMin: string;
+	stockUnit: 'UNIDAD' | 'KILOGRAMO';
 	isPerishable: boolean;
 	saleFormats: ProductSaleFormat[];
 	canDelete?: boolean;

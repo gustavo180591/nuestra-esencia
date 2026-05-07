@@ -12,7 +12,7 @@ interface SaleItemRequest {
 interface SaleRequest {
 	items: SaleItemRequest[];
 	discount?: number;
-	paymentMethod: 'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA';
+	paymentMethodId: string;
 	cashReceived?: number;
 }
 
@@ -34,7 +34,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			);
 		}
 
-		if (!body.paymentMethod) {
+		if (!body.paymentMethodId) {
 			return json({ success: false, message: 'El método de pago es requerido' }, { status: 400 });
 		}
 
@@ -48,7 +48,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				status: 'ACTIVO'
 			},
 			include: {
-				saleFormats: true
+				saleFormats: true,
+				comboItems: {
+					include: {
+						component: true
+					}
+				}
 			}
 		});
 
@@ -130,10 +135,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const discount = body.discount || 0;
 		const total = Math.max(0, subtotal - discount);
 
+		// Obtener el método de pago para verificar si es EFECTIVO
+		const paymentMethod = await db.paymentMethodConfig.findUnique({
+			where: { id: body.paymentMethodId }
+		});
+
 		let cashReceived = null;
 		let changeGiven = null;
 
-		if (body.paymentMethod === 'EFECTIVO' && body.cashReceived) {
+		if (paymentMethod?.code === 'EFECTIVO' && body.cashReceived) {
 			cashReceived = body.cashReceived;
 			changeGiven = Math.max(0, cashReceived - total);
 		}
@@ -154,7 +164,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					subtotal,
 					discount,
 					total,
-					paymentMethod: body.paymentMethod,
+					paymentMethodId: body.paymentMethodId,
 					cashReceived,
 					changeGiven
 				}
@@ -176,25 +186,54 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				const formatQuantity = item.formatQuantity || saleFormat?.quantity || 1;
 				const stockToDeduct = item.quantity * formatQuantity;
 
-				const previousStock = Number(product!.stock);
-				const newStock = previousStock - stockToDeduct;
+				// 🔥 Si es un combo, descontar stock de cada componente
+				if (product?.isCombo && product.comboItems.length > 0) {
+					for (const comboItem of product.comboItems) {
+						const component = comboItem.component;
+						const componentQty = Number(comboItem.quantity) * stockToDeduct;
+						const prevStock = Number(component.stock);
+						const newCompStock = prevStock - componentQty;
 
-				await tx.product.update({
-					where: { id: item.productId },
-					data: { stock: newStock }
-				});
+						await tx.product.update({
+							where: { id: component.id },
+							data: { stock: newCompStock }
+						});
 
-				await tx.stockMovement.create({
-					data: {
-						productId: item.productId,
-						type: 'SALIDA_VENTA',
-						quantity: -stockToDeduct,
-						previousStock,
-						newStock,
-						saleId: sale.id,
-						userId // ✅ dinámico también
+						await tx.stockMovement.create({
+							data: {
+								productId: component.id,
+								type: 'SALIDA_VENTA',
+								quantity: -componentQty,
+								previousStock: prevStock,
+								newStock: newCompStock,
+								saleId: sale.id,
+								userId,
+								reason: `Venta de combo: ${product.name}`
+							}
+						});
 					}
-				});
+				} else {
+					// Producto normal: descontar stock del producto
+					const previousStock = Number(product!.stock);
+					const newStock = previousStock - stockToDeduct;
+
+					await tx.product.update({
+						where: { id: item.productId },
+						data: { stock: newStock }
+					});
+
+					await tx.stockMovement.create({
+						data: {
+							productId: item.productId,
+							type: 'SALIDA_VENTA',
+							quantity: -stockToDeduct,
+							previousStock,
+							newStock,
+							saleId: sale.id,
+							userId
+						}
+					});
+				}
 			}
 
 			return tx.sale.findUnique({
@@ -226,7 +265,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		const dateFrom = url.searchParams.get('dateFrom');
 		const dateTo = url.searchParams.get('dateTo');
 		const status = url.searchParams.get('status');
-		const paymentMethod = url.searchParams.get('paymentMethod');
+		const paymentMethodId = url.searchParams.get('paymentMethodId');
 		const saleNumber = url.searchParams.get('saleNumber');
 
 		const whereClause: any = {};
@@ -243,8 +282,8 @@ export const GET: RequestHandler = async ({ url }) => {
 			whereClause.status = status;
 		}
 
-		if (paymentMethod) {
-			whereClause.paymentMethod = paymentMethod;
+		if (paymentMethodId) {
+			whereClause.paymentMethodId = paymentMethodId;
 		}
 
 		if (saleNumber) {
@@ -257,6 +296,13 @@ export const GET: RequestHandler = async ({ url }) => {
 				createdAt: 'desc'
 			},
 			include: {
+				paymentMethod: {
+					select: {
+						code: true,
+						name: true,
+						icon: true
+					}
+				},
 				items: {
 					select: {
 						id: true,

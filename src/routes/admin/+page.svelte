@@ -86,6 +86,7 @@
 		categoryId: string;
 		stock: number;
 		stockMin: number;
+		stockUnit: string;
 		isPerishable: boolean;
 		status: 'ACTIVO' | 'INACTIVO';
 		saleType: 'UNIDAD' | 'PESO';
@@ -104,6 +105,7 @@
 		categoryId: '',
 		stock: 0,
 		stockMin: 0,
+		stockUnit: 'UNIDAD',
 		isPerishable: false,
 		status: 'ACTIVO',
 		saleType: 'UNIDAD',
@@ -152,6 +154,7 @@
 			categoryId: '',
 			stock: 0,
 			stockMin: 0,
+			stockUnit: 'UNIDAD',
 			isPerishable: false,
 			status: 'ACTIVO',
 			saleType: 'UNIDAD',
@@ -560,6 +563,7 @@
 			categoryId: product.categoryId || '',
 			stock: Number(product.stock),
 			stockMin: Number(product.stockMin),
+			stockUnit: product.stockUnit || 'UNIDAD',
 			isPerishable: product.isPerishable,
 			status: product.status,
 			saleType,
@@ -783,7 +787,9 @@
 									</span>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
-									<div class="text-sm text-gray-900">{product.stock}</div>
+										<div class="text-sm text-gray-900">
+										{product.stock} {product.stockUnit === 'KILOGRAMO' ? 'kg' : 'unid.'}
+									</div>
 									{#if Number(product.stock) <= Number(product.stockMin)}
 										<div class="text-xs text-red-600">Stock bajo</div>
 									{/if}
@@ -954,6 +960,20 @@
 								bind:value={formData.stockMin}
 								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 							/>
+						</div>
+
+						<div>
+							<label for="product-stock-unit" class="mb-1 block text-sm font-medium text-gray-900">
+								Unidad de Stock
+							</label>
+							<select
+								id="product-stock-unit"
+								bind:value={formData.stockUnit}
+								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+							>
+								<option value="UNIDAD">Unidades</option>
+								<option value="KILOGRAMO">Kilogramos (kg)</option>
+							</select>
 						</div>
 
 						<div class="md:col-span-2">
@@ -1244,11 +1264,15 @@
 							</div>
 							<div>
 								<span class="text-sm text-gray-500">Stock Actual:</span>
-								<p class="text-sm font-medium text-gray-900">{selectedProduct.stock}</p>
+								<p class="text-sm font-medium text-gray-900">
+									{selectedProduct.stock} {selectedProduct.stockUnit === 'KILOGRAMO' ? 'kg' : 'unid.'}
+								</p>
 							</div>
 							<div>
 								<span class="text-sm text-gray-500">Stock Mínimo:</span>
-								<p class="text-sm font-medium text-gray-900">{selectedProduct.stockMin}</p>
+								<p class="text-sm font-medium text-gray-900">
+									{selectedProduct.stockMin} {selectedProduct.stockUnit === 'KILOGRAMO' ? 'kg' : 'unid.'}
+								</p>
 							</div>
 						</div>
 						{#if selectedProduct.description}

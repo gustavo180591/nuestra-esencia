@@ -98,7 +98,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const data = await request.json();
 
-		const { name, description, categoryId, stock, stockMin, isPerishable, saleFormats } = data;
+		const { name, description, categoryId, stock, stockMin, stockUnit, isPerishable, saleFormats } = data;
 
 		// Validaciones básicas
 		if (!name || name.trim() === '') {
@@ -128,6 +128,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				categoryId: categoryId || null,
 				stock: stock || 0,
 				stockMin: stockMin || 0,
+				stockUnit: stockUnit || 'UNIDAD',
 				isPerishable: isPerishable || false,
 				saleFormats: {
 					create: saleFormats.map((format: any) => ({

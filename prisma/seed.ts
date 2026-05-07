@@ -20,9 +20,23 @@ async function main() {
 
 	console.log('🧹 Datos limpiados');
 
-	// 1. Crear usuarios
+	// 1. Crear payment methods (si no existen)
+	const existingPaymentMethods = await prisma.paymentMethodConfig.findMany();
+	if (existingPaymentMethods.length === 0) {
+		await prisma.paymentMethodConfig.createMany({
+			data: [
+				{ code: 'EFECTIVO', name: 'Efectivo', icon: '💵', sortOrder: 0 },
+				{ code: 'TRANSFERENCIA', name: 'Transferencia', icon: '🏦', sortOrder: 1 },
+				{ code: 'TARJETA', name: 'Tarjeta', icon: '💳', sortOrder: 2 },
+				{ code: 'QR', name: 'QR', icon: '📱', sortOrder: 3 }
+			]
+		});
+		console.log('💳 Métodos de pago creados');
+	}
+
+	// 2. Crear usuarios
 	const adminPassword = await bcrypt.hash('admin123', 10);
-	const vendedorPassword = await bcrypt.hash('vendedor123', 10);
+	const cajeroPassword = await bcrypt.hash('cajero123', 10);
 
 	await prisma.user.create({
 		data: {
@@ -33,30 +47,30 @@ async function main() {
 		}
 	});
 
-	await prisma.user.create({
+	const cajero1 = await prisma.user.create({
 		data: {
-			name: 'Juan Vendedor',
+			name: 'Juan Cajero',
 			email: 'juan@nuestra-esencia.com',
-			passwordHash: vendedorPassword,
-			role: 'VENDEDOR'
+			passwordHash: cajeroPassword,
+			role: 'CAJERO'
 		}
 	});
 
-	const encargadoCompras = await prisma.user.create({
+	const cajero2 = await prisma.user.create({
 		data: {
-			name: 'María Compras',
+			name: 'María Cajera',
 			email: 'maria@nuestra-esencia.com',
-			passwordHash: vendedorPassword,
-			role: 'COMPRAS'
+			passwordHash: cajeroPassword,
+			role: 'CAJERO'
 		}
 	});
 
 	await prisma.user.create({
 		data: {
-			name: 'Carlos Dueño',
+			name: 'Carlos Admin',
 			email: 'carlos@nuestra-esencia.com',
 			passwordHash: adminPassword,
-			role: 'DUENO'
+			role: 'ADMIN'
 		}
 	});
 
@@ -266,7 +280,7 @@ async function main() {
 			data: {
 				purchaseNumber: 1,
 				supplierId: proveedorPan.id,
-				userId: encargadoCompras.id,
+				userId: cajero1.id,
 				subtotal: 240000,
 				total: 240000,
 				notes: 'Compra semanal de chipá',
@@ -275,6 +289,7 @@ async function main() {
 						{
 							productId: chipa.id,
 							productNameSnapshot: chipa.name,
+							unitMeasure: UnitMeasure.DOCENA,
 							quantity: 20,
 							unitCost: 12000,
 							subtotal: 240000
@@ -289,7 +304,7 @@ async function main() {
 			data: {
 				purchaseNumber: 2,
 				supplierId: proveedorFritos.id,
-				userId: encargadoCompras.id,
+				userId: cajero1.id,
 				subtotal: 156000,
 				total: 156000,
 				notes: 'Empanadas variadas',
@@ -298,6 +313,7 @@ async function main() {
 						{
 							productId: empanadaCarne.id,
 							productNameSnapshot: empanadaCarne.name,
+							unitMeasure: UnitMeasure.UNIDAD,
 							quantity: 30,
 							unitCost: 8000,
 							subtotal: 240000
@@ -314,9 +330,9 @@ async function main() {
 	console.log('');
 	console.log('👤 Usuarios de prueba:');
 	console.log('   Admin: admin@nuestra-esencia.com / admin123');
-	console.log('   Vendedor: juan@nuestra-esencia.com / vendedor123');
-	console.log('   Compras: maria@nuestra-esencia.com / vendedor123');
-	console.log('   Dueño: carlos@nuestra-esencia.com / admin123');
+	console.log('   Cajero 1: juan@nuestra-esencia.com / cajero123');
+	console.log('   Cajero 2: maria@nuestra-esencia.com / cajero123');
+	console.log('   Admin 2: carlos@nuestra-esencia.com / admin123');
 }
 
 main()

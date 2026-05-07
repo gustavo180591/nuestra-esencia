@@ -3,7 +3,10 @@
 	import type { Product, ProductSaleFormat } from '$lib/types';
 
 	// Helper para formatear números con separadores de miles (formato argentino: $12.000,00)
-	function formatCurrency(value: number): string {
+	function formatCurrency(value: number | null | undefined): string {
+		if (value === null || value === undefined || isNaN(value)) {
+			return '$0,00';
+		}
 		return value.toLocaleString('es-AR', {
 			style: 'currency',
 			currency: 'ARS',
@@ -33,9 +36,20 @@
 
 	let total = $state(0);
 	let discount = $state(0);
-	let paymentMethod = $state<'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA'>('EFECTIVO');
+	let paymentMethod = $state<'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA' | 'QR'>('EFECTIVO');
+	let paymentMethodId = $state<string>('');
 	let cashReceived = $state(0);
 	let changeGiven = $state(0);
+	let paymentMethods = $state<Array<{id: string, code: string, name: string, icon: string}>>([]);
+
+	// Estado de caja
+	let cashRegister = $state<any>(null);
+	let showOpenModal = $state(false);
+	let showCloseModal = $state(false);
+	let openingAmount = $state(0);
+	let closingAmount = $state(0);
+	let closingNotes = $state('');
+	let saving = $state(false);
 
 	// Teclado numérico
 	let showKeypad = $state(false);
@@ -93,19 +107,48 @@
 	}
 
 	async function loadProducts() {
+		loading = true;
 		try {
+			console.log('📦 Cargando productos...');
 			const response = await fetch('/api/products');
-			const data = await response.json();
-
-			if (data.success) {
+			console.log('Response status:', response.status);
+			if (response.ok) {
+				const data = await response.json();
+				console.log('Response data:', data);
 				products = data.data;
+				console.log('Productos cargados:', products.length);
 			} else {
-				error = data.message;
+				console.error('Error loading products:', response.statusText);
+				const errorData = await response.json();
+				console.error('Error data:', errorData);
 			}
-		} catch {
-			error = 'Error al cargar productos';
+		} catch (error) {
+			console.error('Error loading products:', error);
 		} finally {
 			loading = false;
+		}
+	}
+
+	async function loadPaymentMethods() {
+		try {
+			console.log('💳 Cargando métodos de pago...');
+			const response = await fetch('/api/payment-methods');
+			if (response.ok) {
+				const data = await response.json();
+				console.log('Payment methods response:', data);
+				paymentMethods = data.data;
+				console.log('Payment methods cargados:', paymentMethods.length);
+				// Establecer el ID del método por defecto (EFECTIVO)
+				const efectivo = paymentMethods.find(pm => pm.code === 'EFECTIVO');
+				if (efectivo) {
+					paymentMethodId = efectivo.id;
+					console.log('PaymentMethodId por defecto:', paymentMethodId);
+				}
+			} else {
+				console.error('Error loading payment methods:', response.statusText);
+			}
+		} catch (error) {
+			console.error('Error loading payment methods:', error);
 		}
 	}
 
@@ -232,18 +275,30 @@
 			}
 		}
 
-		// F1-F3: Métodos de pago
+		// F1-F4: Métodos de pago
 		if (event.key === 'F1') {
 			event.preventDefault();
 			paymentMethod = 'EFECTIVO';
+			const efectivo = paymentMethods.find(pm => pm.code === 'EFECTIVO');
+			if (efectivo) paymentMethodId = efectivo.id;
 		}
 		if (event.key === 'F2') {
 			event.preventDefault();
 			paymentMethod = 'TRANSFERENCIA';
+			const transferencia = paymentMethods.find(pm => pm.code === 'TRANSFERENCIA');
+			if (transferencia) paymentMethodId = transferencia.id;
 		}
 		if (event.key === 'F3') {
 			event.preventDefault();
 			paymentMethod = 'TARJETA';
+			const tarjeta = paymentMethods.find(pm => pm.code === 'TARJETA');
+			if (tarjeta) paymentMethodId = tarjeta.id;
+		}
+		if (event.key === 'F4') {
+			event.preventDefault();
+			paymentMethod = 'QR';
+			const qr = paymentMethods.find(pm => pm.code === 'QR');
+			if (qr) paymentMethodId = qr.id;
 		}
 
 		// Ctrl/Cmd + D: Foco en descuento
@@ -346,7 +401,7 @@
 					formatQuantity: item.formatQuantity
 				})),
 				discount: discount > 0 ? discount : undefined,
-				paymentMethod,
+				paymentMethodId,
 				cashReceived: paymentMethod === 'EFECTIVO' ? cashReceived : undefined
 			};
 
@@ -358,7 +413,11 @@
 				body: JSON.stringify(saleData)
 			});
 
+			console.log('Sale data being sent:', saleData);
+			console.log('Response status:', response.status);
+
 			const result = await response.json();
+			console.log('Response result:', result);
 
 			if (result.success) {
 				alert(
@@ -374,12 +433,86 @@
 		}
 	}
 
-	onMount(() => {
-		loadProducts();
+	// Funciones de caja
+	async function loadCashRegister() {
+		try {
+			const response = await fetch('/api/cash-register?status=ABIERTA');
+			const data = await response.json();
+			if (data.success) {
+				cashRegister = data.data;
+			}
+		} catch (error) {
+			console.error('Error loading cash register:', error);
+		}
+	}
+
+	async function openCashRegister() {
+		saving = true;
+		try {
+			const response = await fetch('/api/cash-register', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ initialAmount: openingAmount })
+			});
+
+			const result = await response.json();
+			if (result.success) {
+				showOpenModal = false;
+				openingAmount = 0;
+				await loadCashRegister();
+			} else {
+				alert(`Error: ${result.message}`);
+			}
+		} catch (error) {
+			alert('Error al abrir caja');
+		} finally {
+			saving = false;
+		}
+	}
+
+	async function closeCashRegister() {
+		saving = true;
+		try {
+			const response = await fetch('/api/cash-register', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ 
+					actualAmount: closingAmount,
+					notes: closingNotes 
+				})
+			});
+
+			const result = await response.json();
+			if (result.success) {
+				showCloseModal = false;
+				closingAmount = 0;
+				closingNotes = '';
+				await loadCashRegister();
+			} else {
+				alert(`Error: ${result.message}`);
+			}
+		} catch (error) {
+			alert('Error al cerrar caja');
+		} finally {
+			saving = false;
+		}
+	}
+
+	onMount(async () => {
+		await loadProducts();
+		await loadPaymentMethods();
+		await loadCashRegister();
 	});
 
 	$effect(() => {
 		updateTotals();
+	});
+
+	$effect(() => {
+		const method = paymentMethods.find(pm => pm.code === paymentMethod);
+		if (method) {
+			paymentMethodId = method.id;
+		}
 	});
 </script>
 
@@ -392,9 +525,36 @@
 					<h1 class="text-2xl font-bold">Nuestra Esencia</h1>
 					<span class="text-amber-100">Sistema de Caja</span>
 				</div>
-				<div class="text-sm">
-					<div class="text-amber-100">Caja Abierta</div>
-					<div>{new Date().toLocaleDateString('es-AR')}</div>
+				<div class="text-sm text-right">
+					{#if cashRegister}
+						<div class="text-amber-100">
+							💵 Caja Abierta
+							{formatCurrency(cashRegister.initialAmount)}
+						</div>
+						<div class="text-xs text-amber-200">
+							Por: {cashRegister.openedBy?.name || 'Usuario'}
+						</div>
+						<div class="flex justify-end space-x-2 mt-2">
+							<button
+								onclick={() => showCloseModal = true}
+								class="rounded-md bg-red-600 px-3 py-1 text-white text-sm hover:bg-red-700"
+							>
+								Cerrar Caja
+							</button>
+						</div>
+					{:else}
+						<div class="text-red-100">
+							🔴 Caja Cerrada
+						</div>
+						<div class="flex justify-end mt-2">
+							<button
+								onclick={() => showOpenModal = true}
+								class="rounded-md bg-green-600 px-3 py-1 text-white text-sm hover:bg-green-700"
+							>
+								Abrir Caja
+							</button>
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -443,7 +603,7 @@
 												<div class="mb-1 text-lg font-bold text-gray-900">{product.name}</div>
 												<div class="mb-2 flex items-center text-sm text-gray-900">
 													<span class="mr-2 inline-block h-2 w-2 rounded-full bg-green-500"></span>
-													Stock: {product.stock}
+													Stock: {product.stock} {product.stockUnit === 'KILOGRAMO' ? 'kg' : 'unid.'}
 												</div>
 												<div class="mb-1 text-2xl font-bold text-amber-600">
 													${product.saleFormats[0]?.price}
@@ -525,27 +685,32 @@
 														200g
 													</button>
 													<button
-														class="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
 														onclick={() => updateQuantity(index, item.quantity + 0.5)}
 													>
 														500g
 													</button>
 													<button
 														class="h-7 w-7 rounded bg-red-100 text-red-600 hover:bg-red-200"
-														onclick={() => updateQuantity(index, item.quantity - 0.1)}
-														disabled={item.quantity <= 0.1}
+														onclick={() => updateQuantity(index, Math.max(0.05, item.quantity - 0.05))}
+														disabled={item.quantity <= 0.05}
 													>
-														-
+														-50g
+													</button>
+													<button
+														class="h-7 w-7 rounded bg-green-100 text-green-600 hover:bg-green-200"
+														onclick={() => updateQuantity(index, item.quantity + 0.05)}
+													>
+														+50g
 													</button>
 												</div>
 												<div class="mt-1 text-right text-sm">
 													{#if editingGramsIndex === index}
 														<input
 															type="number"
-															class="w-16 rounded border px-1 py-1 text-center text-sm font-medium text-black"
+															class="w-20 rounded border px-1 py-1 text-center text-sm font-medium text-black"
 															bind:value={gramsEditValue}
-															min="1"
-															step="1"
+															min="0.1"
+															step="0.1"
 															onblur={() => applyGramsEdit(index)}
 															onkeydown={(e) => {
 																if (e.key === 'Enter') {
@@ -560,7 +725,7 @@
 															onclick={() => startEditingGrams(index, item.quantity * 1000)}
 															title="Click para editar gramos"
 														>
-															{(item.quantity * 1000).toFixed(0)}g
+															{(item.quantity * 1000).toFixed(1)}g
 														</button>
 													{/if}
 													<span class="text-gray-500">= </span>
@@ -685,13 +850,27 @@
 							bind:value={paymentMethod}
 							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 						>
-							<option value="EFECTIVO">Efectivo</option>
-							<option value="TRANSFERENCIA">Transferencia</option>
-							<option value="TARJETA">Tarjeta</option>
+							{#each paymentMethods as pm}
+								<option value={pm.code}>
+									{pm.icon} {pm.name}
+								</option>
+							{/each}
 						</select>
 					</div>
 
 					<!-- Campos para efectivo -->
+					{#if paymentMethod === 'EFECTIVO'}
+						<div class="rounded-lg bg-blue-50 p-3 text-center text-sm text-blue-700">
+							F1: Efectivo | F2: Transferencia | F3: Tarjeta | F4: QR
+						</div>
+					{/if}
+					{#if paymentMethod === 'QR'}
+						<div class="rounded-lg bg-purple-50 p-4 text-center">
+							<div class="mb-2 text-4xl">📱</div>
+							<p class="text-sm font-medium text-purple-700">Escanea el QR del cliente</p>
+							<p class="text-xs text-purple-600">O el cliente escanea tu código</p>
+						</div>
+					{/if}
 					{#if paymentMethod === 'EFECTIVO'}
 						<div class="space-y-2">
 							<label for="cash-received" class="block text-sm font-medium text-gray-900"
@@ -852,6 +1031,148 @@
 						Aceptar
 					</button>
 				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Modal Apertura de Caja -->
+{#if showOpenModal}
+	<div class="fixed inset-0 z-50 overflow-y-auto">
+		<div class="flex min-h-full items-center justify-center bg-black bg-opacity-50 p-4">
+			<div class="w-full max-w-md bg-white rounded-lg shadow-xl p-6">
+				<div class="flex items-center justify-between mb-4">
+					<h3 class="text-lg font-semibold text-gray-900">Apertura de Caja</h3>
+					<button onclick={() => showOpenModal = false} class="text-gray-400 hover:text-gray-600">✕</button>
+				</div>
+
+				<form onsubmit={openCashRegister}>
+					<div class="space-y-4">
+						<div>
+							<label for="openingAmount" class="block text-sm font-medium text-gray-700">Monto Inicial</label>
+							<div class="relative">
+								<span class="absolute left-3 top-2 text-gray-500">$</span>
+								<input
+									id="openingAmount"
+									type="number"
+									bind:value={openingAmount}
+									min="0"
+									step="0.01"
+									required
+									class="w-full rounded-md border-gray-300 pl-8 pr-3 py-2 text-gray-900"
+									placeholder="0.00"
+								/>
+							</div>
+						</div>
+					</div>
+
+					<div class="mt-6 flex justify-end">
+						<button
+							type="button"
+							onclick={() => showOpenModal = false}
+							class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
+						>
+							Cancelar
+						</button>
+						<button
+							type="submit"
+							disabled={saving}
+							class="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:bg-gray-400"
+						>
+							{saving ? 'Abriendo...' : 'Abrir Caja'}
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Modal Cierre de Caja -->
+{#if showCloseModal && cashRegister}
+	<div class="fixed inset-0 z-50 overflow-y-auto">
+		<div class="flex min-h-full items-center justify-center bg-black bg-opacity-50 p-4">
+			<div class="w-full max-w-md bg-white rounded-lg shadow-xl p-6">
+				<div class="flex items-center justify-between mb-4">
+					<h3 class="text-lg font-semibold text-gray-900">Cierre de Caja</h3>
+					<button onclick={() => showCloseModal = false} class="text-gray-400 hover:text-gray-600">✕</button>
+				</div>
+
+				<div class="mb-4 p-4 bg-gray-50 rounded">
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<div class="text-xs text-gray-500">Monto Inicial</div>
+							<div class="text-sm font-medium">{formatCurrency(cashRegister.initialAmount)}</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500">Ventas Efectivo</div>
+							<div class="text-sm font-medium">
+								{formatCurrency(cashRegister.expectedAmount - cashRegister.initialAmount)}
+							</div>
+						</div>
+					</div>
+					<div class="grid grid-cols-2 gap-4 mt-4">
+						<div>
+							<div class="text-xs text-gray-500">Total Esperado</div>
+							<div class="text-sm font-medium">{formatCurrency(cashRegister.expectedAmount)}</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500">Diferencia</div>
+							<div class="text-sm font-medium text-red-600">
+								{formatCurrency(cashRegister.difference || 0)}
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<form onsubmit={closeCashRegister}>
+					<div class="space-y-4">
+						<div>
+							<label for="closingAmount" class="block text-sm font-medium text-gray-700">Monto Real</label>
+							<div class="relative">
+								<span class="absolute left-3 top-2 text-gray-500">$</span>
+								<input
+									id="closingAmount"
+									type="number"
+									bind:value={closingAmount}
+									min="0"
+									step="0.01"
+									required
+									class="w-full rounded-md border-gray-300 pl-8 pr-3 py-2 text-gray-900"
+									placeholder="0.00"
+								/>
+							</div>
+						</div>
+
+						<div>
+							<label for="closingNotes" class="block text-sm font-medium text-gray-700">Notas</label>
+							<textarea
+								id="closingNotes"
+								bind:value={closingNotes}
+								rows="3"
+								class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
+								placeholder="Observaciones del cierre de caja..."
+							></textarea>
+						</div>
+					</div>
+
+					<div class="mt-6 flex justify-end">
+						<button
+							type="button"
+							onclick={() => showCloseModal = false}
+							class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
+						>
+							Cancelar
+						</button>
+						<button
+							type="submit"
+							disabled={saving}
+							class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:bg-gray-400"
+						>
+							{saving ? 'Cerrando...' : 'Cerrar Caja'}
+						</button>
+					</div>
+				</form>
 			</div>
 		</div>
 	</div>
