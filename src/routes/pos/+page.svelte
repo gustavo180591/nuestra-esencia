@@ -110,7 +110,7 @@
 		loading = true;
 		try {
 			console.log('📦 Cargando productos...');
-			const response = await fetch('/api/products');
+			const response = await fetch('/api/products?includeCombos=true');
 			console.log('Response status:', response.status);
 			if (response.ok) {
 				const data = await response.json();
@@ -588,9 +588,49 @@
 							</button>
 						</div>
 					{:else}
+						<!-- Sección de Combos -->
+						{@const combos = products.filter((p) => p.isCombo && p.status === 'ACTIVO')}
+						{#if combos.length > 0}
+							<div class="mb-6">
+								<h3 class="mb-3 border-b pb-2 text-lg font-medium text-purple-900">🎁 Combos</h3>
+								<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+									{#each combos as combo (combo.id)}
+										<div class="space-y-3">
+											<button
+												class="w-full transform rounded-xl border-2 border-purple-300 bg-linear-to-br from-purple-50 to-purple-100 p-6 text-left transition-all duration-200 hover:scale-105 hover:border-purple-500 hover:from-purple-100 hover:to-purple-200 hover:shadow-lg active:scale-95"
+												onclick={() => addToCart(combo, combo.saleFormats[0])}
+											>
+												<div class="mb-1 text-lg font-bold text-purple-900">{combo.name}</div>
+												{#if combo.description}
+													<div class="mb-2 text-sm text-gray-600">{combo.description}</div>
+												{/if}
+												<div class="mb-1 text-2xl font-bold text-purple-600">
+													${combo.saleFormats[0]?.price}
+												</div>
+												<div class="inline-block rounded bg-purple-200 px-2 py-1 text-sm font-medium text-purple-700">
+													{combo.saleFormats[0]?.label}
+												</div>
+												<div class="mt-2 text-xs text-gray-500">
+													{#if combo.comboItems && combo.comboItems.length > 0}
+														{#each combo.comboItems as item (item.id)}
+															{item.component.name} x{item.quantity}
+															{#if item.id !== combo.comboItems[combo.comboItems.length - 1].id}, {/if}
+														{/each}
+													{:else}
+														Sin componentes
+													{/if}
+												</div>
+											</button>
+										</div>
+									{/each}
+								</div>
+							</div>
+						{/if}
+
 						<!-- Agrupar productos por categoría -->
-						{#each Array.from(new Set(products.map((p) => p.category?.name))) as categoryName (categoryName)}
-							{@const categoryProducts = products.filter((p) => p.category?.name === categoryName)}
+						{@const normalProducts = products.filter((p) => !p.isCombo && p.status === 'ACTIVO')}
+						{#each Array.from(new Set(normalProducts.map((p) => p.category?.name))) as categoryName (categoryName)}
+							{@const categoryProducts = normalProducts.filter((p) => p.category?.name === categoryName)}
 
 							<div class="mb-6">
 								<h3 class="mb-3 border-b pb-2 text-lg font-medium text-gray-900">

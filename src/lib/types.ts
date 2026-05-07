@@ -12,8 +12,20 @@ export interface Product {
 	stockMin: string;
 	stockUnit: 'UNIDAD' | 'KILOGRAMO';
 	isPerishable: boolean;
+	isCombo: boolean;
 	saleFormats: ProductSaleFormat[];
 	canDelete?: boolean;
+	comboItems?: ProductComboItem[];
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface ProductComboItem {
+	id: string;
+	comboProductId: string;
+	componentId: string;
+	quantity: number;
+	component: Product;
 	createdAt: string;
 	updatedAt: string;
 }

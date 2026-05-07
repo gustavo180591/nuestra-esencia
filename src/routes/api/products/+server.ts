@@ -5,6 +5,7 @@ import type { RequestHandler } from './$types';
 export const GET: RequestHandler = async ({ url }) => {
 	try {
 		const includeInactive = url.searchParams.get('includeInactive') === 'true';
+		const includeCombos = url.searchParams.get('includeCombos') === 'true';
 		const categoryId = url.searchParams.get('categoryId');
 
 		const whereClause: any = {};
@@ -15,49 +16,65 @@ export const GET: RequestHandler = async ({ url }) => {
 			whereClause.categoryId = categoryId;
 		}
 
-		const products = await db.product.findMany({
-			where: whereClause,
-			include: {
-				category: {
-					select: {
-						id: true,
-						name: true
-					}
-				},
-				saleFormats: {
-					where: {
-						active: true
-					},
-					select: {
-						id: true,
-						unitMeasure: true,
-						label: true,
-						price: true,
-						quantity: true
-					},
-					orderBy: {
-						price: 'asc'
-					}
-				},
-				_count: {
-					select: {
-						saleItems: true,
-						purchaseItems: true,
-						stockMoves: true
-					}
-				},
-				saleItems: {
-					where: {
-						sale: {
-							status: 'COMPLETADA'
-						}
-					},
-					select: {
-						id: true
-					},
-					take: 1
+		const includeConfig: any = {
+			category: {
+				select: {
+					id: true,
+					name: true
 				}
 			},
+			saleFormats: {
+				where: {
+					active: true
+				},
+				select: {
+					id: true,
+					unitMeasure: true,
+					label: true,
+					price: true,
+					quantity: true
+				},
+				orderBy: {
+					price: 'asc'
+				}
+			},
+			_count: {
+				select: {
+					saleItems: true,
+					purchaseItems: true,
+					stockMoves: true
+				}
+			},
+			saleItems: {
+				where: {
+					sale: {
+						status: 'COMPLETADA'
+					}
+				},
+				select: {
+					id: true
+				},
+				take: 1
+			}
+		};
+
+		// Incluir comboItems si se solicita
+		if (includeCombos) {
+			includeConfig.comboItems = {
+				include: {
+					component: {
+						select: {
+							id: true,
+							name: true
+						}
+					}
+				}
+			};
+		}
+
+		const products = await db.product.findMany({
+			where: whereClause,
+			include: includeConfig,
 			orderBy: [
 				{
 					category: {
@@ -73,7 +90,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		// Transform data to include deletable flag
 		const productsWithDeletable = products.map((product) => ({
 			...product,
-			canDelete: product._count.saleItems === 0 || product.saleItems.length === 0
+			canDelete: (product as any)._count?.saleItems === 0
 		}));
 
 		return json({

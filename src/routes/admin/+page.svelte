@@ -703,6 +703,12 @@
 					Gestionar Categorías
 				</a>
 				<a
+					href="/admin/combos"
+					class="rounded-lg bg-pink-600 px-4 py-2 text-white hover:bg-pink-700"
+				>
+					Gestionar Combos
+				</a>
+				<a
 					href="/admin/formats"
 					class="rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700"
 				>

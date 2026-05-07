@@ -106,14 +106,43 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			const formatQuantity = item.formatQuantity || saleFormat.quantity || 1;
 			const stockToDeduct = item.quantity * formatQuantity;
 
-			if (Number(product.stock) < stockToDeduct) {
-				return json(
-					{
-						success: false,
-						message: `Stock insuficiente para ${product.name}`
-					},
-					{ status: 400 }
-				);
+			// Validación de stock diferente para combos y productos normales
+			if (product.isCombo) {
+				// Para combos, verificar stock de cada componente
+				if (!product.comboItems || product.comboItems.length === 0) {
+					return json(
+						{
+							success: false,
+							message: `El combo ${product.name} no tiene componentes configurados`
+						},
+						{ status: 400 }
+					);
+				}
+
+				for (const comboItem of product.comboItems) {
+					const component = comboItem.component;
+					const componentQty = Number(comboItem.quantity) * stockToDeduct;
+					if (Number(component.stock) < componentQty) {
+						return json(
+							{
+								success: false,
+								message: `Stock insuficiente para el componente ${component.name} del combo ${product.name}`
+							},
+							{ status: 400 }
+						);
+					}
+				}
+			} else {
+				// Para productos normales, verificar stock del producto
+				if (Number(product.stock) < stockToDeduct) {
+					return json(
+						{
+							success: false,
+							message: `Stock insuficiente para ${product.name}`
+						},
+						{ status: 400 }
+					);
+				}
 			}
 
 			const itemSubtotal = Number(saleFormat.price) * item.quantity;

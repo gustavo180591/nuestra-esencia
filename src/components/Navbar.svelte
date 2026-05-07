@@ -12,6 +12,7 @@
 	let { user }: { user: User | null } = $props();
 
 	let mobileMenuOpen = $state(false);
+	let adminMenuOpen = $state(false);
 	let currentUser = $derived(
 		user
 			? {
@@ -39,6 +40,21 @@
 		mobileMenuOpen = false;
 	}
 
+	function toggleAdminMenu() {
+		adminMenuOpen = !adminMenuOpen;
+	}
+
+	function closeAdminMenu() {
+		adminMenuOpen = false;
+	}
+
+	function handleClickOutside(event: MouseEvent) {
+		const target = event.target as HTMLElement;
+		if (!target.closest('.admin-menu-container')) {
+			adminMenuOpen = false;
+		}
+	}
+
 	async function handleLogout() {
 		try {
 			// Llamar a la API para cerrar sesión
@@ -54,6 +70,16 @@
 	}
 
 	const currentPath = $derived($page.url.pathname);
+
+// Efecto para cerrar menú al hacer clic fuera
+$effect(() => {
+	if (adminMenuOpen) {
+		document.addEventListener('click', handleClickOutside);
+		return () => {
+			document.removeEventListener('click', handleClickOutside);
+		};
+	}
+});
 </script>
 
 <!-- Navbar principal -->
@@ -104,13 +130,35 @@
 								</span>
 							</div>
 							{#if currentUser.role === 'ADMIN'}
-								<a
-									href="/admin/users"
-									class="text-sm text-gray-300 hover:text-amber-200 hover:underline"
-									title="Gestionar usuarios"
-								>
-									{currentUser.name}
-								</a>
+								<div class="relative admin-menu-container">
+									<button
+										onclick={toggleAdminMenu}
+										class="text-sm text-gray-300 hover:text-amber-200 hover:underline"
+										title="Gestionar usuarios"
+									>
+										{currentUser.name}
+									</button>
+									{#if adminMenuOpen}
+										<div class="absolute right-0 z-50 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+											<div class="py-1">
+												<a
+													href="/admin/users"
+													onclick={closeAdminMenu}
+													class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+												>
+													Gestión de Usuarios
+												</a>
+												<a
+													href="/admin/payment-methods"
+													onclick={closeAdminMenu}
+													class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+												>
+													Medios de Pago
+												</a>
+											</div>
+										</div>
+									{/if}
+								</div>
 							{:else}
 								<span class="text-sm text-gray-300">{currentUser.name}</span>
 							{/if}
@@ -189,14 +237,35 @@
 									</div>
 									<div>
 										{#if currentUser?.role === 'ADMIN'}
-											<a
-												href="/admin/users"
-												class="text-sm font-medium text-white hover:text-amber-200"
-												title="Gestionar usuarios"
-												onclick={closeMobileMenu}
-											>
-												{currentUser?.name}
-											</a>
+											<div class="relative admin-menu-container">
+												<button
+													onclick={toggleAdminMenu}
+													class="text-sm font-medium text-white hover:text-amber-200"
+													title="Gestionar usuarios"
+												>
+													{currentUser?.name}
+												</button>
+												{#if adminMenuOpen}
+													<div class="absolute left-0 z-50 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+														<div class="py-1">
+															<a
+																href="/admin/users"
+																onclick={() => { closeAdminMenu(); closeMobileMenu(); }}
+																class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+															>
+																Gestión de Usuarios
+															</a>
+															<a
+																href="/admin/payment-methods"
+																onclick={() => { closeAdminMenu(); closeMobileMenu(); }}
+																class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+															>
+																Medios de Pago
+															</a>
+														</div>
+													</div>
+												{/if}
+											</div>
 										{:else}
 											<div class="text-sm font-medium text-white">{currentUser?.name}</div>
 										{/if}
