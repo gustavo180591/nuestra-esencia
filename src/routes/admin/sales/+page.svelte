@@ -471,7 +471,8 @@
 					<div>
 						<div class="text-xs text-gray-500">Estado</div>
 						<div class="text-sm font-medium">
-							<span class={`inline-flex rounded-full px-2 py-1 text-xs font-medium text-${getStatusColor(selectedSale.status)}-800 bg-${getStatusColor(selectedSale.status)}-100`}
+							<span
+								class={`inline-flex rounded-full px-2 py-1 text-xs font-medium text-${getStatusColor(selectedSale.status)}-800 bg-${getStatusColor(selectedSale.status)}-100`}
 								>{selectedSale.status}</span
 							>
 						</div>

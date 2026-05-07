@@ -95,16 +95,26 @@
 							/>
 							<button
 								type="button"
-								onclick={() => showPassword = !showPassword}
+								onclick={() => (showPassword = !showPassword)}
 								class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
 							>
 								{#if showPassword}
 									<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 00-3-3 3 3 0 003 3m0-6a3 3 0 00-3 3 3 3 0 003 3m-6 0a3 3 0 00-3 3 3 3 0 003 3" />
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M15 12a3 3 0 00-3-3 3 3 0 003 3m0-6a3 3 0 00-3 3 3 3 0 003 3m-6 0a3 3 0 00-3 3 3 3 0 003 3"
+										/>
 									</svg>
 								{:else}
 									<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0012 19a10.05 10.05 0 0010.05-10.05 10.05 0 001.875 8.175M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M13.875 18.825A10.05 10.05 0 0012 19a10.05 10.05 0 0010.05-10.05 10.05 0 001.875 8.175M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+										/>
 									</svg>
 								{/if}
 							</button>

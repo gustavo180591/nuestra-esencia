@@ -787,8 +787,9 @@
 									</span>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
-										<div class="text-sm text-gray-900">
-										{product.stock} {product.stockUnit === 'KILOGRAMO' ? 'kg' : 'unid.'}
+									<div class="text-sm text-gray-900">
+										{product.stock}
+										{product.stockUnit === 'KILOGRAMO' ? 'kg' : 'unid.'}
 									</div>
 									{#if Number(product.stock) <= Number(product.stockMin)}
 										<div class="text-xs text-red-600">Stock bajo</div>
@@ -1265,13 +1266,15 @@
 							<div>
 								<span class="text-sm text-gray-500">Stock Actual:</span>
 								<p class="text-sm font-medium text-gray-900">
-									{selectedProduct.stock} {selectedProduct.stockUnit === 'KILOGRAMO' ? 'kg' : 'unid.'}
+									{selectedProduct.stock}
+									{selectedProduct.stockUnit === 'KILOGRAMO' ? 'kg' : 'unid.'}
 								</p>
 							</div>
 							<div>
 								<span class="text-sm text-gray-500">Stock Mínimo:</span>
 								<p class="text-sm font-medium text-gray-900">
-									{selectedProduct.stockMin} {selectedProduct.stockUnit === 'KILOGRAMO' ? 'kg' : 'unid.'}
+									{selectedProduct.stockMin}
+									{selectedProduct.stockUnit === 'KILOGRAMO' ? 'kg' : 'unid.'}
 								</p>
 							</div>
 						</div>

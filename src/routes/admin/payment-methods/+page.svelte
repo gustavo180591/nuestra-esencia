@@ -28,7 +28,7 @@
 		try {
 			const params = new URLSearchParams();
 			if (showInactive) params.append('includeInactive', 'true');
-			
+
 			const response = await fetch(`/api/payment-methods?${params.toString()}`);
 			if (response.ok) {
 				const data = await response.json();
@@ -46,10 +46,10 @@
 	async function handleCreateSubmit(event: Event) {
 		event.preventDefault();
 		saving = true;
-		
+
 		const form = event.target as HTMLFormElement;
 		const formData = new FormData(form);
-		
+
 		const methodData = {
 			name: formData.get('name') as string,
 			code: formData.get('code') as string,
@@ -83,10 +83,10 @@
 	async function handleEditSubmit(event: Event) {
 		event.preventDefault();
 		saving = true;
-		
+
 		const form = event.target as HTMLFormElement;
 		const formData = new FormData(form);
-		
+
 		const methodData = {
 			name: formData.get('name') as string,
 			code: formData.get('code') as string,
@@ -176,16 +176,16 @@
 		if (index > 0) {
 			const method = methods[index];
 			const prevMethod = methods[index - 1];
-			
+
 			// Swap en array
 			methods[index] = prevMethod;
 			methods[index - 1] = method;
-			
+
 			// Update sortOrder
 			methods.forEach((m, i) => {
 				m.sortOrder = i + 1;
 			});
-			
+
 			// Update backend
 			updateSortOrders();
 		}
@@ -195,16 +195,16 @@
 		if (index < methods.length - 1) {
 			const method = methods[index];
 			const nextMethod = methods[index + 1];
-			
+
 			// Swap en array
 			methods[index] = nextMethod;
 			methods[index + 1] = method;
-			
+
 			// Update sortOrders
 			methods.forEach((m, i) => {
 				m.sortOrder = i + 1;
 			});
-			
+
 			// Update backend
 			updateSortOrders();
 		}
@@ -212,14 +212,14 @@
 
 	async function updateSortOrders() {
 		try {
-			const updates = methods.map((method, index) => 
+			const updates = methods.map((method, index) =>
 				fetch(`/api/payment-methods/${method.id}`, {
 					method: 'PUT',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ sortOrder: index + 1 })
 				})
 			);
-			
+
 			await Promise.all(updates);
 			await loadMethods();
 		} catch {
@@ -245,7 +245,7 @@
 					<a href="/admin" class="text-amber-100 hover:text-white">Panel</a>
 					<a href="/admin/products" class="text-amber-100 hover:text-white">Productos</a>
 					<a href="/admin/sales" class="text-amber-100 hover:text-white">Ventas</a>
-					<a href="/admin/payment-methods" class="text-white font-medium">Medios de Pago</a>
+					<a href="/admin/payment-methods" class="font-medium text-white">Medios de Pago</a>
 				</nav>
 			</div>
 		</div>
@@ -264,11 +264,7 @@
 						Nuevo Medio de Pago
 					</button>
 					<label class="flex items-center">
-						<input
-							type="checkbox"
-							bind:checked={showInactive}
-							class="mr-2"
-						/>
+						<input type="checkbox" bind:checked={showInactive} class="mr-2" />
 						<span class="text-sm text-gray-700">Ver inactivos</span>
 					</label>
 				</div>
@@ -285,11 +281,11 @@
 					</button>
 				</div>
 			{:else if loading}
-				<div class="text-center py-8">
+				<div class="py-8 text-center">
 					<div class="text-gray-900">Cargando...</div>
 				</div>
 			{:else if methods.length === 0}
-				<div class="text-center py-8">
+				<div class="py-8 text-center">
 					<div class="text-gray-900">No hay medios de pago configurados</div>
 					<button
 						onclick={openCreateModal}
@@ -304,16 +300,30 @@
 					<table class="min-w-full divide-y divide-gray-200">
 						<thead class="bg-gray-50">
 							<tr>
-								<th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Icono</th>
-								<th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Nombre</th>
-								<th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Código</th>
-								<th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Descripción</th>
-								<th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Orden</th>
-								<th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase">Estado</th>
-								<th class="px-4 py-2 text-right text-xs font-medium text-gray-700 uppercase">Acciones</th>
+								<th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase"
+									>Icono</th
+								>
+								<th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase"
+									>Nombre</th
+								>
+								<th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase"
+									>Código</th
+								>
+								<th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase"
+									>Descripción</th
+								>
+								<th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase"
+									>Orden</th
+								>
+								<th class="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase"
+									>Estado</th
+								>
+								<th class="px-4 py-2 text-right text-xs font-medium text-gray-700 uppercase"
+									>Acciones</th
+								>
 							</tr>
 						</thead>
-						<tbody class="bg-white divide-y divide-gray-200">
+						<tbody class="divide-y divide-gray-200 bg-white">
 							{#each methods as method, index (method.id)}
 								<tr class="hover:bg-gray-50">
 									<td class="px-4 py-2 text-sm">
@@ -332,11 +342,13 @@
 										{method.sortOrder}
 									</td>
 									<td class="px-4 py-2 text-sm">
-										<span class={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${method.active ? 'text-green-800 bg-green-100' : 'text-gray-800 bg-gray-100'}`}>
+										<span
+											class={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${method.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+										>
 											{method.active ? 'Activo' : 'Inactivo'}
 										</span>
 									</td>
-									<td class="px-4 py-2 text-sm text-right">
+									<td class="px-4 py-2 text-right text-sm">
 										<div class="flex justify-end space-x-2">
 											<!-- Flechas para reordenar -->
 											{#if index > 0}
@@ -350,23 +362,23 @@
 											{/if}
 											{#if index < methods.length - 1}
 												<button
-														onclick={() => moveMethodDown(index)}
-														class="text-gray-400 hover:text-gray-600"
-														title="Bajar"
-													>
-														↓
-													</button>
+													onclick={() => moveMethodDown(index)}
+													class="text-gray-400 hover:text-gray-600"
+													title="Bajar"
+												>
+													↓
+												</button>
 											{/if}
-											
+
 											<!-- Editar -->
 											<button
 												onclick={() => openEditModal(method)}
-												class="text-blue-600 hover:text-blue-800 mr-2"
+												class="mr-2 text-blue-600 hover:text-blue-800"
 												title="Editar"
 											>
 												✏️
 											</button>
-											
+
 											<!-- Activar/Desactivar -->
 											<button
 												onclick={() => toggleActive(method.id, method.active)}
@@ -375,7 +387,7 @@
 											>
 												{method.active ? '🔴' : '🟢'}
 											</button>
-											
+
 											<!-- Eliminar -->
 											<button
 												onclick={() => deleteMethod(method.id)}
@@ -398,9 +410,9 @@
 	<!-- Modal Crear/Editar -->
 	{#if showCreateModal || showEditModal}
 		<div class="fixed inset-0 z-50 overflow-y-auto">
-			<div class="flex min-h-full items-center justify-center bg-black bg-opacity-50 p-4">
-				<div class="w-full max-w-md bg-white rounded-lg shadow-xl p-6">
-					<div class="flex items-center justify-between mb-4">
+			<div class="bg-opacity-50 flex min-h-full items-center justify-center bg-black p-4">
+				<div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+					<div class="mb-4 flex items-center justify-between">
 						<h3 class="text-lg font-semibold text-gray-900">
 							{showEditModal ? 'Editar Medio de Pago' : 'Nuevo Medio de Pago'}
 						</h3>
@@ -436,7 +448,9 @@
 							</div>
 
 							<div>
-								<label for="description" class="block text-sm font-medium text-gray-700">Descripción</label>
+								<label for="description" class="block text-sm font-medium text-gray-700"
+									>Descripción</label
+								>
 								<textarea
 									id="description"
 									name="description"
@@ -498,7 +512,7 @@
 								disabled={saving}
 								class="rounded-md bg-amber-600 px-4 py-2 text-white hover:bg-amber-700 disabled:bg-gray-400"
 							>
-								{saving ? 'Guardando...' : (showEditModal ? 'Actualizar' : 'Crear')}
+								{saving ? 'Guardando...' : showEditModal ? 'Actualizar' : 'Crear'}
 							</button>
 						</div>
 					</form>

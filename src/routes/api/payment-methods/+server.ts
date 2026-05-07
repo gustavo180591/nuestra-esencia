@@ -26,10 +26,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		return json({ success: true, data: methods });
 	} catch (error) {
 		console.error('Error fetching payment methods:', error);
-		return json(
-			{ success: false, message: 'Error al obtener medios de pago' },
-			{ status: 500 }
-		);
+		return json({ success: false, message: 'Error al obtener medios de pago' }, { status: 500 });
 	}
 };
 
@@ -38,20 +35,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	try {
 		const userId = locals.user?.id;
 		if (!userId) {
-			return json(
-				{ success: false, message: 'Usuario no autenticado' },
-				{ status: 401 }
-			);
+			return json({ success: false, message: 'Usuario no autenticado' }, { status: 401 });
 		}
 
 		const body = await request.json();
 		const { code, name, description, icon, sortOrder } = body;
 
 		if (!code || !name) {
-			return json(
-				{ success: false, message: 'Código y nombre son requeridos' },
-				{ status: 400 }
-			);
+			return json({ success: false, message: 'Código y nombre son requeridos' }, { status: 400 });
 		}
 
 		// Verificar si el código ya existe
@@ -83,9 +74,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		});
 	} catch (error) {
 		console.error('Error creating payment method:', error);
-		return json(
-			{ success: false, message: 'Error al crear medio de pago' },
-			{ status: 500 }
-		);
+		return json({ success: false, message: 'Error al crear medio de pago' }, { status: 500 });
 	}
 };

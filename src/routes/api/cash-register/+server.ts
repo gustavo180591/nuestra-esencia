@@ -7,10 +7,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	try {
 		const userId = locals.user?.id;
 		if (!userId) {
-			return json(
-				{ success: false, message: 'Usuario no autenticado' },
-				{ status: 401 }
-			);
+			return json({ success: false, message: 'Usuario no autenticado' }, { status: 401 });
 		}
 
 		const status = url.searchParams.get('status');
@@ -48,10 +45,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		return json({ success: true, data: registers });
 	} catch (error) {
 		console.error('Error fetching cash register:', error);
-		return json(
-			{ success: false, message: 'Error al obtener caja' },
-			{ status: 500 }
-		);
+		return json({ success: false, message: 'Error al obtener caja' }, { status: 500 });
 	}
 };
 
@@ -60,10 +54,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	try {
 		const userId = locals.user?.id;
 		if (!userId) {
-			return json(
-				{ success: false, message: 'Usuario no autenticado' },
-				{ status: 401 }
-			);
+			return json({ success: false, message: 'Usuario no autenticado' }, { status: 401 });
 		}
 
 		// Verificar si ya hay una caja abierta
@@ -72,19 +63,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		});
 
 		if (existingOpen) {
-			return json(
-				{ success: false, message: 'Ya existe una caja abierta' },
-				{ status: 400 }
-			);
+			return json({ success: false, message: 'Ya existe una caja abierta' }, { status: 400 });
 		}
 
 		const { initialAmount } = await request.json();
 
 		if (initialAmount === undefined || initialAmount < 0) {
-			return json(
-				{ success: false, message: 'Monto inicial requerido' },
-				{ status: 400 }
-			);
+			return json({ success: false, message: 'Monto inicial requerido' }, { status: 400 });
 		}
 
 		const cashRegister = await db.cashRegister.create({
@@ -102,10 +87,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		});
 	} catch (error) {
 		console.error('Error opening cash register:', error);
-		return json(
-			{ success: false, message: 'Error al abrir caja' },
-			{ status: 500 }
-		);
+		return json({ success: false, message: 'Error al abrir caja' }, { status: 500 });
 	}
 };
 
@@ -114,10 +96,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 	try {
 		const userId = locals.user?.id;
 		if (!userId) {
-			return json(
-				{ success: false, message: 'Usuario no autenticado' },
-				{ status: 401 }
-			);
+			return json({ success: false, message: 'Usuario no autenticado' }, { status: 401 });
 		}
 
 		const { actualAmount, notes } = await request.json();
@@ -134,19 +113,12 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 		});
 
 		if (!openCashRegister) {
-			return json(
-				{ success: false, message: 'No hay caja abierta para cerrar' },
-				{ status: 400 }
-			);
+			return json({ success: false, message: 'No hay caja abierta para cerrar' }, { status: 400 });
 		}
 
 		// Calcular monto esperado: inicial + ventas en efectivo
-		const cashSales = openCashRegister.sales.filter(
-			s => s.paymentMethod?.code === 'EFECTIVO'
-		);
-		const totalCashSales = cashSales.reduce(
-			(sum, s) => sum + Number(s.cashReceived || s.total), 0
-		);
+		const cashSales = openCashRegister.sales.filter((s) => s.paymentMethod?.code === 'EFECTIVO');
+		const totalCashSales = cashSales.reduce((sum, s) => sum + Number(s.cashReceived || s.total), 0);
 		const expectedAmount = Number(openCashRegister.initialAmount) + totalCashSales;
 
 		// Calcular diferencia
@@ -182,9 +154,6 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 		});
 	} catch (error) {
 		console.error('Error closing cash register:', error);
-		return json(
-			{ success: false, message: 'Error al cerrar caja' },
-			{ status: 500 }
-		);
+		return json({ success: false, message: 'Error al cerrar caja' }, { status: 500 });
 	}
 };

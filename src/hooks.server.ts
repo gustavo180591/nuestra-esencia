@@ -44,7 +44,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// 🔐 Verificar autorización por rol
 	if (event.locals.user && !isPublicRoute) {
 		const userRole = event.locals.user.role;
-		const isAdminRoute = ADMIN_ONLY_ROUTES.some((route) => path === route || path.startsWith(route));
+		const isAdminRoute = ADMIN_ONLY_ROUTES.some(
+			(route) => path === route || path.startsWith(route)
+		);
 
 		// Cajero intentando acceder a ruta de admin
 		if (isAdminRoute && userRole !== 'ADMIN') {

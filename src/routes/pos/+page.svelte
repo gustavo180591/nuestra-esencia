@@ -40,7 +40,7 @@
 	let paymentMethodId = $state<string>('');
 	let cashReceived = $state(0);
 	let changeGiven = $state(0);
-	let paymentMethods = $state<Array<{id: string, code: string, name: string, icon: string}>>([]);
+	let paymentMethods = $state<Array<{ id: string; code: string; name: string; icon: string }>>([]);
 
 	// Estado de caja
 	let cashRegister = $state<any>(null);
@@ -139,7 +139,7 @@
 				paymentMethods = data.data;
 				console.log('Payment methods cargados:', paymentMethods.length);
 				// Establecer el ID del método por defecto (EFECTIVO)
-				const efectivo = paymentMethods.find(pm => pm.code === 'EFECTIVO');
+				const efectivo = paymentMethods.find((pm) => pm.code === 'EFECTIVO');
 				if (efectivo) {
 					paymentMethodId = efectivo.id;
 					console.log('PaymentMethodId por defecto:', paymentMethodId);
@@ -279,25 +279,25 @@
 		if (event.key === 'F1') {
 			event.preventDefault();
 			paymentMethod = 'EFECTIVO';
-			const efectivo = paymentMethods.find(pm => pm.code === 'EFECTIVO');
+			const efectivo = paymentMethods.find((pm) => pm.code === 'EFECTIVO');
 			if (efectivo) paymentMethodId = efectivo.id;
 		}
 		if (event.key === 'F2') {
 			event.preventDefault();
 			paymentMethod = 'TRANSFERENCIA';
-			const transferencia = paymentMethods.find(pm => pm.code === 'TRANSFERENCIA');
+			const transferencia = paymentMethods.find((pm) => pm.code === 'TRANSFERENCIA');
 			if (transferencia) paymentMethodId = transferencia.id;
 		}
 		if (event.key === 'F3') {
 			event.preventDefault();
 			paymentMethod = 'TARJETA';
-			const tarjeta = paymentMethods.find(pm => pm.code === 'TARJETA');
+			const tarjeta = paymentMethods.find((pm) => pm.code === 'TARJETA');
 			if (tarjeta) paymentMethodId = tarjeta.id;
 		}
 		if (event.key === 'F4') {
 			event.preventDefault();
 			paymentMethod = 'QR';
-			const qr = paymentMethods.find(pm => pm.code === 'QR');
+			const qr = paymentMethods.find((pm) => pm.code === 'QR');
 			if (qr) paymentMethodId = qr.id;
 		}
 
@@ -378,6 +378,13 @@
 	async function processSale() {
 		if (cart.length === 0) {
 			alert('El carrito está vacío');
+			return;
+		}
+
+		// Validar que la caja esté abierta
+		if (!cashRegister) {
+			alert('Debe abrir la caja antes de realizar ventas');
+			showOpenModal = true;
 			return;
 		}
 
@@ -476,9 +483,9 @@
 			const response = await fetch('/api/cash-register', {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ 
+				body: JSON.stringify({
 					actualAmount: closingAmount,
-					notes: closingNotes 
+					notes: closingNotes
 				})
 			});
 
@@ -509,7 +516,7 @@
 	});
 
 	$effect(() => {
-		const method = paymentMethods.find(pm => pm.code === paymentMethod);
+		const method = paymentMethods.find((pm) => pm.code === paymentMethod);
 		if (method) {
 			paymentMethodId = method.id;
 		}
@@ -525,7 +532,7 @@
 					<h1 class="text-2xl font-bold">Nuestra Esencia</h1>
 					<span class="text-amber-100">Sistema de Caja</span>
 				</div>
-				<div class="text-sm text-right">
+				<div class="text-right text-sm">
 					{#if cashRegister}
 						<div class="text-amber-100">
 							💵 Caja Abierta
@@ -534,22 +541,20 @@
 						<div class="text-xs text-amber-200">
 							Por: {cashRegister.openedBy?.name || 'Usuario'}
 						</div>
-						<div class="flex justify-end space-x-2 mt-2">
+						<div class="mt-2 flex justify-end space-x-2">
 							<button
-								onclick={() => showCloseModal = true}
-								class="rounded-md bg-red-600 px-3 py-1 text-white text-sm hover:bg-red-700"
+								onclick={() => (showCloseModal = true)}
+								class="rounded-md bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
 							>
 								Cerrar Caja
 							</button>
 						</div>
 					{:else}
-						<div class="text-red-100">
-							🔴 Caja Cerrada
-						</div>
-						<div class="flex justify-end mt-2">
+						<div class="text-red-100">🔴 Caja Cerrada</div>
+						<div class="mt-2 flex justify-end">
 							<button
-								onclick={() => showOpenModal = true}
-								class="rounded-md bg-green-600 px-3 py-1 text-white text-sm hover:bg-green-700"
+								onclick={() => (showOpenModal = true)}
+								class="rounded-md bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
 							>
 								Abrir Caja
 							</button>
@@ -603,7 +608,8 @@
 												<div class="mb-1 text-lg font-bold text-gray-900">{product.name}</div>
 												<div class="mb-2 flex items-center text-sm text-gray-900">
 													<span class="mr-2 inline-block h-2 w-2 rounded-full bg-green-500"></span>
-													Stock: {product.stock} {product.stockUnit === 'KILOGRAMO' ? 'kg' : 'unid.'}
+													Stock: {product.stock}
+													{product.stockUnit === 'KILOGRAMO' ? 'kg' : 'unid.'}
 												</div>
 												<div class="mb-1 text-2xl font-bold text-amber-600">
 													${product.saleFormats[0]?.price}
@@ -684,14 +690,13 @@
 													>
 														200g
 													</button>
-													<button
-														onclick={() => updateQuantity(index, item.quantity + 0.5)}
-													>
+													<button onclick={() => updateQuantity(index, item.quantity + 0.5)}>
 														500g
 													</button>
 													<button
 														class="h-7 w-7 rounded bg-red-100 text-red-600 hover:bg-red-200"
-														onclick={() => updateQuantity(index, Math.max(0.05, item.quantity - 0.05))}
+														onclick={() =>
+															updateQuantity(index, Math.max(0.05, item.quantity - 0.05))}
 														disabled={item.quantity <= 0.05}
 													>
 														-50g
@@ -852,7 +857,8 @@
 						>
 							{#each paymentMethods as pm}
 								<option value={pm.code}>
-									{pm.icon} {pm.name}
+									{pm.icon}
+									{pm.name}
 								</option>
 							{/each}
 						</select>
@@ -1039,19 +1045,23 @@
 <!-- Modal Apertura de Caja -->
 {#if showOpenModal}
 	<div class="fixed inset-0 z-50 overflow-y-auto">
-		<div class="flex min-h-full items-center justify-center bg-black bg-opacity-50 p-4">
-			<div class="w-full max-w-md bg-white rounded-lg shadow-xl p-6">
-				<div class="flex items-center justify-between mb-4">
+		<div class="bg-opacity-50 flex min-h-full items-center justify-center bg-black p-4">
+			<div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+				<div class="mb-4 flex items-center justify-between">
 					<h3 class="text-lg font-semibold text-gray-900">Apertura de Caja</h3>
-					<button onclick={() => showOpenModal = false} class="text-gray-400 hover:text-gray-600">✕</button>
+					<button onclick={() => (showOpenModal = false)} class="text-gray-400 hover:text-gray-600"
+						>✕</button
+					>
 				</div>
 
 				<form onsubmit={openCashRegister}>
 					<div class="space-y-4">
 						<div>
-							<label for="openingAmount" class="block text-sm font-medium text-gray-700">Monto Inicial</label>
+							<label for="openingAmount" class="block text-sm font-medium text-gray-700"
+								>Monto Inicial</label
+							>
 							<div class="relative">
-								<span class="absolute left-3 top-2 text-gray-500">$</span>
+								<span class="absolute top-2 left-3 text-gray-500">$</span>
 								<input
 									id="openingAmount"
 									type="number"
@@ -1059,7 +1069,7 @@
 									min="0"
 									step="0.01"
 									required
-									class="w-full rounded-md border-gray-300 pl-8 pr-3 py-2 text-gray-900"
+									class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900"
 									placeholder="0.00"
 								/>
 							</div>
@@ -1069,7 +1079,7 @@
 					<div class="mt-6 flex justify-end">
 						<button
 							type="button"
-							onclick={() => showOpenModal = false}
+							onclick={() => (showOpenModal = false)}
 							class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
 						>
 							Cancelar
@@ -1091,14 +1101,16 @@
 <!-- Modal Cierre de Caja -->
 {#if showCloseModal && cashRegister}
 	<div class="fixed inset-0 z-50 overflow-y-auto">
-		<div class="flex min-h-full items-center justify-center bg-black bg-opacity-50 p-4">
-			<div class="w-full max-w-md bg-white rounded-lg shadow-xl p-6">
-				<div class="flex items-center justify-between mb-4">
+		<div class="bg-opacity-50 flex min-h-full items-center justify-center bg-black p-4">
+			<div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+				<div class="mb-4 flex items-center justify-between">
 					<h3 class="text-lg font-semibold text-gray-900">Cierre de Caja</h3>
-					<button onclick={() => showCloseModal = false} class="text-gray-400 hover:text-gray-600">✕</button>
+					<button onclick={() => (showCloseModal = false)} class="text-gray-400 hover:text-gray-600"
+						>✕</button
+					>
 				</div>
 
-				<div class="mb-4 p-4 bg-gray-50 rounded">
+				<div class="mb-4 rounded bg-gray-50 p-4">
 					<div class="grid grid-cols-2 gap-4">
 						<div>
 							<div class="text-xs text-gray-500">Monto Inicial</div>
@@ -1111,7 +1123,7 @@
 							</div>
 						</div>
 					</div>
-					<div class="grid grid-cols-2 gap-4 mt-4">
+					<div class="mt-4 grid grid-cols-2 gap-4">
 						<div>
 							<div class="text-xs text-gray-500">Total Esperado</div>
 							<div class="text-sm font-medium">{formatCurrency(cashRegister.expectedAmount)}</div>
@@ -1128,9 +1140,11 @@
 				<form onsubmit={closeCashRegister}>
 					<div class="space-y-4">
 						<div>
-							<label for="closingAmount" class="block text-sm font-medium text-gray-700">Monto Real</label>
+							<label for="closingAmount" class="block text-sm font-medium text-gray-700"
+								>Monto Real</label
+							>
 							<div class="relative">
-								<span class="absolute left-3 top-2 text-gray-500">$</span>
+								<span class="absolute top-2 left-3 text-gray-500">$</span>
 								<input
 									id="closingAmount"
 									type="number"
@@ -1138,14 +1152,15 @@
 									min="0"
 									step="0.01"
 									required
-									class="w-full rounded-md border-gray-300 pl-8 pr-3 py-2 text-gray-900"
+									class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900"
 									placeholder="0.00"
 								/>
 							</div>
 						</div>
 
 						<div>
-							<label for="closingNotes" class="block text-sm font-medium text-gray-700">Notas</label>
+							<label for="closingNotes" class="block text-sm font-medium text-gray-700">Notas</label
+							>
 							<textarea
 								id="closingNotes"
 								bind:value={closingNotes}
@@ -1159,7 +1174,7 @@
 					<div class="mt-6 flex justify-end">
 						<button
 							type="button"
-							onclick={() => showCloseModal = false}
+							onclick={() => (showCloseModal = false)}
 							class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
 						>
 							Cancelar

@@ -62,8 +62,17 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	try {
 		const data = await request.json();
 
-		const { name, description, categoryId, status, stock, stockMin, stockUnit, isPerishable, saleFormats } =
-			data;
+		const {
+			name,
+			description,
+			categoryId,
+			status,
+			stock,
+			stockMin,
+			stockUnit,
+			isPerishable,
+			saleFormats
+		} = data;
 
 		// Validaciones básicas
 		if (!name || name.trim() === '') {
