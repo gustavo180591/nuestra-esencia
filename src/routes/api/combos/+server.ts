@@ -7,19 +7,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	try {
 		const userId = locals.user?.id;
 		if (!userId) {
-			return json(
-				{ success: false, message: 'Usuario no autenticado' },
-				{ status: 401 }
-			);
+			return json({ success: false, message: 'Usuario no autenticado' }, { status: 401 });
 		}
 
 		const { comboProductId, componentId, quantity } = await request.json();
 
 		if (!comboProductId || !componentId || !quantity) {
-			return json(
-				{ success: false, message: 'Datos incompletos' },
-				{ status: 400 }
-			);
+			return json({ success: false, message: 'Datos incompletos' }, { status: 400 });
 		}
 
 		// Verificar que no exista ya este componente en el combo
@@ -46,10 +40,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		]);
 
 		if (!comboProduct || !component) {
-			return json(
-				{ success: false, message: 'Producto no encontrado' },
-				{ status: 404 }
-			);
+			return json({ success: false, message: 'Producto no encontrado' }, { status: 404 });
 		}
 
 		const comboItem = await db.productComboItem.create({
@@ -67,10 +58,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		});
 	} catch (error) {
 		console.error('Error adding combo item:', error);
-		return json(
-			{ success: false, message: 'Error al agregar componente' },
-			{ status: 500 }
-		);
+		return json({ success: false, message: 'Error al agregar componente' }, { status: 500 });
 	}
 };
 
@@ -79,10 +67,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 	try {
 		const userId = locals.user?.id;
 		if (!userId) {
-			return json(
-				{ success: false, message: 'Usuario no autenticado' },
-				{ status: 401 }
-			);
+			return json({ success: false, message: 'Usuario no autenticado' }, { status: 401 });
 		}
 
 		const comboId = params.id as string;
@@ -97,9 +82,6 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		});
 	} catch (error) {
 		console.error('Error deleting combo items:', error);
-		return json(
-			{ success: false, message: 'Error al eliminar componentes' },
-			{ status: 500 }
-		);
+		return json({ success: false, message: 'Error al eliminar componentes' }, { status: 500 });
 	}
 };

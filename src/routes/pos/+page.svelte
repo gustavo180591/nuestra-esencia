@@ -607,14 +607,17 @@
 												<div class="mb-1 text-2xl font-bold text-purple-600">
 													${combo.saleFormats[0]?.price}
 												</div>
-												<div class="inline-block rounded bg-purple-200 px-2 py-1 text-sm font-medium text-purple-700">
+												<div
+													class="inline-block rounded bg-purple-200 px-2 py-1 text-sm font-medium text-purple-700"
+												>
 													{combo.saleFormats[0]?.label}
 												</div>
 												<div class="mt-2 text-xs text-gray-500">
 													{#if combo.comboItems && combo.comboItems.length > 0}
 														{#each combo.comboItems as item (item.id)}
 															{item.component.name} x{item.quantity}
-															{#if item.id !== combo.comboItems[combo.comboItems.length - 1].id}, {/if}
+															{#if item.id !== combo.comboItems[combo.comboItems.length - 1].id},
+															{/if}
 														{/each}
 													{:else}
 														Sin componentes
@@ -630,7 +633,9 @@
 						<!-- Agrupar productos por categoría -->
 						{@const normalProducts = products.filter((p) => !p.isCombo && p.status === 'ACTIVO')}
 						{#each Array.from(new Set(normalProducts.map((p) => p.category?.name))) as categoryName (categoryName)}
-							{@const categoryProducts = normalProducts.filter((p) => p.category?.name === categoryName)}
+							{@const categoryProducts = normalProducts.filter(
+								(p) => p.category?.name === categoryName
+							)}
 
 							<div class="mb-6">
 								<h3 class="mb-3 border-b pb-2 text-lg font-medium text-gray-900">

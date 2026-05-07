@@ -71,15 +71,15 @@
 
 	const currentPath = $derived($page.url.pathname);
 
-// Efecto para cerrar menú al hacer clic fuera
-$effect(() => {
-	if (adminMenuOpen) {
-		document.addEventListener('click', handleClickOutside);
-		return () => {
-			document.removeEventListener('click', handleClickOutside);
-		};
-	}
-});
+	// Efecto para cerrar menú al hacer clic fuera
+	$effect(() => {
+		if (adminMenuOpen) {
+			document.addEventListener('click', handleClickOutside);
+			return () => {
+				document.removeEventListener('click', handleClickOutside);
+			};
+		}
+	});
 </script>
 
 <!-- Navbar principal -->
@@ -130,7 +130,7 @@ $effect(() => {
 								</span>
 							</div>
 							{#if currentUser.role === 'ADMIN'}
-								<div class="relative admin-menu-container">
+								<div class="admin-menu-container relative">
 									<button
 										onclick={toggleAdminMenu}
 										class="text-sm text-gray-300 hover:text-amber-200 hover:underline"
@@ -139,7 +139,9 @@ $effect(() => {
 										{currentUser.name}
 									</button>
 									{#if adminMenuOpen}
-										<div class="absolute right-0 z-50 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+										<div
+											class="ring-opacity-5 absolute right-0 z-50 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black"
+										>
 											<div class="py-1">
 												<a
 													href="/admin/users"
@@ -237,7 +239,7 @@ $effect(() => {
 									</div>
 									<div>
 										{#if currentUser?.role === 'ADMIN'}
-											<div class="relative admin-menu-container">
+											<div class="admin-menu-container relative">
 												<button
 													onclick={toggleAdminMenu}
 													class="text-sm font-medium text-white hover:text-amber-200"
@@ -246,18 +248,26 @@ $effect(() => {
 													{currentUser?.name}
 												</button>
 												{#if adminMenuOpen}
-													<div class="absolute left-0 z-50 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+													<div
+														class="ring-opacity-5 absolute left-0 z-50 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black"
+													>
 														<div class="py-1">
 															<a
 																href="/admin/users"
-																onclick={() => { closeAdminMenu(); closeMobileMenu(); }}
+																onclick={() => {
+																	closeAdminMenu();
+																	closeMobileMenu();
+																}}
 																class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
 															>
 																Gestión de Usuarios
 															</a>
 															<a
 																href="/admin/payment-methods"
-																onclick={() => { closeAdminMenu(); closeMobileMenu(); }}
+																onclick={() => {
+																	closeAdminMenu();
+																	closeMobileMenu();
+																}}
 																class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
 															>
 																Medios de Pago

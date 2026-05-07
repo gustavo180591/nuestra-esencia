@@ -8,10 +8,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 	try {
 		const userId = locals.user?.id;
 		if (!userId) {
-			return json(
-				{ success: false, message: 'Usuario no autenticado' },
-				{ status: 401 }
-			);
+			return json({ success: false, message: 'Usuario no autenticado' }, { status: 401 });
 		}
 
 		await db.productComboItem.deleteMany({
@@ -24,9 +21,6 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		});
 	} catch (error) {
 		console.error('Error deleting combo items:', error);
-		return json(
-			{ success: false, message: 'Error al eliminar componentes' },
-			{ status: 500 }
-		);
+		return json({ success: false, message: 'Error al eliminar componentes' }, { status: 500 });
 	}
 };

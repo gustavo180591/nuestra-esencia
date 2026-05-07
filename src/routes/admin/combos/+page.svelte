@@ -48,7 +48,7 @@
 	let comboDescription = $state('');
 	let comboPrice = $state(0);
 	let comboLabel = $state('');
-	let selectedComponents = $state<Array<{productId: string, quantity: number}>>([]);
+	let selectedComponents = $state<Array<{ productId: string; quantity: number }>>([]);
 
 	async function loadProducts() {
 		try {
@@ -97,12 +97,14 @@
 					name: comboName,
 					description: comboDescription,
 					isCombo: true,
-					saleFormats: [{
-						label: comboLabel,
-						price: comboPrice,
-						unitMeasure: 'UNIDAD',
-						quantity: 1
-					}]
+					saleFormats: [
+						{
+							label: comboLabel,
+							price: comboPrice,
+							unitMeasure: 'UNIDAD',
+							quantity: 1
+						}
+					]
 				})
 			});
 
@@ -115,7 +117,7 @@
 			const comboId = comboResult.data.id;
 
 			// Crear los items del combo
-			const comboItems = selectedComponents.map(comp => ({
+			const comboItems = selectedComponents.map((comp) => ({
 				comboProductId: comboId,
 				componentId: comp.productId,
 				quantity: comp.quantity
@@ -157,13 +159,15 @@
 				body: JSON.stringify({
 					name: comboName,
 					description: comboDescription,
-					saleFormats: [{
-						id: editingCombo.saleFormats[0]?.id,
-						label: comboLabel,
-						price: comboPrice,
-						unitMeasure: 'UNIDAD',
-						quantity: 1
-					}]
+					saleFormats: [
+						{
+							id: editingCombo.saleFormats[0]?.id,
+							label: comboLabel,
+							price: comboPrice,
+							unitMeasure: 'UNIDAD',
+							quantity: 1
+						}
+					]
 				})
 			});
 
@@ -176,7 +180,7 @@
 			// Actualizar items del combo (eliminar y recrear)
 			await fetch(`/api/combos/${editingCombo.id}/items`, { method: 'DELETE' });
 
-			const comboItems = selectedComponents.map(comp => ({
+			const comboItems = selectedComponents.map((comp) => ({
 				comboProductId: editingCombo!.id,
 				componentId: comp.productId,
 				quantity: comp.quantity
@@ -237,7 +241,7 @@
 		comboDescription = combo.description || '';
 		comboPrice = combo.saleFormats[0]?.price || 0;
 		comboLabel = combo.saleFormats[0]?.label || '';
-		selectedComponents = combo.comboItems.map(item => ({
+		selectedComponents = combo.comboItems.map((item) => ({
 			productId: item.componentId,
 			quantity: Number(item.quantity)
 		}));
@@ -260,32 +264,32 @@
 	}
 
 	function addComponent(productId: string) {
-		if (!selectedComponents.find(c => c.productId === productId)) {
+		if (!selectedComponents.find((c) => c.productId === productId)) {
 			selectedComponents.push({ productId, quantity: 1 });
 		}
 	}
 
 	function removeComponent(productId: string) {
-		selectedComponents = selectedComponents.filter(c => c.productId !== productId);
+		selectedComponents = selectedComponents.filter((c) => c.productId !== productId);
 	}
 
 	function updateComponentQuantity(productId: string, quantity: number) {
-		const component = selectedComponents.find(c => c.productId === productId);
+		const component = selectedComponents.find((c) => c.productId === productId);
 		if (component) {
 			component.quantity = Math.max(0.1, quantity);
 		}
 	}
 
 	function getComponentName(productId: string) {
-		const product = products.find(p => p.id === productId);
+		const product = products.find((p) => p.id === productId);
 		return product?.name || '';
 	}
 
 	function getComboTotal() {
 		return selectedComponents.reduce((total, comp) => {
-			const product = products.find(p => p.id === comp.productId);
+			const product = products.find((p) => p.id === comp.productId);
 			const price = product?.saleFormats[0]?.price || 0;
-			return total + (price * comp.quantity);
+			return total + price * comp.quantity;
 		}, 0);
 	}
 
@@ -306,9 +310,10 @@
 				<nav class="flex space-x-4">
 					<a href="/admin" class="text-amber-100 hover:text-white">Panel</a>
 					<a href="/admin/products" class="text-amber-100 hover:text-white">Productos</a>
-					<a href="/admin/combos" class="text-white font-medium">Combos</a>
+					<a href="/admin/combos" class="font-medium text-white">Combos</a>
 					<a href="/admin/sales" class="text-amber-100 hover:text-white">Ventas</a>
-					<a href="/admin/payment-methods" class="text-amber-100 hover:text-white">Medios de Pago</a>
+					<a href="/admin/payment-methods" class="text-amber-100 hover:text-white">Medios de Pago</a
+					>
 				</nav>
 			</div>
 		</div>
@@ -338,11 +343,11 @@
 					</button>
 				</div>
 			{:else if loading}
-				<div class="text-center py-8">
+				<div class="py-8 text-center">
 					<div class="text-gray-900">Cargando...</div>
 				</div>
 			{:else if combos.length === 0}
-				<div class="text-center py-8">
+				<div class="py-8 text-center">
 					<div class="text-gray-900">No hay combos configurados</div>
 					<button
 						onclick={openCreateModal}
@@ -356,7 +361,7 @@
 				<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
 					{#each combos as combo (combo.id)}
 						<div class="rounded-lg bg-white p-6 shadow-md">
-							<div class="flex items-start justify-between mb-4">
+							<div class="mb-4 flex items-start justify-between">
 								<div>
 									<h3 class="text-lg font-semibold text-gray-900">{combo.name}</h3>
 									{#if combo.description}
@@ -391,7 +396,7 @@
 							</div>
 
 							<div class="border-t pt-4">
-								<h4 class="text-sm font-medium text-gray-700 mb-2">Componentes:</h4>
+								<h4 class="mb-2 text-sm font-medium text-gray-700">Componentes:</h4>
 								<div class="space-y-1">
 									{#each combo.comboItems as item (item.id)}
 										<div class="flex justify-between text-sm">
@@ -403,11 +408,13 @@
 							</div>
 
 							<div class="mt-4">
-								<span class={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-									combo.status === 'ACTIVO' 
-										? 'text-green-800 bg-green-100' 
-										: 'text-gray-800 bg-gray-100'
-								}`}>
+								<span
+									class={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+										combo.status === 'ACTIVO'
+											? 'bg-green-100 text-green-800'
+											: 'bg-gray-100 text-gray-800'
+									}`}
+								>
 									{combo.status}
 								</span>
 							</div>
@@ -421,9 +428,9 @@
 	<!-- Modal Crear/Editar Combo -->
 	{#if showCreateModal || showEditModal}
 		<div class="fixed inset-0 z-50 overflow-y-auto">
-			<div class="flex min-h-full items-center justify-center bg-black bg-opacity-50 p-4">
-				<div class="w-full max-w-4xl bg-white rounded-lg shadow-xl p-6">
-					<div class="flex items-center justify-between mb-4">
+			<div class="bg-opacity-50 flex min-h-full items-center justify-center bg-black p-4">
+				<div class="w-full max-w-4xl rounded-lg bg-white p-6 shadow-xl">
+					<div class="mb-4 flex items-center justify-between">
 						<h3 class="text-lg font-semibold text-gray-900">
 							{showEditModal ? 'Editar Combo' : 'Nuevo Combo'}
 						</h3>
@@ -431,11 +438,13 @@
 					</div>
 
 					<form onsubmit={showEditModal ? updateCombo : createCombo}>
-						<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+						<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 							<!-- Datos del combo -->
 							<div class="space-y-4">
 								<div>
-									<label for="comboName" class="block text-sm font-medium text-gray-700">Nombre del Combo</label>
+									<label for="comboName" class="block text-sm font-medium text-gray-700"
+										>Nombre del Combo</label
+									>
 									<input
 										id="comboName"
 										name="comboName"
@@ -448,7 +457,9 @@
 								</div>
 
 								<div>
-									<label for="comboDescription" class="block text-sm font-medium text-gray-700">Descripción</label>
+									<label for="comboDescription" class="block text-sm font-medium text-gray-700"
+										>Descripción</label
+									>
 									<textarea
 										id="comboDescription"
 										name="comboDescription"
@@ -460,7 +471,9 @@
 								</div>
 
 								<div>
-									<label for="comboLabel" class="block text-sm font-medium text-gray-700">Etiqueta</label>
+									<label for="comboLabel" class="block text-sm font-medium text-gray-700"
+										>Etiqueta</label
+									>
 									<input
 										id="comboLabel"
 										name="comboLabel"
@@ -473,9 +486,11 @@
 								</div>
 
 								<div>
-									<label for="comboPrice" class="block text-sm font-medium text-gray-700">Precio</label>
+									<label for="comboPrice" class="block text-sm font-medium text-gray-700"
+										>Precio</label
+									>
 									<div class="relative">
-										<span class="absolute left-3 top-2 text-gray-500">$</span>
+										<span class="absolute top-2 left-3 text-gray-500">$</span>
 										<input
 											id="comboPrice"
 											name="comboPrice"
@@ -484,24 +499,25 @@
 											min="0"
 											step="0.01"
 											required
-											class="w-full rounded-md border-gray-300 pl-8 pr-3 py-2 text-gray-900"
+											class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900"
 											placeholder="0.00"
 										/>
 									</div>
 								</div>
 
 								<div>
-									<div class="flex justify-between items-center mb-2">
+									<div class="mb-2 flex items-center justify-between">
 										<h4 class="text-sm font-medium text-gray-700">Componentes</h4>
 										<span class="text-sm text-gray-500">
 											Total componentes: ${getComboTotal().toFixed(2)}
 										</span>
 									</div>
-									
-									<div class="border rounded-md p-3 max-h-64 overflow-y-auto">
+
+									<div class="max-h-64 overflow-y-auto rounded-md border p-3">
 										{#each selectedComponents as comp (comp.productId)}
-											<div class="flex items-center justify-between mb-2">
-												<span class="text-sm text-gray-900">{getComponentName(comp.productId)}</span>
+											<div class="mb-2 flex items-center justify-between">
+												<span class="text-sm text-gray-900">{getComponentName(comp.productId)}</span
+												>
 												<div class="flex items-center space-x-2">
 													<input
 														type="number"
@@ -526,21 +542,21 @@
 
 							<!-- Lista de productos disponibles -->
 							<div>
-								<h4 class="text-sm font-medium text-gray-700 mb-2">Productos Disponibles</h4>
-								<div class="border rounded-md p-3 max-h-96 overflow-y-auto">
+								<h4 class="mb-2 text-sm font-medium text-gray-700">Productos Disponibles</h4>
+								<div class="max-h-96 overflow-y-auto rounded-md border p-3">
 									{#each products as product (product.id)}
-										<div class="flex items-center justify-between py-2 border-b last:border-b-0">
+										<div class="flex items-center justify-between border-b py-2 last:border-b-0">
 											<div>
 												<div class="font-medium text-gray-900">{product.name}</div>
 												<div class="text-sm text-gray-500">
 													${product.saleFormats[0]?.price || 0} | Stock: {product.stock}
 												</div>
 											</div>
-											{#if !selectedComponents.find(c => c.productId === product.id)}
+											{#if !selectedComponents.find((c) => c.productId === product.id)}
 												<button
 													type="button"
 													onclick={() => addComponent(product.id)}
-													class="rounded bg-green-600 px-3 py-1 text-white text-sm hover:bg-green-700"
+													class="rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
 												>
 													Agregar
 												</button>
@@ -566,7 +582,7 @@
 								disabled={saving || selectedComponents.length === 0}
 								class="rounded-md bg-amber-600 px-4 py-2 text-white hover:bg-amber-700 disabled:bg-gray-400"
 							>
-								{saving ? 'Guardando...' : (showEditModal ? 'Actualizar' : 'Crear')}
+								{saving ? 'Guardando...' : showEditModal ? 'Actualizar' : 'Crear'}
 							</button>
 						</div>
 					</form>
