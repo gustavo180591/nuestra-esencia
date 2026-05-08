@@ -31,6 +31,12 @@
 			formatQuantity: number;
 			unitPrice: number;
 			subtotal: number;
+			isCombo?: boolean;
+			comboItems?: Array<{
+				id: string;
+				component: { id: string; name: string };
+				quantity: number;
+			}>;
 		}>
 	>([]);
 
@@ -335,7 +341,9 @@
 				quantity: 1,
 				formatQuantity: format.quantity || 1,
 				unitPrice: Number(format.price),
-				subtotal: Number(format.price)
+				subtotal: Number(format.price),
+				isCombo: product.isCombo,
+				comboItems: product.comboItems
 			});
 		}
 
@@ -595,27 +603,83 @@
 								<h3 class="mb-3 border-b pb-2 text-lg font-medium text-purple-900">🎁 Combos</h3>
 								<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 									{#each combos as combo (combo.id)}
-										<div class="space-y-3">
+										{@const availableCombos =
+											combo.comboItems && combo.comboItems.length > 0
+												? Math.floor(
+														Math.min(
+															...combo.comboItems.map((item) => {
+																const component = products.find((p) => p.id === item.component.id);
+																return component
+																	? Number(component.stock) / Number(item.quantity)
+																	: 0;
+															})
+														)
+													)
+												: 0}
+										{@const hasInsufficientStock = availableCombos === 0}
+										<div class="relative space-y-3">
 											<button
-												class="w-full transform rounded-xl border-2 border-purple-300 bg-linear-to-br from-purple-50 to-purple-100 p-6 text-left transition-all duration-200 hover:scale-105 hover:border-purple-500 hover:from-purple-100 hover:to-purple-200 hover:shadow-lg active:scale-95"
-												onclick={() => addToCart(combo, combo.saleFormats[0])}
+												class="w-full transform rounded-xl border-2 {hasInsufficientStock
+													? 'border-red-300 from-red-50 to-red-100'
+													: 'border-purple-300 from-purple-50 to-purple-100'} bg-linear-to-br p-6 text-left transition-all duration-200 hover:scale-105 {hasInsufficientStock
+													? 'hover:border-red-500 hover:from-red-100 hover:to-red-200'
+													: 'hover:border-purple-500 hover:from-purple-100 hover:to-purple-200'} hover:shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+												onclick={() =>
+													!hasInsufficientStock && addToCart(combo, combo.saleFormats[0])}
+												disabled={hasInsufficientStock}
 											>
-												<div class="mb-1 text-lg font-bold text-purple-900">{combo.name}</div>
+												<div
+													class="mb-1 text-lg font-bold {hasInsufficientStock
+														? 'text-red-900'
+														: 'text-purple-900'}"
+												>
+													{combo.name}
+												</div>
 												{#if combo.description}
 													<div class="mb-2 text-sm text-gray-600">{combo.description}</div>
 												{/if}
-												<div class="mb-1 text-2xl font-bold text-purple-600">
+												<div
+													class="mb-2 flex items-center text-sm {hasInsufficientStock
+														? 'text-red-700'
+														: 'text-green-700'}"
+												>
+													<span
+														class="mr-2 inline-block h-2 w-2 rounded-full {hasInsufficientStock
+															? 'bg-red-500'
+															: 'bg-green-500'}"
+													></span>
+													Disponibles: {availableCombos} combos
+												</div>
+												<div
+													class="mb-1 text-2xl font-bold {hasInsufficientStock
+														? 'text-red-600'
+														: 'text-purple-600'}"
+												>
 													${combo.saleFormats[0]?.price}
 												</div>
 												<div
-													class="inline-block rounded bg-purple-200 px-2 py-1 text-sm font-medium text-purple-700"
+													class="inline-block rounded {hasInsufficientStock
+														? 'bg-red-200 text-red-700'
+														: 'bg-purple-200 text-purple-700'} px-2 py-1 text-sm font-medium"
 												>
 													{combo.saleFormats[0]?.label}
 												</div>
 												<div class="mt-2 text-xs text-gray-500">
 													{#if combo.comboItems && combo.comboItems.length > 0}
 														{#each combo.comboItems as item (item.id)}
-															{item.component.name} x{item.quantity}
+															{@const component = products.find((p) => p.id === item.component.id)}
+															{@const componentStock = component ? Number(component.stock) : 0}
+															{@const neededStock = Number(item.quantity)}
+															<span
+																class={componentStock < neededStock
+																	? 'font-semibold text-red-600'
+																	: ''}
+															>
+																{item.component.name} x{item.quantity}
+																{#if componentStock < neededStock}
+																	<span class="ml-1 text-red-500">⚠️ Falta stock</span>
+																{/if}
+															</span>
 															{#if item.id !== combo.comboItems[combo.comboItems.length - 1].id},
 															{/if}
 														{/each}
@@ -624,6 +688,13 @@
 													{/if}
 												</div>
 											</button>
+											{#if hasInsufficientStock}
+												<div
+													class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg"
+												>
+													!
+												</div>
+											{/if}
 										</div>
 									{/each}
 								</div>
@@ -639,7 +710,7 @@
 
 							<div class="mb-6">
 								<h3 class="mb-3 border-b pb-2 text-lg font-medium text-gray-900">
-									{categoryName || 'Sin categoría'}
+									{categoryName || 'Combos'}
 								</h3>
 
 								<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -702,12 +773,37 @@
 						{:else}
 							{#each cart as item, index (item.productId + '-' + item.productSaleFormatId)}
 								{@const isWeightBased = item.unitMeasure === 'KILOGRAMO'}
-								<div class="flex items-center justify-between rounded bg-gray-50 p-3">
+								<div
+									class="flex items-center justify-between rounded bg-gray-50 p-3 {item.isCombo
+										? 'border-l-4 border-purple-500 bg-purple-50'
+										: ''}"
+								>
 									<div class="flex-1">
-										<div class="font-medium" style="color: #000">{item.productName}</div>
-										{#if item.formatLabel}
+										<div class="font-medium" style="color: #000">
+											{#if item.isCombo}
+												<span class="mr-1 text-purple-600">🎁</span>
+												<span class="text-purple-700">{item.productName}</span>
+												<span
+													class="ml-1 rounded bg-purple-200 px-1.5 py-0.5 text-xs text-purple-700"
+													>COMBO</span
+												>
+											{:else}
+												{item.productName}
+											{/if}
+										</div>
+										{#if item.formatLabel && !item.isCombo}
 											<div class="text-sm text-gray-600" style="color: #666">
 												{item.formatLabel}
+											</div>
+										{/if}
+										{#if item.isCombo && item.comboItems && item.comboItems.length > 0}
+											<div class="mt-1 text-xs text-gray-500">
+												{#each item.comboItems as comboItem, i}
+													{comboItem.component.name} x{comboItem.quantity}{i <
+													item.comboItems!.length - 1
+														? ', '
+														: ''}
+												{/each}
 											</div>
 										{/if}
 										<div class="text-sm font-bold" style="color: #000">

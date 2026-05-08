@@ -49,6 +49,7 @@
 	let comboPrice = $state(0);
 	let comboLabel = $state('');
 	let selectedComponents = $state<Array<{ productId: string; quantity: number }>>([]);
+	let searchQuery = $state('');
 
 	async function loadProducts() {
 		try {
@@ -293,32 +294,16 @@
 		}, 0);
 	}
 
+	let filteredProducts = $derived(
+		products.filter((product) => product.name.toLowerCase().includes(searchQuery.toLowerCase()))
+	);
+
 	onMount(() => {
 		loadAll();
 	});
 </script>
 
 <div class="min-h-screen bg-gray-50">
-	<!-- Header -->
-	<header class="bg-amber-600 text-white shadow-lg">
-		<div class="container mx-auto px-4 py-4">
-			<div class="flex items-center justify-between">
-				<div class="flex items-center space-x-4">
-					<h1 class="text-2xl font-bold">Nuestra Esencia</h1>
-					<span class="text-amber-100">Administración</span>
-				</div>
-				<nav class="flex space-x-4">
-					<a href="/admin" class="text-amber-100 hover:text-white">Panel</a>
-					<a href="/admin/products" class="text-amber-100 hover:text-white">Productos</a>
-					<a href="/admin/combos" class="font-medium text-white">Combos</a>
-					<a href="/admin/sales" class="text-amber-100 hover:text-white">Ventas</a>
-					<a href="/admin/payment-methods" class="text-amber-100 hover:text-white">Medios de Pago</a
-					>
-				</nav>
-			</div>
-		</div>
-	</header>
-
 	<!-- Main Content -->
 	<main class="container mx-auto px-4 py-6">
 		<div class="mb-6">
@@ -524,7 +509,7 @@
 														bind:value={comp.quantity}
 														min="0.1"
 														step="0.1"
-														class="w-16 rounded border-gray-300 px-2 py-1 text-sm"
+														class="w-16 rounded border-gray-300 px-2 py-1 text-sm text-gray-900"
 													/>
 													<button
 														type="button"
@@ -543,8 +528,16 @@
 							<!-- Lista de productos disponibles -->
 							<div>
 								<h4 class="mb-2 text-sm font-medium text-gray-700">Productos Disponibles</h4>
+								<div class="mb-3">
+									<input
+										type="text"
+										bind:value={searchQuery}
+										placeholder="Buscar productos..."
+										class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
+									/>
+								</div>
 								<div class="max-h-96 overflow-y-auto rounded-md border p-3">
-									{#each products as product (product.id)}
+									{#each filteredProducts as product (product.id)}
 										<div class="flex items-center justify-between border-b py-2 last:border-b-0">
 											<div>
 												<div class="font-medium text-gray-900">{product.name}</div>
