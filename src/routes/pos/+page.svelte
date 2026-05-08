@@ -42,6 +42,8 @@
 
 	let total = $state(0);
 	let discount = $state(0);
+	let discountType = $state<'percentage' | 'amount'>('amount');
+	let discountPercentage = $state(0);
 	let paymentMethod = $state<'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA' | 'QR'>('EFECTIVO');
 	let paymentMethodId = $state<string>('');
 	let cashReceived = $state(0);
@@ -968,17 +970,57 @@
 								>{formatCurrency(cart.reduce((sum, item) => sum + item.subtotal, 0))}</span
 							>
 						</div>
-						<div class="flex justify-between">
+						<div class="flex justify-between items-center">
 							<span style="color: #000">Descuento:</span>
-							<input
-								type="number"
-								bind:value={discount}
-								class="w-20 rounded border px-2 py-1 text-right"
-								placeholder="0"
-								readonly
-								onclick={() => openKeypad('discount')}
-								style="color: #000"
-							/>
+							<div class="flex items-center gap-2">
+								<!-- Selector de tipo de descuento -->
+								<div class="flex rounded border overflow-hidden">
+									<button
+										type="button"
+										class="px-2 py-1 text-sm {discountType === 'amount' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-700'}"
+										onclick={() => { discountType = 'amount'; discount = 0; discountPercentage = 0; updateTotals(); }}
+									>
+										$
+									</button>
+									<button
+										type="button"
+										class="px-2 py-1 text-sm {discountType === 'percentage' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-700'}"
+										onclick={() => { discountType = 'percentage'; discount = 0; discountPercentage = 0; updateTotals(); }}
+									>
+										%
+									</button>
+								</div>
+								<!-- Input de descuento según tipo seleccionado -->
+								{#if discountType === 'amount'}
+									<input
+										type="number"
+										bind:value={discount}
+										class="w-20 rounded border px-2 py-1 text-right"
+										placeholder="0"
+										readonly
+										onclick={() => openKeypad('discount')}
+										style="color: #000"
+									/>
+								{:else}
+									<input
+										type="number"
+										bind:value={discountPercentage}
+										class="w-20 rounded border px-2 py-1 text-right"
+										placeholder="0"
+										min="0"
+										max="100"
+										onchange={(e) => {
+											const pct = Math.min(100, Math.max(0, parseFloat(e.currentTarget.value) || 0));
+											discountPercentage = pct;
+											const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+											discount = Math.round((subtotal * pct) / 100);
+											updateTotals();
+										}}
+										style="color: #000"
+									/>
+									<span class="text-sm text-gray-600">%</span>
+								{/if}
+							</div>
 						</div>
 						<div class="flex justify-between text-lg font-bold">
 							<span style="color: #000">Total:</span>
