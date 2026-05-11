@@ -768,12 +768,30 @@
 				<div class="sticky top-6 rounded-lg bg-white p-6 shadow-md">
 					<h2 class="mb-4 text-xl font-semibold text-gray-900">Carrito</h2>
 
+					<!-- Botones de acción -->
+					<div class="mb-4 space-y-2">
+						<button
+							class="w-full rounded-lg bg-amber-600 py-3 font-medium text-white hover:bg-amber-700 disabled:bg-gray-400"
+							onclick={processSale}
+							disabled={cart.length === 0}
+						>
+							Cobrar {formatCurrency(total)}
+						</button>
+						<button
+							class="w-full rounded-lg bg-gray-200 py-2 text-gray-900 hover:bg-gray-300"
+							onclick={clearCart}
+							disabled={cart.length === 0}
+						>
+							Vaciar Carrito
+						</button>
+					</div>
+
 					<!-- Items del carrito -->
 					<div class="mb-4 max-h-96 space-y-2 overflow-y-auto">
 						{#if cart.length === 0}
 							<div class="py-4 text-center text-gray-900">El carrito está vacío</div>
 						{:else}
-							{#each cart as item, index (item.productId + '-' + item.productSaleFormatId)}
+							{#each cart.slice().reverse() as item, index (item.productId + '-' + item.productSaleFormatId)}
 								{@const isWeightBased = item.unitMeasure === 'KILOGRAMO'}
 								<div
 									class="flex items-center justify-between rounded bg-gray-50 p-3 {item.isCombo
@@ -1083,23 +1101,6 @@
 						</div>
 					{/if}
 
-					<!-- Botones de acción -->
-					<div class="mt-6 space-y-2">
-						<button
-							class="w-full rounded-lg bg-amber-600 py-3 font-medium text-white hover:bg-amber-700 disabled:bg-gray-400"
-							onclick={processSale}
-							disabled={cart.length === 0}
-						>
-							Cobrar {formatCurrency(total)}
-						</button>
-						<button
-							class="w-full rounded-lg bg-gray-200 py-2 text-gray-900 hover:bg-gray-300"
-							onclick={clearCart}
-							disabled={cart.length === 0}
-						>
-							Vaciar Carrito
-						</button>
-					</div>
 				</div>
 			</div>
 		</div>
