@@ -78,10 +78,21 @@ export const GET: RequestHandler = async ({ url }) => {
 };
 
 // POST - Crear nuevo gasto
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	try {
+		const userId = locals.user?.id;
+		if (!userId) {
+			return json(
+				{
+					success: false,
+					message: 'Usuario no autenticado'
+				},
+				{ status: 401 }
+			);
+		}
+
 		const data = await request.json();
-		const { description, amount, category, date, paymentMethod, supplierId, notes, userId, cashRegisterId } = data;
+		const { description, amount, category, date, paymentMethod, supplierId, notes, cashRegisterId } = data;
 
 		// Validaciones básicas
 		if (!description || description.trim() === '') {
@@ -119,16 +130,6 @@ export const POST: RequestHandler = async ({ request }) => {
 				{
 					success: false,
 					message: 'El método de pago es requerido'
-				},
-				{ status: 400 }
-			);
-		}
-
-		if (!userId) {
-			return json(
-				{
-					success: false,
-					message: 'El usuario es requerido'
 				},
 				{ status: 400 }
 			);

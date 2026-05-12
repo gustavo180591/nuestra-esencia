@@ -90,12 +90,6 @@
 	async function createExpense() {
 		saving = true;
 		try {
-			const userId = localStorage.getItem('userId');
-			if (!userId) {
-				alert('Error: No hay usuario autenticado');
-				return;
-			}
-
 			const response = await fetch('/api/expenses', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -106,8 +100,7 @@
 					date,
 					paymentMethod,
 					supplierId: supplierId || null,
-					notes,
-					userId
+					notes
 				})
 			});
 
