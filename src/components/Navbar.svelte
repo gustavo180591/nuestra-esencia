@@ -29,7 +29,6 @@
 		{ href: '/admin', label: 'Productos', icon: '📦' },
 		{ href: '/admin/stock', label: 'Stock', icon: '📊' },
 		{ href: '/admin/purchases', label: 'Compras', icon: '🛒' },
-		{ href: '/admin/suppliers', label: 'Proveedores', icon: '🚚' },
 		{ href: '/admin/expenses', label: 'Gastos', icon: '💸' }
 	];
 
@@ -152,6 +151,13 @@
 													Gestión de Usuarios
 												</a>
 												<a
+													href="/admin/suppliers"
+													onclick={closeAdminMenu}
+													class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+												>
+													Proveedores
+												</a>
+												<a
 													href="/admin/payment-methods"
 													onclick={closeAdminMenu}
 													class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -262,6 +268,16 @@
 																class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
 															>
 																Gestión de Usuarios
+															</a>
+															<a
+																href="/admin/suppliers"
+																onclick={() => {
+																	closeAdminMenu();
+																	closeMobileMenu();
+																}}
+																class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+															>
+																Proveedores
 															</a>
 															<a
 																href="/admin/payment-methods"
