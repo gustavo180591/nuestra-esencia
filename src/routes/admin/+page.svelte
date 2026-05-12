@@ -714,6 +714,12 @@
 				>
 					Gestionar Formatos
 				</a>
+				<a
+					href="/admin/expenses"
+					class="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+				>
+					Gestionar Gastos
+				</a>
 				<button
 					onclick={openCreateModal}
 					class="rounded-lg bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"

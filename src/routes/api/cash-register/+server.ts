@@ -108,6 +108,9 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 				sales: {
 					where: { status: 'COMPLETADA' },
 					select: { total: true, paymentMethod: true, cashReceived: true }
+				},
+				expenses: {
+					select: { amount: true, paymentMethod: true }
 				}
 			}
 		});
@@ -116,10 +119,14 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 			return json({ success: false, message: 'No hay caja abierta para cerrar' }, { status: 400 });
 		}
 
-		// Calcular monto esperado: inicial + ventas en efectivo
+		// Calcular monto esperado: inicial + ventas en efectivo - gastos en efectivo
 		const cashSales = openCashRegister.sales.filter((s) => s.paymentMethod?.code === 'EFECTIVO');
 		const totalCashSales = cashSales.reduce((sum, s) => sum + Number(s.cashReceived || s.total), 0);
-		const expectedAmount = Number(openCashRegister.initialAmount) + totalCashSales;
+		
+		const cashExpenses = openCashRegister.expenses.filter((e) => e.paymentMethod === 'EFECTIVO');
+		const totalCashExpenses = cashExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
+		
+		const expectedAmount = Number(openCashRegister.initialAmount) + totalCashSales - totalCashExpenses;
 
 		// Calcular diferencia
 		const difference = (actualAmount || 0) - expectedAmount;
@@ -145,6 +152,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 				arqueo: {
 					initialAmount: openCashRegister.initialAmount,
 					totalCashSales,
+					totalCashExpenses,
 					expectedAmount,
 					actualAmount,
 					difference,

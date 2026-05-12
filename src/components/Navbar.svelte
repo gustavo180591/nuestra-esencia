@@ -29,7 +29,8 @@
 		{ href: '/admin', label: 'Productos', icon: '📦' },
 		{ href: '/admin/stock', label: 'Stock', icon: '📊' },
 		{ href: '/admin/purchases', label: 'Compras', icon: '🛒' },
-		{ href: '/admin/suppliers', label: 'Proveedores', icon: '🚚' }
+		{ href: '/admin/suppliers', label: 'Proveedores', icon: '🚚' },
+		{ href: '/admin/expenses', label: 'Gastos', icon: '💸' }
 	];
 
 	function toggleMobileMenu() {
