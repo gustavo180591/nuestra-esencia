@@ -287,7 +287,7 @@
 					<label class="block text-sm font-medium text-gray-700">Categoría</label>
 					<select
 						bind:value={filterCategory}
-						class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
+						class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 					>
 						<option value="">Todas</option>
 						{#each categories as cat}
@@ -299,7 +299,7 @@
 					<label class="block text-sm font-medium text-gray-700">Proveedor</label>
 					<select
 						bind:value={filterSupplierId}
-						class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
+						class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 					>
 						<option value="">Todos</option>
 						{#each suppliers as supplier}
