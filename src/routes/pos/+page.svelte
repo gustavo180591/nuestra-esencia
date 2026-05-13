@@ -65,7 +65,6 @@
 	} | null>(null);
 	let showOpenModal = $state(false);
 	let showMovementModal = $state(false);
-	let showCashRegisterModal = $state(false);
 	let showCloseModal = $state(false);
 	let openingAmount = $state(0);
 	let openingBranch = $state('');
@@ -659,7 +658,6 @@
 			const result = await response.json();
 			if (result.success) {
 				showCloseModal = false;
-				showCashRegisterModal = false;
 				closingAmount = 0;
 				closingNotes = '';
 				// Resetear conteo de billetes
@@ -714,11 +712,7 @@
 					<span class="text-amber-100">Sistema de Caja</span>
 				</div>
 				<div class="flex items-center space-x-3">
-					<button
-						type="button"
-						onclick={() => (showCashRegisterModal = true)}
-						class="text-right text-sm text-white hover:text-amber-200"
-					>
+					<div class="text-right text-sm">
 						{#if cashRegister}
 							<div class="text-amber-100">
 								💵 Caja Abierta
@@ -730,14 +724,11 @@
 						{:else}
 							<div class="text-red-100">🔴 Caja Cerrada</div>
 						{/if}
-					</button>
+					</div>
 					{#if cashRegister}
 						<button
 							type="button"
-							onclick={() => {
-								showCashRegisterModal = false;
-								showCloseModal = true;
-							}}
+							onclick={() => (showCloseModal = true)}
 							class="rounded-md bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
 						>
 							Cerrar Caja
@@ -745,10 +736,7 @@
 					{:else}
 						<button
 							type="button"
-							onclick={() => {
-								showCashRegisterModal = false;
-								showOpenModal = true;
-							}}
+							onclick={() => (showOpenModal = true)}
 							class="rounded-md bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
 						>
 							Abrir Caja
@@ -1671,182 +1659,6 @@
 						</button>
 					</div>
 				</form>
-			</div>
-		</div>
-	</div>
-{/if}
-
-<!-- Modal Integral de Caja -->
-{#if showCashRegisterModal}
-	<div class="fixed inset-0 z-50 overflow-y-auto">
-		<div class="bg-opacity-50 flex min-h-full items-center justify-center bg-black p-4">
-			<div class="w-full max-w-4xl rounded-lg bg-white p-6 shadow-xl">
-				<div class="mb-4 flex items-center justify-between">
-					<h3 class="text-lg font-semibold text-gray-900">Gestión de Caja</h3>
-					<button
-						onclick={() => (showCashRegisterModal = false)}
-						class="text-gray-400 hover:text-gray-600"
-						>✕</button
-					>
-				</div>
-
-				{#if cashRegister}
-					<!-- Caja Abierta - Mostrar resumen y opciones -->
-					<div class="space-y-4">
-						<!-- Resumen del estado actual -->
-						<div class="rounded bg-gray-50 p-4">
-							<h4 class="mb-3 text-sm font-medium text-gray-900">Estado Actual</h4>
-							<div class="grid grid-cols-2 gap-4">
-								<div>
-									<div class="text-xs text-gray-500">Monto Inicial</div>
-									<div class="text-sm font-medium text-gray-900">
-										{formatCurrency(cashRegister.initialAmount)}
-									</div>
-								</div>
-								<div>
-									<div class="text-xs text-gray-500">Abierta por</div>
-									<div class="text-sm font-medium text-gray-900">
-										{cashRegister.openedBy?.name || 'Usuario'}
-									</div>
-								</div>
-								<div>
-									<div class="text-xs text-gray-500">Fecha Apertura</div>
-									<div class="text-sm font-medium text-gray-900">
-										{new Date(cashRegister.openedAt || '').toLocaleString('es-AR')}
-									</div>
-								</div>
-								<div>
-									<div class="text-xs text-gray-500">Sucursal</div>
-									<div class="text-sm font-medium text-gray-900">
-										{cashRegister.branch || 'Principal'}
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<!-- Resumen de ventas por método de pago -->
-						<div class="rounded bg-gray-50 p-4">
-							<h4 class="mb-3 text-sm font-medium text-gray-900">Ventas del Turno</h4>
-							<div class="grid grid-cols-2 gap-4">
-								<div>
-									<div class="text-xs text-gray-500">Efectivo</div>
-									<div class="text-sm font-medium text-gray-900">
-										{formatCurrency(
-											(cashRegister.sales || [])
-												.filter((s) => s.paymentMethod?.code === 'EFECTIVO')
-												.reduce((sum: number, s) => sum + Number(s.cashReceived || s.total), 0)
-										)}
-									</div>
-								</div>
-								<div>
-									<div class="text-xs text-gray-500">Transferencias</div>
-									<div class="text-sm font-medium text-blue-600">
-										{formatCurrency(
-											(cashRegister.sales || [])
-												.filter((s) => s.paymentMethod?.code === 'TRANSFERENCIA')
-												.reduce((sum: number, s) => sum + Number(s.total), 0)
-										)}
-									</div>
-								</div>
-								<div>
-									<div class="text-xs text-gray-500">QR</div>
-									<div class="text-sm font-medium text-purple-600">
-										{formatCurrency(
-											(cashRegister.sales || [])
-												.filter((s) => s.paymentMethod?.code === 'QR')
-												.reduce((sum: number, s) => sum + Number(s.total), 0)
-										)}
-									</div>
-								</div>
-								<div>
-									<div class="text-xs text-gray-500">Tarjeta</div>
-									<div class="text-sm font-medium text-green-600">
-										{formatCurrency(
-											(cashRegister.sales || [])
-												.filter((s) => s.paymentMethod?.code === 'TARJETA')
-												.reduce((sum: number, s) => sum + Number(s.total), 0)
-										)}
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<!-- Movimientos manuales -->
-						<div class="rounded bg-gray-50 p-4">
-							<div class="mb-3 flex items-center justify-between">
-								<h4 class="text-sm font-medium text-gray-900">Movimientos Manuales</h4>
-								<button
-									type="button"
-									onclick={() => {
-										showCashRegisterModal = false;
-										showMovementModal = true;
-									}}
-									class="rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-								>
-									+ Agregar Movimiento
-								</button>
-							</div>
-							{#if movements.length === 0}
-								<div class="py-4 text-center text-gray-500">No hay movimientos registrados</div>
-							{:else}
-								<div class="max-h-48 space-y-2 overflow-y-auto">
-									{#each movements as movement (movement.id)}
-										<div class="flex items-center justify-between rounded bg-white p-3">
-											<div>
-												<div class="text-sm font-medium text-gray-900">
-													{movement.type === 'INGRESO' ? '+' : '-'}
-													{formatCurrency(movement.amount)}
-												</div>
-												<div class="text-xs text-gray-500">{movement.description}</div>
-											</div>
-											<div class="text-right">
-												<div class="text-xs text-gray-500">{movement.category}</div>
-												<div class="text-xs text-gray-400">
-													{movement.user?.name || 'Usuario'}
-												</div>
-											</div>
-										</div>
-									{/each}
-								</div>
-							{/if}
-						</div>
-
-						<!-- Botón de cierre -->
-						<div class="flex justify-end">
-							<button
-								type="button"
-								onclick={() => {
-									showCashRegisterModal = false;
-									showCloseModal = true;
-								}}
-								class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-							>
-								Cerrar Caja
-							</button>
-						</div>
-					</div>
-				{:else}
-					<!-- Caja Cerrada - Mostrar opción de apertura -->
-					<div class="space-y-4">
-						<div class="rounded bg-gray-50 p-4">
-							<h4 class="mb-3 text-sm font-medium text-gray-900">Estado Actual</h4>
-							<div class="text-center text-gray-500">🔴 Caja Cerrada</div>
-						</div>
-
-						<div class="flex justify-end">
-							<button
-								type="button"
-								onclick={() => {
-									showCashRegisterModal = false;
-									showOpenModal = true;
-								}}
-								class="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-							>
-								Abrir Caja
-							</button>
-						</div>
-					</div>
-				{/if}
 			</div>
 		</div>
 	</div>
