@@ -122,10 +122,10 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const data = await request.json();
-		const { actualAmount, notes, billCounts } = data;
+		const { totalAmount, notes, billCounts } = data;
 
-		if (!actualAmount || actualAmount < 0) {
-			return json({ success: false, message: 'El monto real es requerido' }, { status: 400 });
+		if (!totalAmount || totalAmount < 0) {
+			return json({ success: false, message: 'El total general es requerido' }, { status: 400 });
 		}
 
 		// Buscar caja abierta
@@ -170,7 +170,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 			Number(openCashRegister.initialAmount) + totalCashSales - totalCashExpenses;
 
 		// Calcular diferencia
-		const difference = (actualAmount || 0) - expectedAmount;
+		const difference = (totalAmount || 0) - expectedAmount;
 
 		const closedCashRegister = await db.cashRegister.update({
 			where: { id: openCashRegister.id },
@@ -178,7 +178,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 				status: 'CERRADA',
 				closedAt: new Date(),
 				closedBy: { connect: { id: userId } },
-				actualAmount,
+				actualAmount: totalAmount,
 				expectedAmount,
 				difference,
 				notes,
@@ -199,7 +199,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 					totalCardSales,
 					totalCashExpenses,
 					expectedAmount,
-					actualAmount,
+					totalAmount,
 					difference,
 					differenceText: difference === 0 ? 'Cuadrado' : difference > 0 ? 'Sobrante' : 'Faltante'
 				}
