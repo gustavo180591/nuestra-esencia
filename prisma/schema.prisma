@@ -392,6 +392,7 @@ model PaymentMethodConfig {
   description String?
   icon        String?  // emoji o icono
   active      Boolean  @default(true)
+  affectsCash  Boolean  @default(false)  // Si afecta el dinero físico en caja
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

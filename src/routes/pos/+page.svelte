@@ -67,7 +67,6 @@
 	let showMovementModal = $state(false);
 	let showCloseModal = $state(false);
 	let openingAmount = $state(0);
-	let openingBranch = $state('');
 	let openingNotes = $state('');
 	let closingAmount = $state(0);
 	let closingNotes = $state('');
@@ -595,7 +594,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					initialAmount: openingAmount,
-					branch: openingBranch || null,
+					branch: 'Principal',
 					openingBillCounts: openingBillCounts,
 					openingNotes: openingNotes || null
 				})
@@ -605,7 +604,6 @@
 			if (result.success) {
 				showOpenModal = false;
 				openingAmount = 0;
-				openingBranch = '';
 				openingNotes = '';
 				// Resetear conteo de billetes de apertura
 				openingBillCounts = {
@@ -1430,19 +1428,7 @@
 
 				<form onsubmit={openCashRegister}>
 					<div class="space-y-4">
-						<div>
-						<label for="openingBranch" class="block text-sm font-medium text-gray-700"
-							>Sucursal</label
-						>
-						<input
-							id="openingBranch"
-							type="text"
-							bind:value={openingBranch}
-							class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
-							placeholder="Principal"
-						/>
-					</div>
-
+						
 						<div>
 							<label for="openingAmount" class="block text-sm font-medium text-gray-700"
 								>Monto Inicial</label
@@ -1703,7 +1689,7 @@
 								{formatCurrency(
 									movements
 										.filter((m) => m.type === 'INGRESO')
-										.reduce((sum: number, m) => sum + m.amount, 0)
+										.reduce((sum: number, m) => sum + Number(m.amount), 0)
 								)}
 							</div>
 						</div>
@@ -1713,7 +1699,7 @@
 								{formatCurrency(
 									movements
 										.filter((m) => m.type === 'EGRESO')
-										.reduce((sum: number, m) => sum + m.amount, 0)
+										.reduce((sum: number, m) => sum + Number(m.amount), 0)
 								)}
 							</div>
 						</div>
