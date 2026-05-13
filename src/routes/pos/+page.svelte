@@ -1463,43 +1463,103 @@
 						<div class="mt-4 grid grid-cols-2 gap-3">
 							<div>
 								<label for="opening-bill-20000" class="block text-xs text-gray-500">$ 20.000</label>
-								<input type="number" id="opening-bill-20000" min="0" bind:value={openingBillCounts['20000']} class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900" />
+								<input
+									type="number"
+									id="opening-bill-20000"
+									min="0"
+									bind:value={openingBillCounts['20000']}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+								/>
 							</div>
 							<div>
 								<label for="opening-bill-10000" class="block text-xs text-gray-500">$ 10.000</label>
-								<input type="number" id="opening-bill-10000" min="0" bind:value={openingBillCounts['10000']} class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900" />
+								<input
+									type="number"
+									id="opening-bill-10000"
+									min="0"
+									bind:value={openingBillCounts['10000']}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+								/>
 							</div>
 							<div>
 								<label for="opening-bill-2000" class="block text-xs text-gray-500">$ 2.000</label>
-								<input type="number" id="opening-bill-2000" min="0" bind:value={openingBillCounts['2000']} class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900" />
+								<input
+									type="number"
+									id="opening-bill-2000"
+									min="0"
+									bind:value={openingBillCounts['2000']}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+								/>
 							</div>
 							<div>
 								<label for="opening-bill-1000" class="block text-xs text-gray-500">$ 1.000</label>
-								<input type="number" id="opening-bill-1000" min="0" bind:value={openingBillCounts['1000']} class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900" />
+								<input
+									type="number"
+									id="opening-bill-1000"
+									min="0"
+									bind:value={openingBillCounts['1000']}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+								/>
 							</div>
 							<div>
 								<label for="opening-bill-500" class="block text-xs text-gray-500">$ 500</label>
-								<input type="number" id="opening-bill-500" min="0" bind:value={openingBillCounts['500']} class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900" />
+								<input
+									type="number"
+									id="opening-bill-500"
+									min="0"
+									bind:value={openingBillCounts['500']}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+								/>
 							</div>
 							<div>
 								<label for="opening-bill-200" class="block text-xs text-gray-500">$ 200</label>
-								<input type="number" id="opening-bill-200" min="0" bind:value={openingBillCounts['200']} class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900" />
+								<input
+									type="number"
+									id="opening-bill-200"
+									min="0"
+									bind:value={openingBillCounts['200']}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+								/>
 							</div>
 							<div>
 								<label for="opening-bill-100" class="block text-xs text-gray-500">$ 100</label>
-								<input type="number" id="opening-bill-100" min="0" bind:value={openingBillCounts['100']} class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900" />
+								<input
+									type="number"
+									id="opening-bill-100"
+									min="0"
+									bind:value={openingBillCounts['100']}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+								/>
 							</div>
 							<div>
 								<label for="opening-bill-50" class="block text-xs text-gray-500">$ 50</label>
-								<input type="number" id="opening-bill-50" min="0" bind:value={openingBillCounts['50']} class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900" />
+								<input
+									type="number"
+									id="opening-bill-50"
+									min="0"
+									bind:value={openingBillCounts['50']}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+								/>
 							</div>
 							<div>
 								<label for="opening-bill-20" class="block text-xs text-gray-500">$ 20</label>
-								<input type="number" id="opening-bill-20" min="0" bind:value={openingBillCounts['20']} class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900" />
+								<input
+									type="number"
+									id="opening-bill-20"
+									min="0"
+									bind:value={openingBillCounts['20']}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+								/>
 							</div>
 							<div>
 								<label for="opening-bill-10" class="block text-xs text-gray-500">$ 10</label>
-								<input type="number" id="opening-bill-10" min="0" bind:value={openingBillCounts['10']} class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900" />
+								<input
+									type="number"
+									id="opening-bill-10"
+									min="0"
+									bind:value={openingBillCounts['10']}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+								/>
 							</div>
 						</div>
 					</div>
@@ -1507,43 +1567,68 @@
 						<h4 class="text-lg font-semibold text-gray-900">Dinero Digital</h4>
 						<div class="mt-4 space-y-4">
 							<div>
-								<label for="opening-qr-amount" class="block text-sm font-medium text-gray-700">QR</label>
+								<label for="opening-qr-amount" class="block text-sm font-medium text-gray-700"
+									>QR</label
+								>
 								<div class="relative">
 									<span class="absolute top-2 left-3 text-gray-500">$</span>
-									<input type="number" id="opening-qr-amount" min="0" step="0.01" bind:value={openingQrAmount} class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900" placeholder="0.00" />
+									<input
+										type="number"
+										id="opening-qr-amount"
+										min="0"
+										step="0.01"
+										bind:value={openingQrAmount}
+										class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900"
+										placeholder="0.00"
+									/>
 								</div>
 							</div>
 							<div>
-								<label for="opening-transfer-amount" class="block text-sm font-medium text-gray-700">Transferencias</label>
+								<label for="opening-transfer-amount" class="block text-sm font-medium text-gray-700"
+									>Transferencias</label
+								>
 								<div class="relative">
 									<span class="absolute top-2 left-3 text-gray-500">$</span>
-									<input type="number" id="opening-transfer-amount" min="0" step="0.01" bind:value={openingTransferAmount} class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900" placeholder="0.00" />
+									<input
+										type="number"
+										id="opening-transfer-amount"
+										min="0"
+										step="0.01"
+										bind:value={openingTransferAmount}
+										class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900"
+										placeholder="0.00"
+									/>
 								</div>
 							</div>
 						</div>
-						
-						
+
 						<!-- Totales -->
 						<div class="mt-6 rounded bg-gray-50 p-4">
-							<h5 class="text-sm font-semibold text-gray-900 mb-3">Totales</h5>
+							<h5 class="mb-3 text-sm font-semibold text-gray-900">Totales</h5>
 							<div class="space-y-2">
 								<div class="flex justify-between text-sm">
 									<span class="text-gray-600">Total Dinero Físico:</span>
-									<span class="font-medium text-gray-900">{formatCurrency(totalOpeningPhysicalMoney)}</span>
+									<span class="font-medium text-gray-900"
+										>{formatCurrency(totalOpeningPhysicalMoney)}</span
+									>
 								</div>
 								<div class="flex justify-between text-sm">
 									<span class="text-gray-600">Total Dinero Digital:</span>
-									<span class="font-medium text-gray-900">{formatCurrency(totalOpeningDigitalMoney)}</span>
+									<span class="font-medium text-gray-900"
+										>{formatCurrency(totalOpeningDigitalMoney)}</span
+									>
 								</div>
-								<div class="border-t pt-2 flex justify-between">
+								<div class="flex justify-between border-t pt-2">
 									<span class="font-semibold text-gray-900">Total General:</span>
-									<span class="font-bold text-lg text-gray-900">{formatCurrency(openingGrandTotal)}</span>
+									<span class="text-lg font-bold text-gray-900"
+										>{formatCurrency(openingGrandTotal)}</span
+									>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-				
+
 				<!-- Botones de acción -->
 				<div class="mt-6 flex justify-end space-x-3">
 					<button

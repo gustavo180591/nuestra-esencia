@@ -245,7 +245,8 @@
 					<a href="/admin" class="text-amber-100 hover:text-white">Panel</a>
 					<a href="/admin/products" class="text-amber-100 hover:text-white">Productos</a>
 					<a href="/admin/sales" class="text-amber-100 hover:text-white">Ventas</a>
-					<a href="/admin/payment-methods" class="text-amber-100 hover:text-white">Medios de Pago</a>
+					<a href="/admin/payment-methods" class="text-amber-100 hover:text-white">Medios de Pago</a
+					>
 				</nav>
 			</div>
 		</div>
