@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import * as XLSX from 'xlsx';
 
 	interface Movement {
 		id: string;
@@ -137,6 +138,66 @@
 		}
 	}
 
+	async function exportToExcel() {
+		try {
+			// Get all movements data with current filters
+			const params = new URLSearchParams({
+				export: 'all' // Flag to get all data for export
+			});
+
+			if (selectedType) params.append('type', selectedType);
+			if (startDate) params.append('startDate', startDate);
+			if (endDate) params.append('endDate', endDate);
+
+			const response = await fetch(`/api/movements?${params.toString()}`);
+			const data = await response.json();
+			
+			if (!data.success) {
+				alert('Error al obtener datos para exportar');
+				return;
+			}
+
+			const allMovements = data.data.movements;
+
+			// Prepare data for Excel
+			const excelData = allMovements.map((movement: Movement) => {
+				return {
+					'Fecha/Hora': formatDate(movement.timestamp),
+					'Tipo': movement.type === 'OPENING' ? 'Apertura' : 'Cierre',
+					'Usuario': `${movement.user.name} (${movement.user.email})`,
+					'Monto': movement.amount,
+					'Descripción': movement.description,
+					'Notas': movement.notes || '',
+					'Diferencia': movement.difference !== undefined ? movement.difference : '',
+					'Monto Esperado': movement.expectedAmount || '',
+					'ID Caja': movement.cashRegisterId
+				};
+			});
+
+			// Create workbook
+			const ws = XLSX.utils.json_to_sheet(excelData);
+			const wb = XLSX.utils.book_new();
+			XLSX.utils.book_append_sheet(wb, ws, 'Movimientos');
+
+			// Generate filename with current date and filters
+			const date = new Date().toLocaleDateString('es-AR').replace(/\//g, '-');
+			let filename = `movimientos-${date}`;
+			
+			if (selectedType) {
+				filename += `-tipo-${selectedType}`;
+			}
+			if (startDate || endDate) {
+				filename += `-desde-${startDate || 'inicio'}-hasta-${endDate || 'hoy'}`;
+			}
+
+			// Save file
+			XLSX.writeFile(wb, `${filename}.xlsx`);
+		} catch (error) {
+			console.error('Error exporting to Excel:', error);
+			alert('Error al exportar a Excel');
+		}
+	}
+
 	onMount(() => {
 		loadMovements();
 	});
@@ -237,8 +298,20 @@
 					<div class="text-red-800">{error}</div>
 				</div>
 			{:else}
-				<!-- Tabla de movimientos -->
-				<div class="overflow-hidden rounded-lg bg-white shadow">
+			<!-- Botón de exportación -->
+			{#if movements.length > 0}
+				<div class="mb-4">
+					<button
+						onclick={exportToExcel}
+						class="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+					>
+						📊 Exportar Excel
+					</button>
+				</div>
+			{/if}
+
+			<!-- Tabla de movimientos -->
+			<div class="overflow-hidden rounded-lg bg-white shadow">
 					<div class="overflow-x-auto">
 						<table class="min-w-full divide-y divide-gray-200">
 							<thead class="bg-gray-50">
