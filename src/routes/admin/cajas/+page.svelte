@@ -62,39 +62,48 @@
 				<table class="min-w-full divide-y divide-gray-200">
 					<thead class="bg-gray-50">
 						<tr>
-							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							<th
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>
 								Fecha Apertura
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							<th
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>
 								Fecha Cierre
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							<th
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>
 								Sucursal
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							<th
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>
 								Turno
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							<th
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>
 								Responsable
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							<th
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>
 								Monto Inicial
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							<th
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>
 								Diferencia
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							<th
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>
 								Estado
 							</th>
-							<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							<th
+								class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>
 								Acciones
 							</th>
@@ -103,25 +112,25 @@
 					<tbody class="divide-y divide-gray-200 bg-white">
 						{#each cashRegisters as register (register.id)}
 							<tr class="hover:bg-gray-50">
-								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+								<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 									{formatDate(register.openedAt)}
 								</td>
-								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+								<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 									{register.closedAt ? formatDate(register.closedAt) : '-'}
 								</td>
-								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+								<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 									{register.branch || '-'}
 								</td>
-								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+								<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 									{register.shift || '-'}
 								</td>
-								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+								<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 									{register.openedBy?.name || '-'}
 								</td>
-								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+								<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 									{formatCurrency(Number(register.initialAmount))}
 								</td>
-								<td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
+								<td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
 									{#if register.difference === 0}
 										<span class="text-green-600">{formatCurrency(0)}</span>
 									{:else if register.difference && register.difference > 0}
@@ -130,28 +139,28 @@
 										<span class="text-red-600">{formatCurrency(register.difference || 0)}</span>
 									{/if}
 								</td>
-								<td class="whitespace-nowrap px-6 py-4 text-sm">
+								<td class="px-6 py-4 text-sm whitespace-nowrap">
 									{#if register.difference === 0}
 										<span
-											class="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800"
+											class="inline-flex rounded-full bg-green-100 px-2 text-xs leading-5 font-semibold text-green-800"
 										>
 											Cuadrado
 										</span>
 									{:else if register.difference && register.difference > 0}
 										<span
-											class="inline-flex rounded-full bg-yellow-100 px-2 text-xs font-semibold leading-5 text-yellow-800"
+											class="inline-flex rounded-full bg-yellow-100 px-2 text-xs leading-5 font-semibold text-yellow-800"
 										>
 											Sobrante
 										</span>
 									{:else}
 										<span
-											class="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800"
+											class="inline-flex rounded-full bg-red-100 px-2 text-xs leading-5 font-semibold text-red-800"
 										>
 											Faltante
 										</span>
 									{/if}
 								</td>
-								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+								<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 									<button
 										onclick={() => selectRegister(register)}
 										class="text-blue-600 hover:text-blue-900"
@@ -211,20 +220,30 @@
 							<div class="space-y-2 text-sm">
 								<div class="flex justify-between">
 									<span class="text-gray-600">Monto Inicial:</span>
-									<span class="font-medium">{formatCurrency(Number(selectedRegister.initialAmount))}</span>
+									<span class="font-medium"
+										>{formatCurrency(Number(selectedRegister.initialAmount))}</span
+									>
 								</div>
 								<div class="flex justify-between">
 									<span class="text-gray-600">Monto Esperado:</span>
-									<span class="font-medium">{formatCurrency(Number(selectedRegister.expectedAmount))}</span>
+									<span class="font-medium"
+										>{formatCurrency(Number(selectedRegister.expectedAmount))}</span
+									>
 								</div>
 								<div class="flex justify-between">
 									<span class="text-gray-600">Monto Real:</span>
-									<span class="font-medium">{formatCurrency(Number(selectedRegister.actualAmount))}</span>
+									<span class="font-medium"
+										>{formatCurrency(Number(selectedRegister.actualAmount))}</span
+									>
 								</div>
 								<div class="flex justify-between border-t pt-2">
 									<span class="font-medium text-gray-900">Diferencia:</span>
 									<span
-										class="font-bold {selectedRegister.difference === 0 ? 'text-green-600' : selectedRegister.difference && selectedRegister.difference > 0 ? 'text-yellow-600' : 'text-red-600'}"
+										class="font-bold {selectedRegister.difference === 0
+											? 'text-green-600'
+											: selectedRegister.difference && selectedRegister.difference > 0
+												? 'text-yellow-600'
+												: 'text-red-600'}"
 									>
 										{formatCurrency(selectedRegister.difference || 0)}
 									</span>

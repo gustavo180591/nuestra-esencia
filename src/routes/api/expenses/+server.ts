@@ -92,7 +92,16 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 
 		const data = await request.json();
-		const { description, amount, category, date, paymentMethod, supplierId, notes, cashRegisterId } = data;
+		const {
+			description,
+			amount,
+			category,
+			date,
+			paymentMethod,
+			supplierId,
+			notes,
+			cashRegisterId
+		} = data;
 
 		// Validaciones básicas
 		if (!description || description.trim() === '') {

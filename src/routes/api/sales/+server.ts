@@ -297,14 +297,18 @@ export const GET: RequestHandler = async ({ url }) => {
 		const paymentMethodId = url.searchParams.get('paymentMethodId');
 		const saleNumber = url.searchParams.get('saleNumber');
 
-		const whereClause: any = {};
+		const whereClause: Record<string, unknown> = {};
 
 		if (dateFrom) {
-			whereClause.createdAt = { ...whereClause.createdAt, gte: new Date(dateFrom) };
+			whereClause.createdAt = { gte: new Date(dateFrom) };
 		}
 
 		if (dateTo) {
-			whereClause.createdAt = { ...whereClause.createdAt, lte: new Date(dateTo + 'T23:59:59') };
+			const existingDateRange = whereClause.createdAt as { gte?: Date } | undefined;
+			whereClause.createdAt = {
+				...existingDateRange,
+				lte: new Date(dateTo + 'T23:59:59')
+			};
 		}
 
 		if (status) {

@@ -51,7 +51,16 @@
 	let paymentMethods = $state<Array<{ id: string; code: string; name: string; icon: string }>>([]);
 
 	// Estado de caja
-	let cashRegister = $state<any>(null);
+	let cashRegister = $state<{
+		id: string;
+		status: string;
+		initialAmount: number;
+		expectedAmount?: number;
+		sales?: Array<{ paymentMethod?: { code: string }; cashReceived?: number; total: number }>;
+		expenses?: Array<{ paymentMethod: string; amount: number }>;
+		difference?: number;
+		openedBy?: { name: string };
+	} | null>(null);
 	let showOpenModal = $state(false);
 	let showCloseModal = $state(false);
 	let showMovementModal = $state(false);
@@ -64,7 +73,16 @@
 	let saving = $state(false);
 
 	// Estado de movimientos de caja
-	let movements = $state<any[]>([]);
+	let movements = $state<
+		Array<{
+			id: string;
+			type: string;
+			category: string;
+			amount: number;
+			description: string;
+			user?: { name: string };
+		}>
+	>([]);
 	let movementType = $state<'INGRESO' | 'EGRESO'>('INGRESO');
 	let movementCategory = $state('GASTO');
 	let movementAmount = $state(0);
@@ -561,7 +579,7 @@
 			} else {
 				alert(`Error: ${result.message}`);
 			}
-		} catch (error) {
+		} catch {
 			alert('Error al registrar movimiento');
 		} finally {
 			saving = false;
@@ -607,7 +625,7 @@
 			} else {
 				alert(`Error: ${result.message}`);
 			}
-		} catch (error) {
+		} catch {
 			alert('Error al abrir caja');
 		} finally {
 			saving = false;
@@ -618,7 +636,7 @@
 		saving = true;
 		try {
 			// Calcular diferencia esperada
-			const expectedAmount = Number(cashRegister.expectedAmount);
+			const expectedAmount = Number(cashRegister?.expectedAmount || 0);
 			const difference = closingAmount - expectedAmount;
 
 			// Validar que se agreguen notas solo si hay una diferencia significativa (no 0)
@@ -660,7 +678,7 @@
 			} else {
 				alert(`Error: ${result.message}`);
 			}
-		} catch (error) {
+		} catch {
 			alert('Error al cerrar caja');
 		} finally {
 			saving = false;
@@ -949,7 +967,9 @@
 						{#if cart.length === 0}
 							<div class="py-4 text-center text-gray-900">El carrito está vacío</div>
 						{:else}
-							{#each cart.slice().reverse() as item, index (item.productId + '-' + item.productSaleFormatId)}
+							{#each cart
+								.slice()
+								.reverse() as item, index (item.productId + '-' + item.productSaleFormatId + '-' + index)}
 								{@const isWeightBased = item.unitMeasure === 'KILOGRAMO'}
 								<div
 									class="flex items-center justify-between rounded bg-gray-50 p-3 {item.isCombo
@@ -976,7 +996,7 @@
 										{/if}
 										{#if item.isCombo && item.comboItems && item.comboItems.length > 0}
 											<div class="mt-1 text-xs text-gray-500">
-												{#each item.comboItems as comboItem, i}
+												{#each item.comboItems as comboItem, i (comboItem.id)}
 													{comboItem.component.name} x{comboItem.quantity}{i <
 													item.comboItems!.length - 1
 														? ', '
@@ -1146,22 +1166,36 @@
 								>{formatCurrency(cart.reduce((sum, item) => sum + item.subtotal, 0))}</span
 							>
 						</div>
-						<div class="flex justify-between items-center">
+						<div class="flex items-center justify-between">
 							<span style="color: #000">Descuento:</span>
 							<div class="flex items-center gap-2">
 								<!-- Selector de tipo de descuento -->
-								<div class="flex rounded border overflow-hidden">
+								<div class="flex overflow-hidden rounded border">
 									<button
 										type="button"
-										class="px-2 py-1 text-sm {discountType === 'amount' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-700'}"
-										onclick={() => { discountType = 'amount'; discount = 0; discountPercentage = 0; updateTotals(); }}
+										class="px-2 py-1 text-sm {discountType === 'amount'
+											? 'bg-amber-600 text-white'
+											: 'bg-gray-100 text-gray-700'}"
+										onclick={() => {
+											discountType = 'amount';
+											discount = 0;
+											discountPercentage = 0;
+											updateTotals();
+										}}
 									>
 										$
 									</button>
 									<button
 										type="button"
-										class="px-2 py-1 text-sm {discountType === 'percentage' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-700'}"
-										onclick={() => { discountType = 'percentage'; discount = 0; discountPercentage = 0; updateTotals(); }}
+										class="px-2 py-1 text-sm {discountType === 'percentage'
+											? 'bg-amber-600 text-white'
+											: 'bg-gray-100 text-gray-700'}"
+										onclick={() => {
+											discountType = 'percentage';
+											discount = 0;
+											discountPercentage = 0;
+											updateTotals();
+										}}
 									>
 										%
 									</button>
@@ -1186,7 +1220,10 @@
 										min="0"
 										max="100"
 										onchange={(e) => {
-											const pct = Math.min(100, Math.max(0, parseFloat(e.currentTarget.value) || 0));
+											const pct = Math.min(
+												100,
+												Math.max(0, parseFloat(e.currentTarget.value) || 0)
+											);
 											discountPercentage = pct;
 											const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
 											discount = Math.round((subtotal * pct) / 100);
@@ -1214,7 +1251,7 @@
 							bind:value={paymentMethod}
 							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 						>
-							{#each paymentMethods as pm}
+							{#each paymentMethods as pm (pm.id)}
 								<option value={pm.code}>
 									{pm.icon}
 									{pm.name}
@@ -1258,7 +1295,6 @@
 							{/if}
 						</div>
 					{/if}
-
 				</div>
 			</div>
 		</div>
@@ -1407,7 +1443,7 @@
 									id="openingBranch"
 									type="text"
 									bind:value={openingBranch}
-									class="w-full rounded-md border-gray-300 py-2 px-3 text-gray-900"
+									class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
 									placeholder="Principal"
 								/>
 							</div>
@@ -1418,7 +1454,7 @@
 								<select
 									id="openingShift"
 									bind:value={openingShift}
-									class="w-full rounded-md border-gray-300 py-2 px-3 text-gray-900"
+									class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
 								>
 									<option value="">Seleccionar...</option>
 									<option value="MAÑANA">Mañana</option>
@@ -1458,9 +1494,11 @@
 						<div class="rounded bg-gray-50 p-4">
 							<h4 class="mb-3 text-sm font-medium text-gray-900">Conteo de Billetes</h4>
 							<div class="grid grid-cols-2 gap-3">
-								{#each Object.entries(openingBillCounts) as [denomination, count]}
+								{#each Object.entries(openingBillCounts) as [denomination] (denomination)}
 									<div>
-										<label for="opening-bill-{denomination}" class="block text-xs text-gray-500">$ {denomination}</label>
+										<label for="opening-bill-{denomination}" class="block text-xs text-gray-500"
+											>$ {denomination}</label
+										>
 										<input
 											id="opening-bill-{denomination}"
 											type="number"
@@ -1473,7 +1511,9 @@
 							</div>
 							<div class="mt-3 flex justify-between border-t pt-3">
 								<span class="text-sm font-medium text-gray-700">Total Billetes:</span>
-								<span class="text-sm font-bold text-gray-900">{formatCurrency(totalOpeningBills)}</span>
+								<span class="text-sm font-bold text-gray-900"
+									>{formatCurrency(totalOpeningBills)}</span
+								>
 							</div>
 						</div>
 
@@ -1529,15 +1569,17 @@
 					<div class="grid grid-cols-2 gap-4">
 						<div>
 							<div class="text-xs text-gray-900">Monto Inicial</div>
-							<div class="text-sm font-medium text-gray-900">{formatCurrency(cashRegister.initialAmount)}</div>
+							<div class="text-sm font-medium text-gray-900">
+								{formatCurrency(cashRegister.initialAmount)}
+							</div>
 						</div>
 						<div>
 							<div class="text-xs text-gray-900">Ventas Efectivo</div>
 							<div class="text-sm font-medium text-gray-900">
 								{formatCurrency(
 									(cashRegister.sales || [])
-										.filter((s: any) => s.paymentMethod?.code === 'EFECTIVO')
-										.reduce((sum: number, s: any) => sum + Number(s.cashReceived || s.total), 0)
+										.filter((s) => s.paymentMethod?.code === 'EFECTIVO')
+										.reduce((sum: number, s) => sum + Number(s.cashReceived || s.total), 0)
 								)}
 							</div>
 						</div>
@@ -1548,14 +1590,16 @@
 							<div class="text-sm font-medium text-red-600">
 								{formatCurrency(
 									(cashRegister.expenses || [])
-										.filter((e: any) => e.paymentMethod === 'EFECTIVO')
-										.reduce((sum: number, e: any) => sum + Number(e.amount), 0)
+										.filter((e) => e.paymentMethod === 'EFECTIVO')
+										.reduce((sum: number, e) => sum + Number(e.amount), 0)
 								)}
 							</div>
 						</div>
 						<div>
 							<div class="text-xs text-gray-900">Efectivo Esperado</div>
-							<div class="text-sm font-medium text-gray-900">{formatCurrency(cashRegister.expectedAmount)}</div>
+							<div class="text-sm font-medium text-gray-900">
+								{formatCurrency(cashRegister.expectedAmount)}
+							</div>
 						</div>
 					</div>
 					<div class="mt-4 grid grid-cols-2 gap-4">
@@ -1564,8 +1608,8 @@
 							<div class="text-sm font-medium text-blue-600">
 								{formatCurrency(
 									(cashRegister.sales || [])
-										.filter((s: any) => s.paymentMethod?.code === 'TRANSFERENCIA')
-										.reduce((sum: number, s: any) => sum + Number(s.total), 0)
+										.filter((s) => s.paymentMethod?.code === 'TRANSFERENCIA')
+										.reduce((sum: number, s) => sum + Number(s.total), 0)
 								)}
 							</div>
 						</div>
@@ -1574,8 +1618,8 @@
 							<div class="text-sm font-medium text-purple-600">
 								{formatCurrency(
 									(cashRegister.sales || [])
-										.filter((s: any) => s.paymentMethod?.code === 'QR')
-										.reduce((sum: number, s: any) => sum + Number(s.total), 0)
+										.filter((s) => s.paymentMethod?.code === 'QR')
+										.reduce((sum: number, s) => sum + Number(s.total), 0)
 								)}
 							</div>
 						</div>
@@ -1586,8 +1630,8 @@
 							<div class="text-sm font-medium text-green-600">
 								{formatCurrency(
 									(cashRegister.sales || [])
-										.filter((s: any) => s.paymentMethod?.code === 'TARJETA')
-										.reduce((sum: number, s: any) => sum + Number(s.total), 0)
+										.filter((s) => s.paymentMethod?.code === 'TARJETA')
+										.reduce((sum: number, s) => sum + Number(s.total), 0)
 								)}
 							</div>
 						</div>
@@ -1617,9 +1661,11 @@
 				<div class="mb-4 rounded bg-gray-50 p-4">
 					<h4 class="mb-3 text-sm font-medium text-gray-900">Conteo de Billetes</h4>
 					<div class="grid grid-cols-2 gap-3">
-						{#each Object.entries(billCounts) as [denomination, count]}
+						{#each Object.entries(billCounts) as [denomination] (denomination)}
 							<div>
-								<label for="closing-bill-{denomination}" class="block text-xs text-gray-500">$ {denomination}</label>
+								<label for="closing-bill-{denomination}" class="block text-xs text-gray-500"
+									>$ {denomination}</label
+								>
 								<input
 									id="closing-bill-{denomination}"
 									type="number"
@@ -1706,8 +1752,9 @@
 			<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
 				<div class="mb-4 flex items-center justify-between">
 					<h3 class="text-lg font-semibold text-gray-900">Movimientos de Caja</h3>
-					<button onclick={() => (showMovementModal = false)} class="text-gray-400 hover:text-gray-600"
-						>✕</button
+					<button
+						onclick={() => (showMovementModal = false)}
+						class="text-gray-400 hover:text-gray-600">✕</button
 					>
 				</div>
 
@@ -1724,7 +1771,11 @@
 										{movement.type} - {movement.category} - {movement.user?.name}
 									</div>
 								</div>
-								<div class="font-bold {movement.type === 'INGRESO' ? 'text-green-600' : 'text-red-600'}">
+								<div
+									class="font-bold {movement.type === 'INGRESO'
+										? 'text-green-600'
+										: 'text-red-600'}"
+								>
 									{movement.type === 'INGRESO' ? '+' : '-'}{formatCurrency(Number(movement.amount))}
 								</div>
 							</div>
@@ -1737,22 +1788,26 @@
 					<div class="space-y-4">
 						<div class="grid grid-cols-2 gap-4">
 							<div>
-								<label for="movementType" class="block text-sm font-medium text-gray-700">Tipo</label>
+								<label for="movementType" class="block text-sm font-medium text-gray-700"
+									>Tipo</label
+								>
 								<select
 									id="movementType"
 									bind:value={movementType}
-									class="w-full rounded-md border-gray-300 py-2 px-3 text-gray-900"
+									class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
 								>
 									<option value="INGRESO">Ingreso</option>
 									<option value="EGRESO">Egreso</option>
 								</select>
 							</div>
 							<div>
-								<label for="movementCategory" class="block text-sm font-medium text-gray-700">Categoría</label>
+								<label for="movementCategory" class="block text-sm font-medium text-gray-700"
+									>Categoría</label
+								>
 								<select
 									id="movementCategory"
 									bind:value={movementCategory}
-									class="w-full rounded-md border-gray-300 py-2 px-3 text-gray-900"
+									class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
 								>
 									<option value="GASTO">Gasto</option>
 									<option value="RETIRO">Retiro</option>
@@ -1766,7 +1821,9 @@
 						</div>
 
 						<div>
-							<label for="movementAmount" class="block text-sm font-medium text-gray-700">Monto</label>
+							<label for="movementAmount" class="block text-sm font-medium text-gray-700"
+								>Monto</label
+							>
 							<div class="relative">
 								<span class="absolute top-2 left-3 text-gray-500">$</span>
 								<input
@@ -1783,13 +1840,15 @@
 						</div>
 
 						<div>
-							<label for="movementDescription" class="block text-sm font-medium text-gray-700">Descripción</label>
+							<label for="movementDescription" class="block text-sm font-medium text-gray-700"
+								>Descripción</label
+							>
 							<input
 								id="movementDescription"
 								type="text"
 								bind:value={movementDescription}
 								required
-								class="w-full rounded-md border-gray-300 py-2 px-3 text-gray-900"
+								class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
 								placeholder="Descripción del movimiento..."
 							/>
 						</div>

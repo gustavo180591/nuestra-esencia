@@ -14,13 +14,13 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		const type = url.searchParams.get('type');
 		const category = url.searchParams.get('category');
 
-		const where: any = {};
-		if (cashRegisterId) where.cashRegisterId = cashRegisterId;
-		if (type) where.type = type;
-		if (category) where.category = category;
+		const whereClause: Record<string, unknown> = {};
+		if (cashRegisterId) whereClause.cashRegisterId = cashRegisterId;
+		if (type) whereClause.type = type;
+		if (category) whereClause.category = category;
 
 		const movements = await db.cashMovement.findMany({
-			where,
+			where: whereClause,
 			orderBy: { createdAt: 'desc' },
 			include: {
 				user: { select: { id: true, name: true } },
@@ -65,7 +65,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 
 		if (cashRegister.status !== 'ABIERTA') {
-			return json({ success: false, message: 'Solo se pueden registrar movimientos en cajas abiertas' }, { status: 400 });
+			return json(
+				{ success: false, message: 'Solo se pueden registrar movimientos en cajas abiertas' },
+				{ status: 400 }
+			);
 		}
 
 		// Crear movimiento

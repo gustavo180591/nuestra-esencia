@@ -491,12 +491,16 @@
 						</div>
 						<div>
 							<div class="text-xs text-gray-500">Cambio</div>
-							<div class="text-sm font-medium text-green-600">${selectedSale.changeGiven || '0'}</div>
+							<div class="text-sm font-medium text-green-600">
+								${selectedSale.changeGiven || '0'}
+							</div>
 						</div>
 					{/if}
 					<div>
 						<div class="text-xs text-gray-500">Atendido por</div>
-						<div class="text-sm font-medium">{selectedSale.user?.name || 'Usuario no disponible'}</div>
+						<div class="text-sm font-medium">
+							{selectedSale.user?.name || 'Usuario no disponible'}
+						</div>
 					</div>
 				</div>
 

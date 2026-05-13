@@ -346,14 +346,29 @@
 					<table class="w-full">
 						<thead class="bg-gray-50">
 							<tr>
-								<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Fecha</th>
-								<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Descripción</th>
-								<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Categoría</th>
-								<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Monto</th>
-								<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Pago</th>
-								<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Proveedor</th>
-								<th class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Registrado por</th>
-								<th class="px-6 py-3 text-right text-xs font-medium uppercase text-gray-500">Acciones</th>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+									>Fecha</th
+								>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+									>Descripción</th
+								>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+									>Categoría</th
+								>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+									>Monto</th
+								>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pago</th
+								>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+									>Proveedor</th
+								>
+								<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+									>Registrado por</th
+								>
+								<th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"
+									>Acciones</th
+								>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gray-200">
@@ -367,11 +382,17 @@
 										{/if}
 									</td>
 									<td class="px-6 py-4">
-										<span class="rounded px-2 py-1 text-xs font-medium {getCategoryColor(expense.category)}">
+										<span
+											class="rounded px-2 py-1 text-xs font-medium {getCategoryColor(
+												expense.category
+											)}"
+										>
 											{getCategoryLabel(expense.category)}
 										</span>
 									</td>
-									<td class="px-6 py-4 text-sm font-bold text-gray-900">{formatCurrency(expense.amount)}</td>
+									<td class="px-6 py-4 text-sm font-bold text-gray-900"
+										>{formatCurrency(expense.amount)}</td
+									>
 									<td class="px-6 py-4 text-sm text-gray-900">{expense.paymentMethod}</td>
 									<td class="px-6 py-4 text-sm text-gray-900">
 										{expense.supplier ? expense.supplier.name : '-'}
@@ -402,11 +423,14 @@
 
 	<!-- Modal Crear Gasto -->
 	{#if showCreateModal}
-		<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+		<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
 			<div class="w-full max-w-lg rounded-lg bg-white shadow-xl">
 				<div class="border-b px-6 py-4">
 					<h2 class="text-xl font-semibold text-gray-900">Nuevo Gasto</h2>
-					<button onclick={() => (showCreateModal = false)} class="float-right text-gray-400 hover:text-gray-600">✕</button>
+					<button
+						onclick={() => (showCreateModal = false)}
+						class="float-right text-gray-400 hover:text-gray-600">✕</button
+					>
 				</div>
 				<form onsubmit={createExpense} class="p-6">
 					<div class="space-y-4">
@@ -509,11 +533,14 @@
 
 	<!-- Modal Editar Gasto -->
 	{#if showEditModal && editingExpense}
-		<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+		<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
 			<div class="w-full max-w-lg rounded-lg bg-white shadow-xl">
 				<div class="border-b px-6 py-4">
 					<h2 class="text-xl font-semibold text-gray-900">Editar Gasto</h2>
-					<button onclick={() => (showEditModal = false)} class="float-right text-gray-400 hover:text-gray-600">✕</button>
+					<button
+						onclick={() => (showEditModal = false)}
+						class="float-right text-gray-400 hover:text-gray-600">✕</button
+					>
 				</div>
 				<form onsubmit={updateExpense} class="p-6">
 					<div class="space-y-4">

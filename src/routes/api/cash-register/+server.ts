@@ -149,22 +149,25 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 		// Calcular ventas por método de pago
 		const cashSales = openCashRegister.sales.filter((s) => s.paymentMethod?.code === 'EFECTIVO');
 		const totalCashSales = cashSales.reduce((sum, s) => sum + Number(s.cashReceived || s.total), 0);
-		
-		const transferSales = openCashRegister.sales.filter((s) => s.paymentMethod?.code === 'TRANSFERENCIA');
+
+		const transferSales = openCashRegister.sales.filter(
+			(s) => s.paymentMethod?.code === 'TRANSFERENCIA'
+		);
 		const totalTransferSales = transferSales.reduce((sum, s) => sum + Number(s.total), 0);
-		
+
 		const qrSales = openCashRegister.sales.filter((s) => s.paymentMethod?.code === 'QR');
 		const totalQrSales = qrSales.reduce((sum, s) => sum + Number(s.total), 0);
-		
+
 		const cardSales = openCashRegister.sales.filter((s) => s.paymentMethod?.code === 'TARJETA');
 		const totalCardSales = cardSales.reduce((sum, s) => sum + Number(s.total), 0);
-		
+
 		// Calcular gastos en efectivo
 		const cashExpenses = openCashRegister.expenses.filter((e) => e.paymentMethod === 'EFECTIVO');
 		const totalCashExpenses = cashExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
-		
+
 		// Monto esperado en efectivo: inicial + ventas en efectivo - gastos en efectivo
-		const expectedAmount = Number(openCashRegister.initialAmount) + totalCashSales - totalCashExpenses;
+		const expectedAmount =
+			Number(openCashRegister.initialAmount) + totalCashSales - totalCashExpenses;
 
 		// Calcular diferencia
 		const difference = (actualAmount || 0) - expectedAmount;
@@ -204,28 +207,29 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 		});
 	} catch (error) {
 		console.error('Error closing cash register:', error);
-		
+
 		// Mensajes de error específicos
 		let errorMessage = 'Error al cerrar caja';
-		
+
 		if (error instanceof Error) {
 			if (error.message.includes('Unique constraint')) {
 				errorMessage = 'Ya existe una caja abierta. No se puede cerrar otra caja.';
 			} else if (error.message.includes('Foreign key constraint')) {
-				errorMessage = 'Error de integridad de datos. Verifique que el usuario y la caja sean válidos.';
+				errorMessage =
+					'Error de integridad de datos. Verifique que el usuario y la caja sean válidos.';
 			} else if (error.message.includes('Record to update not found')) {
 				errorMessage = 'La caja ya fue cerrada por otro usuario.';
 			} else {
 				errorMessage = `Error al cerrar caja: ${error.message}`;
 			}
 		}
-		
+
 		return json(
-			{ 
-				success: false, 
+			{
+				success: false,
 				message: errorMessage,
 				error: error instanceof Error ? error.message : 'Unknown error'
-			}, 
+			},
 			{ status: 500 }
 		);
 	}

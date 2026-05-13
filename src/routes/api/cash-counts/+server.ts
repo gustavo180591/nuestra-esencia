@@ -13,12 +13,16 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		const cashRegisterId = url.searchParams.get('cashRegisterId');
 		const type = url.searchParams.get('type');
 
-		const where: any = {};
-		if (cashRegisterId) where.cashRegisterId = cashRegisterId;
-		if (type) where.type = type;
+		const whereClause: Record<string, unknown> = {};
+		if (cashRegisterId) {
+			whereClause.cashRegisterId = cashRegisterId;
+		}
+		if (type) {
+			whereClause.type = type;
+		}
 
 		const cashCounts = await db.cashCount.findMany({
-			where,
+			where: whereClause,
 			orderBy: { createdAt: 'desc' },
 			include: {
 				user: { select: { id: true, name: true } },
@@ -61,7 +65,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 		// Calcular total del conteo
 		let totalAmount = 0;
-		const itemsWithSubtotal = items.map((item: any) => {
+		const itemsWithSubtotal = items.map((item: { denomination: number; quantity: number }) => {
 			const subtotal = item.denomination * item.quantity;
 			totalAmount += subtotal;
 			return {

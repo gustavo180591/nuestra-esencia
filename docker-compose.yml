@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: nuestra-esencia
       POSTGRES_PASSWORD: Nuestra123
     ports:
-      - "5438:5432"
+      - '5438:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
