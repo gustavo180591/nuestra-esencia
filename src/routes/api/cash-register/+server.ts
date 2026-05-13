@@ -168,6 +168,29 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 		});
 	} catch (error) {
 		console.error('Error closing cash register:', error);
-		return json({ success: false, message: 'Error al cerrar caja' }, { status: 500 });
+		
+		// Mensajes de error específicos
+		let errorMessage = 'Error al cerrar caja';
+		
+		if (error instanceof Error) {
+			if (error.message.includes('Unique constraint')) {
+				errorMessage = 'Ya existe una caja abierta. No se puede cerrar otra caja.';
+			} else if (error.message.includes('Foreign key constraint')) {
+				errorMessage = 'Error de integridad de datos. Verifique que el usuario y la caja sean válidos.';
+			} else if (error.message.includes('Record to update not found')) {
+				errorMessage = 'La caja ya fue cerrada por otro usuario.';
+			} else {
+				errorMessage = `Error al cerrar caja: ${error.message}`;
+			}
+		}
+		
+		return json(
+			{ 
+				success: false, 
+				message: errorMessage,
+				error: error instanceof Error ? error.message : 'Unknown error'
+			}, 
+			{ status: 500 }
+		);
 	}
 };
