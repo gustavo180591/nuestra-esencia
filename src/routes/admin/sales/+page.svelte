@@ -12,6 +12,13 @@
 			name: string;
 			icon: string;
 		};
+		cashReceived?: string;
+		changeGiven?: string;
+		userId?: string;
+		user?: {
+			id: string;
+			name: string;
+		};
 		items: Array<{
 			id: string;
 			productNameSnapshot: string;
@@ -476,6 +483,20 @@
 								>{selectedSale.status}</span
 							>
 						</div>
+					</div>
+					{#if selectedSale.paymentMethod?.code === 'EFECTIVO'}
+						<div>
+							<div class="text-xs text-gray-500">Pagó con</div>
+							<div class="text-sm font-medium">${selectedSale.cashReceived || '0'}</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500">Cambio</div>
+							<div class="text-sm font-medium text-green-600">${selectedSale.changeGiven || '0'}</div>
+						</div>
+					{/if}
+					<div>
+						<div class="text-xs text-gray-500">Atendido por</div>
+						<div class="text-sm font-medium">{selectedSale.user?.name || 'Usuario no disponible'}</div>
 					</div>
 				</div>
 

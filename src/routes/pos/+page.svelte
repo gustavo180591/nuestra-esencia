@@ -54,10 +54,21 @@
 	let cashRegister = $state<any>(null);
 	let showOpenModal = $state(false);
 	let showCloseModal = $state(false);
+	let showMovementModal = $state(false);
 	let openingAmount = $state(0);
+	let openingBranch = $state('');
+	let openingShift = $state('');
+	let openingNotes = $state('');
 	let closingAmount = $state(0);
 	let closingNotes = $state('');
 	let saving = $state(false);
+
+	// Estado de movimientos de caja
+	let movements = $state<any[]>([]);
+	let movementType = $state<'INGRESO' | 'EGRESO'>('INGRESO');
+	let movementCategory = $state('GASTO');
+	let movementAmount = $state(0);
+	let movementDescription = $state('');
 
 	// Conteo de billetes para cierre de caja
 	let billCounts = $state({
@@ -73,9 +84,30 @@
 		'10': 0
 	});
 
+	// Conteo de billetes para apertura de caja
+	let openingBillCounts = $state({
+		'20000': 0,
+		'10000': 0,
+		'2000': 0,
+		'1000': 0,
+		'500': 0,
+		'200': 0,
+		'100': 0,
+		'50': 0,
+		'20': 0,
+		'10': 0
+	});
+
 	// Calcular total de billetes contados
 	let totalBills = $derived(
 		Object.entries(billCounts).reduce((sum, [denomination, count]) => {
+			return sum + Number(denomination) * count;
+		}, 0)
+	);
+
+	// Calcular total de billetes de apertura
+	let totalOpeningBills = $derived(
+		Object.entries(openingBillCounts).reduce((sum, [denomination, count]) => {
 			return sum + Number(denomination) * count;
 		}, 0)
 	);
@@ -478,9 +510,61 @@
 			const data = await response.json();
 			if (data.success) {
 				cashRegister = data.data;
+				// Cargar movimientos si hay caja abierta
+				if (cashRegister) {
+					await loadMovements();
+				}
 			}
 		} catch (error) {
 			console.error('Error loading cash register:', error);
+		}
+	}
+
+	async function loadMovements() {
+		if (!cashRegister) return;
+		try {
+			const response = await fetch(`/api/cash-movements?cashRegisterId=${cashRegister.id}`);
+			const data = await response.json();
+			if (data.success) {
+				movements = data.data;
+			}
+		} catch (error) {
+			console.error('Error loading movements:', error);
+		}
+	}
+
+	async function createMovement() {
+		if (!cashRegister) return;
+		saving = true;
+		try {
+			const response = await fetch('/api/cash-movements', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					cashRegisterId: cashRegister.id,
+					type: movementType,
+					category: movementCategory,
+					amount: movementAmount,
+					description: movementDescription
+				})
+			});
+
+			const result = await response.json();
+			if (result.success) {
+				showMovementModal = false;
+				movementType = 'INGRESO';
+				movementCategory = 'GASTO';
+				movementAmount = 0;
+				movementDescription = '';
+				await loadMovements();
+				await loadCashRegister(); // Recargar para actualizar expectedAmount
+			} else {
+				alert(`Error: ${result.message}`);
+			}
+		} catch (error) {
+			alert('Error al registrar movimiento');
+		} finally {
+			saving = false;
 		}
 	}
 
@@ -490,13 +574,35 @@
 			const response = await fetch('/api/cash-register', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ initialAmount: openingAmount })
+				body: JSON.stringify({
+					initialAmount: openingAmount,
+					branch: openingBranch || null,
+					shift: openingShift || null,
+					openingBillCounts: openingBillCounts,
+					openingNotes: openingNotes || null
+				})
 			});
 
 			const result = await response.json();
 			if (result.success) {
 				showOpenModal = false;
 				openingAmount = 0;
+				openingBranch = '';
+				openingShift = '';
+				openingNotes = '';
+				// Resetear conteo de billetes de apertura
+				openingBillCounts = {
+					'20000': 0,
+					'10000': 0,
+					'2000': 0,
+					'1000': 0,
+					'500': 0,
+					'200': 0,
+					'100': 0,
+					'50': 0,
+					'20': 0,
+					'10': 0
+				};
 				await loadCashRegister();
 			} else {
 				alert(`Error: ${result.message}`);
@@ -511,12 +617,23 @@
 	async function closeCashRegister() {
 		saving = true;
 		try {
+			// Calcular diferencia esperada
+			const expectedAmount = Number(cashRegister.expectedAmount);
+			const difference = closingAmount - expectedAmount;
+
+			// Validar que se agreguen notas solo si hay una diferencia significativa (no 0)
+			if (difference !== 0 && !closingNotes.trim()) {
+				alert('Debe agregar observaciones cuando existe una diferencia en el cierre de caja');
+				saving = false;
+				return;
+			}
+
 			const response = await fetch('/api/cash-register', {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					actualAmount: closingAmount,
-					notes: closingNotes,
+					notes: difference !== 0 ? closingNotes : '',
 					billCounts
 				})
 			});
@@ -587,6 +704,12 @@
 							Por: {cashRegister.openedBy?.name || 'Usuario'}
 						</div>
 						<div class="mt-2 flex justify-end space-x-2">
+							<button
+								onclick={() => (showMovementModal = true)}
+								class="rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+							>
+								Movimientos
+							</button>
 							<button
 								onclick={() => (showCloseModal = true)}
 								class="rounded-md bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
@@ -1275,6 +1398,36 @@
 
 				<form onsubmit={openCashRegister}>
 					<div class="space-y-4">
+						<div class="grid grid-cols-2 gap-4">
+							<div>
+								<label for="openingBranch" class="block text-sm font-medium text-gray-700"
+									>Sucursal</label
+								>
+								<input
+									id="openingBranch"
+									type="text"
+									bind:value={openingBranch}
+									class="w-full rounded-md border-gray-300 py-2 px-3 text-gray-900"
+									placeholder="Principal"
+								/>
+							</div>
+							<div>
+								<label for="openingShift" class="block text-sm font-medium text-gray-700"
+									>Turno</label
+								>
+								<select
+									id="openingShift"
+									bind:value={openingShift}
+									class="w-full rounded-md border-gray-300 py-2 px-3 text-gray-900"
+								>
+									<option value="">Seleccionar...</option>
+									<option value="MAÑANA">Mañana</option>
+									<option value="TARDE">Tarde</option>
+									<option value="NOCHE">Noche</option>
+								</select>
+							</div>
+						</div>
+
 						<div>
 							<label for="openingAmount" class="block text-sm font-medium text-gray-700"
 								>Monto Inicial</label
@@ -1292,6 +1445,49 @@
 									placeholder="0.00"
 								/>
 							</div>
+							<button
+								type="button"
+								onclick={() => (openingAmount = totalOpeningBills)}
+								class="mt-2 text-sm text-amber-600 hover:text-amber-700"
+							>
+								Usar total de billetes: {formatCurrency(totalOpeningBills)}
+							</button>
+						</div>
+
+						<!-- Conteo de billetes -->
+						<div class="rounded bg-gray-50 p-4">
+							<h4 class="mb-3 text-sm font-medium text-gray-900">Conteo de Billetes</h4>
+							<div class="grid grid-cols-2 gap-3">
+								{#each Object.entries(openingBillCounts) as [denomination, count]}
+									<div>
+										<label for="opening-bill-{denomination}" class="block text-xs text-gray-500">$ {denomination}</label>
+										<input
+											id="opening-bill-{denomination}"
+											type="number"
+											min="0"
+											bind:value={openingBillCounts[denomination as keyof typeof openingBillCounts]}
+											class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+										/>
+									</div>
+								{/each}
+							</div>
+							<div class="mt-3 flex justify-between border-t pt-3">
+								<span class="text-sm font-medium text-gray-700">Total Billetes:</span>
+								<span class="text-sm font-bold text-gray-900">{formatCurrency(totalOpeningBills)}</span>
+							</div>
+						</div>
+
+						<div>
+							<label for="openingNotes" class="block text-sm font-medium text-gray-700"
+								>Observaciones</label
+							>
+							<textarea
+								id="openingNotes"
+								bind:value={openingNotes}
+								rows="2"
+								class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
+								placeholder="Observaciones de la apertura..."
+							></textarea>
 						</div>
 					</div>
 
@@ -1338,8 +1534,28 @@
 						<div>
 							<div class="text-xs text-gray-900">Ventas Efectivo</div>
 							<div class="text-sm font-medium text-gray-900">
-								{formatCurrency(cashRegister.expectedAmount - cashRegister.initialAmount)}
+								{formatCurrency(
+									(cashRegister.sales || [])
+										.filter((s: any) => s.paymentMethod?.code === 'EFECTIVO')
+										.reduce((sum: number, s: any) => sum + Number(s.cashReceived || s.total), 0)
+								)}
 							</div>
+						</div>
+					</div>
+					<div class="mt-4 grid grid-cols-2 gap-4">
+						<div>
+							<div class="text-xs text-gray-900">Gastos Efectivo</div>
+							<div class="text-sm font-medium text-red-600">
+								{formatCurrency(
+									(cashRegister.expenses || [])
+										.filter((e: any) => e.paymentMethod === 'EFECTIVO')
+										.reduce((sum: number, e: any) => sum + Number(e.amount), 0)
+								)}
+							</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-900">Efectivo Esperado</div>
+							<div class="text-sm font-medium text-gray-900">{formatCurrency(cashRegister.expectedAmount)}</div>
 						</div>
 					</div>
 					<div class="mt-4 grid grid-cols-2 gap-4">
@@ -1347,7 +1563,7 @@
 							<div class="text-xs text-gray-900">Transferencias</div>
 							<div class="text-sm font-medium text-blue-600">
 								{formatCurrency(
-									cashRegister.sales
+									(cashRegister.sales || [])
 										.filter((s: any) => s.paymentMethod?.code === 'TRANSFERENCIA')
 										.reduce((sum: number, s: any) => sum + Number(s.total), 0)
 								)}
@@ -1357,7 +1573,7 @@
 							<div class="text-xs text-gray-900">QR</div>
 							<div class="text-sm font-medium text-purple-600">
 								{formatCurrency(
-									cashRegister.sales
+									(cashRegister.sales || [])
 										.filter((s: any) => s.paymentMethod?.code === 'QR')
 										.reduce((sum: number, s: any) => sum + Number(s.total), 0)
 								)}
@@ -1366,14 +1582,33 @@
 					</div>
 					<div class="mt-4 grid grid-cols-2 gap-4">
 						<div>
-							<div class="text-xs text-gray-900">Total Esperado</div>
-							<div class="text-sm font-medium text-gray-900">{formatCurrency(cashRegister.expectedAmount)}</div>
+							<div class="text-xs text-gray-900">Tarjeta</div>
+							<div class="text-sm font-medium text-green-600">
+								{formatCurrency(
+									(cashRegister.sales || [])
+										.filter((s: any) => s.paymentMethod?.code === 'TARJETA')
+										.reduce((sum: number, s: any) => sum + Number(s.total), 0)
+								)}
+							</div>
 						</div>
 						<div>
 							<div class="text-xs text-gray-900">Diferencia</div>
-							<div class="text-sm font-medium text-red-600">
-								{formatCurrency(cashRegister.difference || 0)}
-							</div>
+							{#if cashRegister.difference === 0}
+								<div class="text-sm font-medium text-green-600">
+									{formatCurrency(0)}
+									<span class="ml-1 text-xs">(Cuadrado)</span>
+								</div>
+							{:else if cashRegister.difference && cashRegister.difference > 0}
+								<div class="text-sm font-medium text-yellow-600">
+									{formatCurrency(cashRegister.difference)}
+									<span class="ml-1 text-xs">(Sobrante)</span>
+								</div>
+							{:else}
+								<div class="text-sm font-medium text-red-600">
+									{formatCurrency(cashRegister.difference || 0)}
+									<span class="ml-1 text-xs">(Faltante)</span>
+								</div>
+							{/if}
 						</div>
 					</div>
 				</div>
@@ -1384,8 +1619,9 @@
 					<div class="grid grid-cols-2 gap-3">
 						{#each Object.entries(billCounts) as [denomination, count]}
 							<div>
-								<label class="block text-xs text-gray-500">$ {denomination}</label>
+								<label for="closing-bill-{denomination}" class="block text-xs text-gray-500">$ {denomination}</label>
 								<input
+									id="closing-bill-{denomination}"
 									type="number"
 									min="0"
 									bind:value={billCounts[denomination as keyof typeof billCounts]}
@@ -1455,6 +1691,124 @@
 							class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:bg-gray-400"
 						>
 							{saving ? 'Cerrando...' : 'Cerrar Caja'}
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Modal Movimientos de Caja -->
+{#if showMovementModal && cashRegister}
+	<div class="fixed inset-0 z-50 overflow-y-auto">
+		<div class="bg-opacity-50 flex min-h-full items-center justify-center bg-black p-4">
+			<div class="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
+				<div class="mb-4 flex items-center justify-between">
+					<h3 class="text-lg font-semibold text-gray-900">Movimientos de Caja</h3>
+					<button onclick={() => (showMovementModal = false)} class="text-gray-400 hover:text-gray-600"
+						>✕</button
+					>
+				</div>
+
+				<!-- Lista de movimientos -->
+				<div class="mb-4 max-h-64 overflow-y-auto rounded bg-gray-50 p-4">
+					{#if movements.length === 0}
+						<div class="py-4 text-center text-gray-500">No hay movimientos registrados</div>
+					{:else}
+						{#each movements as movement (movement.id)}
+							<div class="mb-2 flex items-center justify-between rounded bg-white p-3">
+								<div>
+									<div class="font-medium text-gray-900">{movement.description}</div>
+									<div class="text-xs text-gray-500">
+										{movement.type} - {movement.category} - {movement.user?.name}
+									</div>
+								</div>
+								<div class="font-bold {movement.type === 'INGRESO' ? 'text-green-600' : 'text-red-600'}">
+									{movement.type === 'INGRESO' ? '+' : '-'}{formatCurrency(Number(movement.amount))}
+								</div>
+							</div>
+						{/each}
+					{/if}
+				</div>
+
+				<!-- Formulario nuevo movimiento -->
+				<form onsubmit={createMovement}>
+					<div class="space-y-4">
+						<div class="grid grid-cols-2 gap-4">
+							<div>
+								<label for="movementType" class="block text-sm font-medium text-gray-700">Tipo</label>
+								<select
+									id="movementType"
+									bind:value={movementType}
+									class="w-full rounded-md border-gray-300 py-2 px-3 text-gray-900"
+								>
+									<option value="INGRESO">Ingreso</option>
+									<option value="EGRESO">Egreso</option>
+								</select>
+							</div>
+							<div>
+								<label for="movementCategory" class="block text-sm font-medium text-gray-700">Categoría</label>
+								<select
+									id="movementCategory"
+									bind:value={movementCategory}
+									class="w-full rounded-md border-gray-300 py-2 px-3 text-gray-900"
+								>
+									<option value="GASTO">Gasto</option>
+									<option value="RETIRO">Retiro</option>
+									<option value="PAGO">Pago</option>
+									<option value="COBRO">Cobro</option>
+									<option value="AJUSTE">Ajuste</option>
+									<option value="DELIVERY">Delivery</option>
+									<option value="TRANSFERENCIA">Transferencia</option>
+								</select>
+							</div>
+						</div>
+
+						<div>
+							<label for="movementAmount" class="block text-sm font-medium text-gray-700">Monto</label>
+							<div class="relative">
+								<span class="absolute top-2 left-3 text-gray-500">$</span>
+								<input
+									id="movementAmount"
+									type="number"
+									bind:value={movementAmount}
+									min="0"
+									step="0.01"
+									required
+									class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900"
+									placeholder="0.00"
+								/>
+							</div>
+						</div>
+
+						<div>
+							<label for="movementDescription" class="block text-sm font-medium text-gray-700">Descripción</label>
+							<input
+								id="movementDescription"
+								type="text"
+								bind:value={movementDescription}
+								required
+								class="w-full rounded-md border-gray-300 py-2 px-3 text-gray-900"
+								placeholder="Descripción del movimiento..."
+							/>
+						</div>
+					</div>
+
+					<div class="mt-6 flex justify-end">
+						<button
+							type="button"
+							onclick={() => (showMovementModal = false)}
+							class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
+						>
+							Cerrar
+						</button>
+						<button
+							type="submit"
+							disabled={saving}
+							class="ml-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-gray-400"
+						>
+							{saving ? 'Registrando...' : 'Registrar Movimiento'}
 						</button>
 					</div>
 				</form>

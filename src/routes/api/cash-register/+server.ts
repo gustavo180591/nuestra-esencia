@@ -20,29 +20,47 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 					openedBy: { select: { id: true, name: true } },
 					sales: {
 						where: { status: 'COMPLETADA' },
-						select: { total: true, paymentMethod: true }
-					}
+						include: {
+							paymentMethod: true
+						}
+					},
+					expenses: true
 				}
 			});
 
-			return json({
-				success: true,
-				data: openCashRegister,
-				hasOpenCashRegister: !!openCashRegister
-			});
+			return json({ success: true, data: openCashRegister });
 		}
 
-		// Listado histórico
-		const registers = await db.cashRegister.findMany({
+		// Si se pide cajas cerradas
+		if (status === 'CERRADA') {
+			const closedCashRegisters = await db.cashRegister.findMany({
+				where: { status: 'CERRADA' },
+				orderBy: { openedAt: 'desc' },
+				include: {
+					openedBy: { select: { id: true, name: true } },
+					closedBy: { select: { id: true, name: true } }
+				}
+			});
+
+			return json({ success: true, data: closedCashRegisters });
+		}
+
+		// Por defecto, devolver la última caja (abierta o cerrada)
+		const cashRegister = await db.cashRegister.findFirst({
 			orderBy: { openedAt: 'desc' },
-			take: 50,
 			include: {
 				openedBy: { select: { id: true, name: true } },
-				closedBy: { select: { id: true, name: true } }
+				closedBy: { select: { id: true, name: true } },
+				sales: {
+					include: {
+						paymentMethod: true
+					}
+				},
+				expenses: true
 			}
 		});
 
-		return json({ success: true, data: registers });
+		return json({ success: true, data: cashRegister });
 	} catch (error) {
 		console.error('Error fetching cash register:', error);
 		return json({ success: false, message: 'Error al obtener caja' }, { status: 500 });
@@ -66,7 +84,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json({ success: false, message: 'Ya existe una caja abierta' }, { status: 400 });
 		}
 
-		const { initialAmount } = await request.json();
+		const { initialAmount, branch, shift, openingBillCounts, openingNotes } = await request.json();
 
 		if (initialAmount === undefined || initialAmount < 0) {
 			return json({ success: false, message: 'Monto inicial requerido' }, { status: 400 });
@@ -76,7 +94,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			data: {
 				initialAmount,
 				openedById: userId,
-				status: 'ABIERTA'
+				status: 'ABIERTA',
+				branch: branch || null,
+				shift: shift || null,
+				openingBillCounts: openingBillCounts || null,
+				openingNotes: openingNotes || null
 			}
 		});
 
@@ -124,13 +146,24 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 			return json({ success: false, message: 'No hay caja abierta para cerrar' }, { status: 400 });
 		}
 
-		// Calcular monto esperado: inicial + ventas en efectivo - gastos en efectivo
+		// Calcular ventas por método de pago
 		const cashSales = openCashRegister.sales.filter((s) => s.paymentMethod?.code === 'EFECTIVO');
 		const totalCashSales = cashSales.reduce((sum, s) => sum + Number(s.cashReceived || s.total), 0);
 		
+		const transferSales = openCashRegister.sales.filter((s) => s.paymentMethod?.code === 'TRANSFERENCIA');
+		const totalTransferSales = transferSales.reduce((sum, s) => sum + Number(s.total), 0);
+		
+		const qrSales = openCashRegister.sales.filter((s) => s.paymentMethod?.code === 'QR');
+		const totalQrSales = qrSales.reduce((sum, s) => sum + Number(s.total), 0);
+		
+		const cardSales = openCashRegister.sales.filter((s) => s.paymentMethod?.code === 'TARJETA');
+		const totalCardSales = cardSales.reduce((sum, s) => sum + Number(s.total), 0);
+		
+		// Calcular gastos en efectivo
 		const cashExpenses = openCashRegister.expenses.filter((e) => e.paymentMethod === 'EFECTIVO');
 		const totalCashExpenses = cashExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
 		
+		// Monto esperado en efectivo: inicial + ventas en efectivo - gastos en efectivo
 		const expectedAmount = Number(openCashRegister.initialAmount) + totalCashSales - totalCashExpenses;
 
 		// Calcular diferencia
@@ -141,7 +174,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 			data: {
 				status: 'CERRADA',
 				closedAt: new Date(),
-				closedById: userId,
+				closedBy: { connect: { id: userId } },
 				actualAmount,
 				expectedAmount,
 				difference,
@@ -158,6 +191,9 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 				arqueo: {
 					initialAmount: openCashRegister.initialAmount,
 					totalCashSales,
+					totalTransferSales,
+					totalQrSales,
+					totalCardSales,
 					totalCashExpenses,
 					expectedAmount,
 					actualAmount,

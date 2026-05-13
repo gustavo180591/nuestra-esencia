@@ -332,6 +332,12 @@ export const GET: RequestHandler = async ({ url }) => {
 						icon: true
 					}
 				},
+				user: {
+					select: {
+						id: true,
+						name: true
+					}
+				},
 				items: {
 					select: {
 						id: true,
