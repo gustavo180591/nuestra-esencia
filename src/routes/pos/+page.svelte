@@ -60,10 +60,13 @@
 		expenses?: Array<{ paymentMethod: string; amount: number }>;
 		difference?: number;
 		openedBy?: { name: string };
+		openedAt?: string;
+		branch?: string;
 	} | null>(null);
 	let showOpenModal = $state(false);
-	let showCloseModal = $state(false);
 	let showMovementModal = $state(false);
+	let showCashRegisterModal = $state(false);
+	let showCloseModal = $state(false);
 	let openingAmount = $state(0);
 	let openingBranch = $state('');
 	let openingNotes = $state('');
@@ -656,6 +659,7 @@
 			const result = await response.json();
 			if (result.success) {
 				showCloseModal = false;
+				showCashRegisterModal = false;
 				closingAmount = 0;
 				closingNotes = '';
 				// Resetear conteo de billetes
@@ -709,7 +713,11 @@
 					<h1 class="text-2xl font-bold">Nuestra Esencia</h1>
 					<span class="text-amber-100">Sistema de Caja</span>
 				</div>
-				<div class="text-right text-sm">
+				<button
+					type="button"
+					onclick={() => (showCashRegisterModal = true)}
+					class="text-right text-sm text-white hover:text-amber-200"
+				>
 					{#if cashRegister}
 						<div class="text-amber-100">
 							💵 Caja Abierta
@@ -718,32 +726,10 @@
 						<div class="text-xs text-amber-200">
 							Por: {cashRegister.openedBy?.name || 'Usuario'}
 						</div>
-						<div class="mt-2 flex justify-end space-x-2">
-							<button
-								onclick={() => (showMovementModal = true)}
-								class="rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
-							>
-								Movimientos
-							</button>
-							<button
-								onclick={() => (showCloseModal = true)}
-								class="rounded-md bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
-							>
-								Cerrar Caja
-							</button>
-						</div>
 					{:else}
 						<div class="text-red-100">🔴 Caja Cerrada</div>
-						<div class="mt-2 flex justify-end">
-							<button
-								onclick={() => (showOpenModal = true)}
-								class="rounded-md bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
-							>
-								Abrir Caja
-							</button>
-						</div>
 					{/if}
-				</div>
+				</button>
 			</div>
 		</div>
 	</header>
@@ -1533,197 +1519,6 @@
 	</div>
 {/if}
 
-<!-- Modal Cierre de Caja -->
-{#if showCloseModal && cashRegister}
-	<div class="fixed inset-0 z-50 overflow-y-auto">
-		<div class="bg-opacity-50 flex min-h-full items-center justify-center bg-black p-4">
-			<div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-				<div class="mb-4 flex items-center justify-between">
-					<h3 class="text-lg font-semibold text-gray-900">Cierre de Caja</h3>
-					<button onclick={() => (showCloseModal = false)} class="text-gray-400 hover:text-gray-600"
-						>✕</button
-					>
-				</div>
-
-				<div class="mb-4 rounded bg-gray-50 p-4">
-					<div class="grid grid-cols-2 gap-4">
-						<div>
-							<div class="text-xs text-gray-900">Monto Inicial</div>
-							<div class="text-sm font-medium text-gray-900">
-								{formatCurrency(cashRegister.initialAmount)}
-							</div>
-						</div>
-						<div>
-							<div class="text-xs text-gray-900">Ventas Efectivo</div>
-							<div class="text-sm font-medium text-gray-900">
-								{formatCurrency(
-									(cashRegister.sales || [])
-										.filter((s) => s.paymentMethod?.code === 'EFECTIVO')
-										.reduce((sum: number, s) => sum + Number(s.cashReceived || s.total), 0)
-								)}
-							</div>
-						</div>
-					</div>
-					<div class="mt-4 grid grid-cols-2 gap-4">
-						<div>
-							<div class="text-xs text-gray-900">Gastos Efectivo</div>
-							<div class="text-sm font-medium text-red-600">
-								{formatCurrency(
-									(cashRegister.expenses || [])
-										.filter((e) => e.paymentMethod === 'EFECTIVO')
-										.reduce((sum: number, e) => sum + Number(e.amount), 0)
-								)}
-							</div>
-						</div>
-						<div>
-							<div class="text-xs text-gray-900">Efectivo Esperado</div>
-							<div class="text-sm font-medium text-gray-900">
-								{formatCurrency(cashRegister.expectedAmount)}
-							</div>
-						</div>
-					</div>
-					<div class="mt-4 grid grid-cols-2 gap-4">
-						<div>
-							<div class="text-xs text-gray-900">Transferencias</div>
-							<div class="text-sm font-medium text-blue-600">
-								{formatCurrency(
-									(cashRegister.sales || [])
-										.filter((s) => s.paymentMethod?.code === 'TRANSFERENCIA')
-										.reduce((sum: number, s) => sum + Number(s.total), 0)
-								)}
-							</div>
-						</div>
-						<div>
-							<div class="text-xs text-gray-900">QR</div>
-							<div class="text-sm font-medium text-purple-600">
-								{formatCurrency(
-									(cashRegister.sales || [])
-										.filter((s) => s.paymentMethod?.code === 'QR')
-										.reduce((sum: number, s) => sum + Number(s.total), 0)
-								)}
-							</div>
-						</div>
-					</div>
-					<div class="mt-4 grid grid-cols-2 gap-4">
-						<div>
-							<div class="text-xs text-gray-900">Tarjeta</div>
-							<div class="text-sm font-medium text-green-600">
-								{formatCurrency(
-									(cashRegister.sales || [])
-										.filter((s) => s.paymentMethod?.code === 'TARJETA')
-										.reduce((sum: number, s) => sum + Number(s.total), 0)
-								)}
-							</div>
-						</div>
-						<div>
-							<div class="text-xs text-gray-900">Diferencia</div>
-							{#if cashRegister.difference === 0}
-								<div class="text-sm font-medium text-green-600">
-									{formatCurrency(0)}
-									<span class="ml-1 text-xs">(Cuadrado)</span>
-								</div>
-							{:else if cashRegister.difference && cashRegister.difference > 0}
-								<div class="text-sm font-medium text-yellow-600">
-									{formatCurrency(cashRegister.difference)}
-									<span class="ml-1 text-xs">(Sobrante)</span>
-								</div>
-							{:else}
-								<div class="text-sm font-medium text-red-600">
-									{formatCurrency(cashRegister.difference || 0)}
-									<span class="ml-1 text-xs">(Faltante)</span>
-								</div>
-							{/if}
-						</div>
-					</div>
-				</div>
-
-				<!-- Conteo de billetes -->
-				<div class="mb-4 rounded bg-gray-50 p-4">
-					<h4 class="mb-3 text-sm font-medium text-gray-900">Conteo de Billetes</h4>
-					<div class="grid grid-cols-2 gap-3">
-						{#each Object.entries(billCounts) as [denomination] (denomination)}
-							<div>
-								<label for="closing-bill-{denomination}" class="block text-xs text-gray-500"
-									>$ {denomination}</label
-								>
-								<input
-									id="closing-bill-{denomination}"
-									type="number"
-									min="0"
-									bind:value={billCounts[denomination as keyof typeof billCounts]}
-									class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
-								/>
-							</div>
-						{/each}
-					</div>
-					<div class="mt-3 flex justify-between border-t pt-3">
-						<span class="text-sm font-medium text-gray-700">Total Billetes:</span>
-						<span class="text-sm font-bold text-gray-900">{formatCurrency(totalBills)}</span>
-					</div>
-				</div>
-
-				<form onsubmit={closeCashRegister}>
-					<div class="space-y-4">
-						<div>
-							<label for="closingAmount" class="block text-sm font-medium text-gray-700"
-								>Monto Real (o usar total de billetes)</label
-							>
-							<div class="relative">
-								<span class="absolute top-2 left-3 text-gray-500">$</span>
-								<input
-									id="closingAmount"
-									type="number"
-									bind:value={closingAmount}
-									min="0"
-									step="0.01"
-									required
-									class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900"
-									placeholder="0.00"
-								/>
-							</div>
-							<button
-								type="button"
-								onclick={() => (closingAmount = totalBills)}
-								class="mt-2 text-sm text-amber-600 hover:text-amber-700"
-							>
-								Usar total de billetes: {formatCurrency(totalBills)}
-							</button>
-						</div>
-
-						<div>
-							<label for="closingNotes" class="block text-sm font-medium text-gray-700">Notas</label
-							>
-							<textarea
-								id="closingNotes"
-								bind:value={closingNotes}
-								rows="3"
-								class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
-								placeholder="Observaciones del cierre de caja..."
-							></textarea>
-						</div>
-					</div>
-
-					<div class="mt-6 flex justify-end">
-						<button
-							type="button"
-							onclick={() => (showCloseModal = false)}
-							class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
-						>
-							Cancelar
-						</button>
-						<button
-							type="submit"
-							disabled={saving}
-							class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:bg-gray-400"
-						>
-							{saving ? 'Cerrando...' : 'Cerrar Caja'}
-						</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
-{/if}
 
 <!-- Modal Movimientos de Caja -->
 {#if showMovementModal && cashRegister}
@@ -1848,6 +1643,332 @@
 							class="ml-2 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-gray-400"
 						>
 							{saving ? 'Registrando...' : 'Registrar Movimiento'}
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Modal Integral de Caja -->
+{#if showCashRegisterModal}
+	<div class="fixed inset-0 z-50 overflow-y-auto">
+		<div class="bg-opacity-50 flex min-h-full items-center justify-center bg-black p-4">
+			<div class="w-full max-w-4xl rounded-lg bg-white p-6 shadow-xl">
+				<div class="mb-4 flex items-center justify-between">
+					<h3 class="text-lg font-semibold text-gray-900">Gestión de Caja</h3>
+					<button
+						onclick={() => (showCashRegisterModal = false)}
+						class="text-gray-400 hover:text-gray-600"
+						>✕</button
+					>
+				</div>
+
+				{#if cashRegister}
+					<!-- Caja Abierta - Mostrar resumen y opciones -->
+					<div class="space-y-4">
+						<!-- Resumen del estado actual -->
+						<div class="rounded bg-gray-50 p-4">
+							<h4 class="mb-3 text-sm font-medium text-gray-900">Estado Actual</h4>
+							<div class="grid grid-cols-2 gap-4">
+								<div>
+									<div class="text-xs text-gray-500">Monto Inicial</div>
+									<div class="text-sm font-medium text-gray-900">
+										{formatCurrency(cashRegister.initialAmount)}
+									</div>
+								</div>
+								<div>
+									<div class="text-xs text-gray-500">Abierta por</div>
+									<div class="text-sm font-medium text-gray-900">
+										{cashRegister.openedBy?.name || 'Usuario'}
+									</div>
+								</div>
+								<div>
+									<div class="text-xs text-gray-500">Fecha Apertura</div>
+									<div class="text-sm font-medium text-gray-900">
+										{new Date(cashRegister.openedAt || '').toLocaleString('es-AR')}
+									</div>
+								</div>
+								<div>
+									<div class="text-xs text-gray-500">Sucursal</div>
+									<div class="text-sm font-medium text-gray-900">
+										{cashRegister.branch || 'Principal'}
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Resumen de ventas por método de pago -->
+						<div class="rounded bg-gray-50 p-4">
+							<h4 class="mb-3 text-sm font-medium text-gray-900">Ventas del Turno</h4>
+							<div class="grid grid-cols-2 gap-4">
+								<div>
+									<div class="text-xs text-gray-500">Efectivo</div>
+									<div class="text-sm font-medium text-gray-900">
+										{formatCurrency(
+											(cashRegister.sales || [])
+												.filter((s) => s.paymentMethod?.code === 'EFECTIVO')
+												.reduce((sum: number, s) => sum + Number(s.cashReceived || s.total), 0)
+										)}
+									</div>
+								</div>
+								<div>
+									<div class="text-xs text-gray-500">Transferencias</div>
+									<div class="text-sm font-medium text-blue-600">
+										{formatCurrency(
+											(cashRegister.sales || [])
+												.filter((s) => s.paymentMethod?.code === 'TRANSFERENCIA')
+												.reduce((sum: number, s) => sum + Number(s.total), 0)
+										)}
+									</div>
+								</div>
+								<div>
+									<div class="text-xs text-gray-500">QR</div>
+									<div class="text-sm font-medium text-purple-600">
+										{formatCurrency(
+											(cashRegister.sales || [])
+												.filter((s) => s.paymentMethod?.code === 'QR')
+												.reduce((sum: number, s) => sum + Number(s.total), 0)
+										)}
+									</div>
+								</div>
+								<div>
+									<div class="text-xs text-gray-500">Tarjeta</div>
+									<div class="text-sm font-medium text-green-600">
+										{formatCurrency(
+											(cashRegister.sales || [])
+												.filter((s) => s.paymentMethod?.code === 'TARJETA')
+												.reduce((sum: number, s) => sum + Number(s.total), 0)
+										)}
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Movimientos manuales -->
+						<div class="rounded bg-gray-50 p-4">
+							<div class="mb-3 flex items-center justify-between">
+								<h4 class="text-sm font-medium text-gray-900">Movimientos Manuales</h4>
+								<button
+									type="button"
+									onclick={() => {
+										showCashRegisterModal = false;
+										showMovementModal = true;
+									}}
+									class="rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+								>
+									+ Agregar Movimiento
+								</button>
+							</div>
+							{#if movements.length === 0}
+								<div class="py-4 text-center text-gray-500">No hay movimientos registrados</div>
+							{:else}
+								<div class="max-h-48 space-y-2 overflow-y-auto">
+									{#each movements as movement (movement.id)}
+										<div class="flex items-center justify-between rounded bg-white p-3">
+											<div>
+												<div class="text-sm font-medium text-gray-900">
+													{movement.type === 'INGRESO' ? '+' : '-'}
+													{formatCurrency(movement.amount)}
+												</div>
+												<div class="text-xs text-gray-500">{movement.description}</div>
+											</div>
+											<div class="text-right">
+												<div class="text-xs text-gray-500">{movement.category}</div>
+												<div class="text-xs text-gray-400">
+													{movement.user?.name || 'Usuario'}
+												</div>
+											</div>
+										</div>
+									{/each}
+								</div>
+							{/if}
+						</div>
+
+						<!-- Botón de cierre -->
+						<div class="flex justify-end">
+							<button
+								type="button"
+								onclick={() => {
+									showCashRegisterModal = false;
+									showCloseModal = true;
+								}}
+								class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+							>
+								Cerrar Caja
+							</button>
+						</div>
+					</div>
+				{:else}
+					<!-- Caja Cerrada - Mostrar opción de apertura -->
+					<div class="space-y-4">
+						<div class="rounded bg-gray-50 p-4">
+							<h4 class="mb-3 text-sm font-medium text-gray-900">Estado Actual</h4>
+							<div class="text-center text-gray-500">🔴 Caja Cerrada</div>
+						</div>
+
+						<div class="flex justify-end">
+							<button
+								type="button"
+								onclick={() => {
+									showCashRegisterModal = false;
+									showOpenModal = true;
+								}}
+								class="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+							>
+								Abrir Caja
+							</button>
+						</div>
+					</div>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Modal Cierre de Caja -->
+{#if showCloseModal && cashRegister}
+	<div class="fixed inset-0 z-50 overflow-y-auto">
+		<div class="bg-opacity-50 flex min-h-full items-center justify-center bg-black p-4">
+			<div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+				<div class="mb-4 flex items-center justify-between">
+					<h3 class="text-lg font-semibold text-gray-900">Cierre de Caja</h3>
+					<button onclick={() => (showCloseModal = false)} class="text-gray-400 hover:text-gray-600"
+						>✕</button
+					>
+				</div>
+
+				<div class="mb-4 rounded bg-gray-50 p-4">
+					<h4 class="mb-3 text-sm font-medium text-gray-900">Saldo Teórico (Sistema)</h4>
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<div class="text-xs text-gray-500">Monto Inicial</div>
+							<div class="text-sm font-medium text-gray-900">
+								{formatCurrency(cashRegister.initialAmount)}
+							</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500">Ventas Efectivo</div>
+							<div class="text-sm font-medium text-gray-900">
+								{formatCurrency(
+									(cashRegister.sales || [])
+										.filter((s) => s.paymentMethod?.code === 'EFECTIVO')
+										.reduce((sum: number, s) => sum + Number(s.cashReceived || s.total), 0)
+								)}
+							</div>
+						</div>
+					</div>
+					<div class="mt-4 grid grid-cols-2 gap-4">
+						<div>
+							<div class="text-xs text-gray-500">Ingresos Manuales</div>
+							<div class="text-sm font-medium text-green-600">
+								{formatCurrency(
+									movements
+										.filter((m) => m.type === 'INGRESO')
+										.reduce((sum: number, m) => sum + m.amount, 0)
+								)}
+							</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500">Egresos Manuales</div>
+							<div class="text-sm font-medium text-red-600">
+								{formatCurrency(
+									movements
+										.filter((m) => m.type === 'EGRESO')
+										.reduce((sum: number, m) => sum + m.amount, 0)
+								)}
+							</div>
+						</div>
+					</div>
+					<div class="mt-4 rounded bg-gray-200 p-3">
+						<div class="text-xs text-gray-500">Saldo Esperado</div>
+						<div class="text-lg font-bold text-gray-900">
+							{formatCurrency(cashRegister.expectedAmount || 0)}
+						</div>
+					</div>
+				</div>
+
+				<!-- Conteo de billetes -->
+				<div class="mb-4 rounded bg-gray-50 p-4">
+					<h4 class="mb-3 text-sm font-medium text-gray-900">Saldo Real (Físico)</h4>
+					<div class="grid grid-cols-2 gap-3">
+						{#each Object.entries(billCounts) as [denomination] (denomination)}
+							<div>
+								<label for="closing-bill-{denomination}" class="block text-xs text-gray-500"
+									>$ {denomination}</label
+								>
+								<input
+									id="closing-bill-{denomination}"
+									type="number"
+									min="0"
+									bind:value={billCounts[denomination as keyof typeof billCounts]}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+								/>
+							</div>
+						{/each}
+					</div>
+					<div class="mt-3 flex justify-between border-t pt-3">
+						<span class="text-sm font-medium text-gray-700">Total Físico:</span>
+						<span class="text-sm font-bold text-gray-900">{formatCurrency(totalBills)}</span>
+					</div>
+				</div>
+
+				<form onsubmit={closeCashRegister}>
+					<div class="space-y-4">
+						<div>
+							<label for="closingAmount" class="block text-sm font-medium text-gray-700"
+								>Monto Real (o usar total de billetes)</label
+							>
+							<div class="relative">
+								<span class="absolute top-2 left-3 text-gray-500">$</span>
+								<input
+									id="closingAmount"
+									type="number"
+									bind:value={closingAmount}
+									min="0"
+									step="0.01"
+									required
+									class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900"
+									placeholder="0.00"
+								/>
+							</div>
+							<button
+								type="button"
+								onclick={() => (closingAmount = totalBills)}
+								class="mt-2 text-sm text-amber-600 hover:text-amber-700"
+							>
+								Usar total de billetes: {formatCurrency(totalBills)}
+							</button>
+						</div>
+
+						<div>
+							<label for="closingNotes" class="block text-sm font-medium text-gray-700">Notas</label
+							>
+							<textarea
+								id="closingNotes"
+								bind:value={closingNotes}
+								rows="3"
+								class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
+								placeholder="Observaciones del cierre de caja..."
+							></textarea>
+						</div>
+					</div>
+
+					<div class="mt-6 flex justify-end">
+						<button
+							type="button"
+							onclick={() => (showCloseModal = false)}
+							class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
+						>
+							Cancelar
+						</button>
+						<button
+							type="submit"
+							disabled={saving}
+							class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:bg-gray-400"
+						>
+							{saving ? 'Cerrando...' : 'Cerrar Caja'}
 						</button>
 					</div>
 				</form>
