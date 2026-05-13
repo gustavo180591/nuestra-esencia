@@ -713,23 +713,48 @@
 					<h1 class="text-2xl font-bold">Nuestra Esencia</h1>
 					<span class="text-amber-100">Sistema de Caja</span>
 				</div>
-				<button
-					type="button"
-					onclick={() => (showCashRegisterModal = true)}
-					class="text-right text-sm text-white hover:text-amber-200"
-				>
+				<div class="flex items-center space-x-3">
+					<button
+						type="button"
+						onclick={() => (showCashRegisterModal = true)}
+						class="text-right text-sm text-white hover:text-amber-200"
+					>
+						{#if cashRegister}
+							<div class="text-amber-100">
+								💵 Caja Abierta
+								{formatCurrency(cashRegister.initialAmount)}
+							</div>
+							<div class="text-xs text-amber-200">
+								Por: {cashRegister.openedBy?.name || 'Usuario'}
+							</div>
+						{:else}
+							<div class="text-red-100">🔴 Caja Cerrada</div>
+						{/if}
+					</button>
 					{#if cashRegister}
-						<div class="text-amber-100">
-							💵 Caja Abierta
-							{formatCurrency(cashRegister.initialAmount)}
-						</div>
-						<div class="text-xs text-amber-200">
-							Por: {cashRegister.openedBy?.name || 'Usuario'}
-						</div>
+						<button
+							type="button"
+							onclick={() => {
+								showCashRegisterModal = false;
+								showCloseModal = true;
+							}}
+							class="rounded-md bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
+						>
+							Cerrar Caja
+						</button>
 					{:else}
-						<div class="text-red-100">🔴 Caja Cerrada</div>
+						<button
+							type="button"
+							onclick={() => {
+								showCashRegisterModal = false;
+								showOpenModal = true;
+							}}
+							class="rounded-md bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
+						>
+							Abrir Caja
+						</button>
 					{/if}
-				</button>
+				</div>
 			</div>
 		</div>
 	</header>
