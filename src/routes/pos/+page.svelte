@@ -1332,19 +1332,19 @@
 				<div class="mb-4 rounded bg-gray-50 p-4">
 					<div class="grid grid-cols-2 gap-4">
 						<div>
-							<div class="text-xs text-gray-500">Monto Inicial</div>
-							<div class="text-sm font-medium">{formatCurrency(cashRegister.initialAmount)}</div>
+							<div class="text-xs text-gray-900">Monto Inicial</div>
+							<div class="text-sm font-medium text-gray-900">{formatCurrency(cashRegister.initialAmount)}</div>
 						</div>
 						<div>
-							<div class="text-xs text-gray-500">Ventas Efectivo</div>
-							<div class="text-sm font-medium">
+							<div class="text-xs text-gray-900">Ventas Efectivo</div>
+							<div class="text-sm font-medium text-gray-900">
 								{formatCurrency(cashRegister.expectedAmount - cashRegister.initialAmount)}
 							</div>
 						</div>
 					</div>
 					<div class="mt-4 grid grid-cols-2 gap-4">
 						<div>
-							<div class="text-xs text-gray-500">Transferencias</div>
+							<div class="text-xs text-gray-900">Transferencias</div>
 							<div class="text-sm font-medium text-blue-600">
 								{formatCurrency(
 									cashRegister.sales
@@ -1354,7 +1354,7 @@
 							</div>
 						</div>
 						<div>
-							<div class="text-xs text-gray-500">QR</div>
+							<div class="text-xs text-gray-900">QR</div>
 							<div class="text-sm font-medium text-purple-600">
 								{formatCurrency(
 									cashRegister.sales
@@ -1366,11 +1366,11 @@
 					</div>
 					<div class="mt-4 grid grid-cols-2 gap-4">
 						<div>
-							<div class="text-xs text-gray-500">Total Esperado</div>
-							<div class="text-sm font-medium">{formatCurrency(cashRegister.expectedAmount)}</div>
+							<div class="text-xs text-gray-900">Total Esperado</div>
+							<div class="text-sm font-medium text-gray-900">{formatCurrency(cashRegister.expectedAmount)}</div>
 						</div>
 						<div>
-							<div class="text-xs text-gray-500">Diferencia</div>
+							<div class="text-xs text-gray-900">Diferencia</div>
 							<div class="text-sm font-medium text-red-600">
 								{formatCurrency(cashRegister.difference || 0)}
 							</div>
