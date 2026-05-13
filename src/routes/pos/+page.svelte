@@ -277,7 +277,9 @@
 			applyPriceEdit(editingPriceIndex);
 		}
 		editingSubtotalIndex = index;
-		subtotalEditValue = currentSubtotal.toFixed(2);
+		// Forzar actualización del valor con el subtotal actual del carrito
+		const actualSubtotal = cart[index].subtotal;
+		subtotalEditValue = actualSubtotal.toFixed(2);
 	}
 
 	function applySubtotalEdit(index: number) {
@@ -285,7 +287,7 @@
 		const unitPrice = cart[index].unitPrice;
 		const newQuantity = unitPrice > 0 ? desiredSubtotal / unitPrice : 0;
 		cart[index].quantity = newQuantity;
-		cart[index].subtotal = newQuantity * unitPrice;
+		cart[index].subtotal = newQuantity * cart[index].unitPrice;
 		updateTotals();
 		editingSubtotalIndex = null;
 	}
@@ -299,7 +301,9 @@
 			applySubtotalEdit(editingSubtotalIndex);
 		}
 		editingGramsIndex = index;
-		gramsEditValue = currentGrams.toFixed(0);
+		// Forzar actualización del valor con los gramos actuales del carrito
+		const actualGrams = cart[index].quantity * 1000;
+		gramsEditValue = actualGrams.toFixed(0);
 	}
 
 	function applyGramsEdit(index: number) {
@@ -320,7 +324,9 @@
 			applySubtotalEdit(editingSubtotalIndex);
 		}
 		editingPriceIndex = index;
-		priceEditValue = currentSubtotal.toFixed(2);
+		// Forzar actualización del valor con el subtotal actual del carrito
+		const actualSubtotal = cart[index].subtotal;
+		priceEditValue = actualSubtotal.toFixed(2);
 	}
 
 	function applyPriceEdit(index: number) {
@@ -995,6 +1001,7 @@
 								.slice()
 								.reverse() as item, index (item.productId + '-' + item.productSaleFormatId + '-' + index)}
 								{@const isWeightBased = item.unitMeasure === 'KILOGRAMO'}
+								{@const realIndex = cart.length - 1 - index}
 								<div
 									class="flex items-center justify-between rounded bg-gray-50 p-3 {item.isCombo
 										? 'border-l-4 border-purple-500 bg-purple-50'
@@ -1043,46 +1050,46 @@
 												<div class="flex items-center gap-1">
 													<button
 														class="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
-														onclick={() => updateQuantity(index, item.quantity + 0.1)}
+														onclick={() => updateQuantity(realIndex, item.quantity + 0.1)}
 													>
 														100g
 													</button>
 													<button
 														class="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
-														onclick={() => updateQuantity(index, item.quantity + 0.2)}
+														onclick={() => updateQuantity(realIndex, item.quantity + 0.2)}
 													>
 														200g
 													</button>
-													<button onclick={() => updateQuantity(index, item.quantity + 0.5)}>
+													<button onclick={() => updateQuantity(realIndex, item.quantity + 0.5)}>
 														500g
 													</button>
 													<button
 														class="h-7 w-7 rounded bg-red-100 text-red-600 hover:bg-red-200"
 														onclick={() =>
-															updateQuantity(index, Math.max(0.05, item.quantity - 0.05))}
+															updateQuantity(realIndex, Math.max(0.05, item.quantity - 0.05))}
 														disabled={item.quantity <= 0.05}
 													>
 														-50g
 													</button>
 													<button
 														class="h-7 w-7 rounded bg-green-100 text-green-600 hover:bg-green-200"
-														onclick={() => updateQuantity(index, item.quantity + 0.05)}
+														onclick={() => updateQuantity(realIndex, item.quantity + 0.05)}
 													>
 														+50g
 													</button>
 												</div>
 												<div class="mt-1 text-right text-sm">
-													{#if editingGramsIndex === index}
+													{#if editingGramsIndex === realIndex}
 														<input
 															type="number"
 															class="w-20 rounded border px-1 py-1 text-center text-sm font-medium text-black"
 															bind:value={gramsEditValue}
 															min="0.1"
 															step="0.1"
-															onblur={() => applyGramsEdit(index)}
+															onblur={() => applyGramsEdit(realIndex)}
 															onkeydown={(e) => {
 																if (e.key === 'Enter') {
-																	applyGramsEdit(index);
+																	applyGramsEdit(realIndex);
 																}
 															}}
 														/>
@@ -1090,31 +1097,31 @@
 														<button
 															class="font-medium hover:text-amber-600"
 															style="color: #000"
-															onclick={() => startEditingGrams(index, item.quantity * 1000)}
+															onclick={() => startEditingGrams(realIndex, item.quantity * 1000)}
 															title="Click para editar gramos"
 														>
 															{(item.quantity * 1000).toFixed(1)}g
 														</button>
 													{/if}
 													<span class="text-gray-500">= </span>
-													{#if editingPriceIndex === index}
+													{#if editingPriceIndex === realIndex}
 														<input
 															type="number"
 															class="w-24 rounded border px-1 py-1 text-right text-sm font-medium text-black"
 															bind:value={priceEditValue}
 															min="0"
 															step="0.01"
-															onblur={() => applyPriceEdit(index)}
+															onblur={() => applyPriceEdit(realIndex)}
 															onkeydown={(e) => {
 																if (e.key === 'Enter') {
-																	applyPriceEdit(index);
+																	applyPriceEdit(realIndex);
 																}
 															}}
 														/>
 													{:else}
 														<button
 															class="text-gray-500 hover:text-amber-600"
-															onclick={() => startEditingPrice(index, item.subtotal)}
+															onclick={() => startEditingPrice(realIndex, item.subtotal)}
 															title="Click para editar precio"
 														>
 															{formatCurrency(item.subtotal)}
@@ -1126,7 +1133,7 @@
 												<div class="flex items-center space-x-2">
 													<button
 														class="h-8 w-8 rounded bg-red-100 text-red-600 hover:bg-red-200"
-														onclick={() => updateQuantity(index, item.quantity - 1)}
+														onclick={() => updateQuantity(realIndex, item.quantity - 1)}
 													>
 														-
 													</button>
@@ -1138,28 +1145,28 @@
 														step="1"
 														onchange={(e) => {
 															const val = parseInt(e.currentTarget.value) || 1;
-															updateQuantity(index, val);
+															updateQuantity(realIndex, val);
 														}}
 													/>
 													<button
 														class="h-8 w-8 rounded bg-green-100 text-green-600 hover:bg-green-200"
-														onclick={() => updateQuantity(index, item.quantity + 1)}
+														onclick={() => updateQuantity(realIndex, item.quantity + 1)}
 													>
 														+
 													</button>
 												</div>
 												<div class="mt-1 text-right font-bold" style="color: #000">
-													{#if editingSubtotalIndex === index}
+													{#if editingSubtotalIndex === realIndex}
 														<input
 															type="number"
 															class="w-24 rounded border px-1 py-1 text-right text-sm font-medium text-black"
 															bind:value={subtotalEditValue}
 															min="0"
 															step="0.01"
-															onblur={() => applySubtotalEdit(index)}
+															onblur={() => applySubtotalEdit(realIndex)}
 															onkeydown={(e) => {
 																if (e.key === 'Enter') {
-																	applySubtotalEdit(index);
+																	applySubtotalEdit(realIndex);
 																}
 															}}
 														/>
@@ -1167,7 +1174,7 @@
 														<button
 															class="hover:text-amber-600"
 															style="color: #000"
-															onclick={() => startEditingSubtotal(index, item.subtotal)}
+															onclick={() => startEditingSubtotal(realIndex, item.subtotal)}
 															title="Click para editar subtotal"
 														>
 															{formatCurrency(item.subtotal)}
