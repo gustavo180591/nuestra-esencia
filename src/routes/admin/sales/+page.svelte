@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import * as XLSX from 'xlsx';
 
 	interface Sale {
 		id: string;
@@ -232,6 +233,69 @@
 
 	const profitData = $derived(calculateProfit());
 
+	async function exportToExcel() {
+		try {
+			// Get all sales data (not just current page) with current filters
+			const params = new URLSearchParams();
+			if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+			if (filters.dateTo) params.append('dateTo', filters.dateTo);
+			if (filters.status) params.append('status', filters.status);
+			if (filters.paymentMethodId) params.append('paymentMethodId', filters.paymentMethodId);
+			if (filters.saleNumber) params.append('saleNumber', filters.saleNumber);
+			params.append('export', 'all'); // Flag to get all data for export
+
+			const response = await fetch(`/api/sales?${params.toString()}`);
+			const data = await response.json();
+			
+			if (!data.success) {
+				alert('Error al obtener datos para exportar');
+				return;
+			}
+
+			const allSales = data.data;
+
+			// Prepare data for Excel
+			const excelData = allSales.map((sale: Sale) => {
+				const items = sale.items.map(item => 
+					`${item.productNameSnapshot} (${item.quantity} x $${item.unitPrice})`
+				).join('\n');
+				
+				return {
+					'N° Venta': sale.saleNumber,
+					'Fecha': new Date(sale.createdAt).toLocaleDateString('es-AR'),
+					'Items': items,
+					'Cantidad Items': sale.items.length,
+					'Total': parseFloat(sale.total),
+					'Método de Pago': getPaymentMethodLabel(sale.paymentMethod),
+					'Estado': sale.status === 'COMPLETADA' ? 'Completada' : 'Cancelada',
+					'Usuario': sale.user?.name || 'N/A'
+				};
+			});
+
+			// Create workbook
+			const ws = XLSX.utils.json_to_sheet(excelData);
+			const wb = XLSX.utils.book_new();
+			XLSX.utils.book_append_sheet(wb, ws, 'Ventas');
+
+			// Generate filename with current date and filters
+			const date = new Date().toLocaleDateString('es-AR').replace(/\//g, '-');
+			let filename = `ventas-${date}`;
+			
+			if (filters.dateFrom || filters.dateTo) {
+				filename += `-desde-${filters.dateFrom || 'inicio'}-hasta-${filters.dateTo || 'hoy'}`;
+			}
+			if (filters.status) {
+				filename += `-estado-${filters.status}`;
+			}
+
+			// Save file
+			XLSX.writeFile(wb, `${filename}.xlsx`);
+		} catch (error) {
+			console.error('Error exporting to Excel:', error);
+			alert('Error al exportar a Excel');
+		}
+	}
+
 	onMount(() => {
 		loadSales();
 	});
@@ -320,6 +384,12 @@
 					class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
 				>
 					Limpiar filtros
+				</button>
+				<button
+					onclick={exportToExcel}
+					class="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+				>
+					📊 Exportar Excel
 				</button>
 			</div>
 		</div>
