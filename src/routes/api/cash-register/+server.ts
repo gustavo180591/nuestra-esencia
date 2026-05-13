@@ -99,7 +99,12 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 			return json({ success: false, message: 'Usuario no autenticado' }, { status: 401 });
 		}
 
-		const { actualAmount, notes } = await request.json();
+		const data = await request.json();
+		const { actualAmount, notes, billCounts } = data;
+
+		if (!actualAmount || actualAmount < 0) {
+			return json({ success: false, message: 'El monto real es requerido' }, { status: 400 });
+		}
 
 		// Buscar caja abierta
 		const openCashRegister = await db.cashRegister.findFirst({
@@ -140,7 +145,8 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 				actualAmount,
 				expectedAmount,
 				difference,
-				notes
+				notes,
+				billCounts: billCounts ? JSON.stringify(billCounts) : null
 			}
 		});
 

@@ -218,6 +218,7 @@ model CashRegister {
   actualAmount     Decimal?       @db.Decimal(12, 2) // Conteo físico al cerrar
   difference       Decimal?       @db.Decimal(12, 2) // Diferencia para arqueo
   notes            String?        // Observaciones al cerrar
+  billCounts       Json?          // Conteo de billetes al cerrar
   sales            Sale[]
   expenses         Expense[]      // Gastos registrados durante esta caja
   openedBy         User           @relation("CashOpenedBy", fields: [openedById], references: [id])

@@ -59,6 +59,27 @@
 	let closingNotes = $state('');
 	let saving = $state(false);
 
+	// Conteo de billetes para cierre de caja
+	let billCounts = $state({
+		'20000': 0,
+		'10000': 0,
+		'2000': 0,
+		'1000': 0,
+		'500': 0,
+		'200': 0,
+		'100': 0,
+		'50': 0,
+		'20': 0,
+		'10': 0
+	});
+
+	// Calcular total de billetes contados
+	let totalBills = $derived(
+		Object.entries(billCounts).reduce((sum, [denomination, count]) => {
+			return sum + Number(denomination) * count;
+		}, 0)
+	);
+
 	// Teclado numérico
 	let showKeypad = $state(false);
 	let activeInput = $state<'discount' | 'cash' | null>(null);
@@ -495,7 +516,8 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					actualAmount: closingAmount,
-					notes: closingNotes
+					notes: closingNotes,
+					billCounts
 				})
 			});
 
@@ -504,6 +526,19 @@
 				showCloseModal = false;
 				closingAmount = 0;
 				closingNotes = '';
+				// Resetear conteo de billetes
+				billCounts = {
+					'20000': 0,
+					'10000': 0,
+					'2000': 0,
+					'1000': 0,
+					'500': 0,
+					'200': 0,
+					'100': 0,
+					'50': 0,
+					'20': 0,
+					'10': 0
+				};
 				await loadCashRegister();
 			} else {
 				alert(`Error: ${result.message}`);
@@ -1309,6 +1344,28 @@
 					</div>
 					<div class="mt-4 grid grid-cols-2 gap-4">
 						<div>
+							<div class="text-xs text-gray-500">Transferencias</div>
+							<div class="text-sm font-medium text-blue-600">
+								{formatCurrency(
+									cashRegister.sales
+										.filter((s: any) => s.paymentMethod?.code === 'TRANSFERENCIA')
+										.reduce((sum: number, s: any) => sum + Number(s.total), 0)
+								)}
+							</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500">QR</div>
+							<div class="text-sm font-medium text-purple-600">
+								{formatCurrency(
+									cashRegister.sales
+										.filter((s: any) => s.paymentMethod?.code === 'QR')
+										.reduce((sum: number, s: any) => sum + Number(s.total), 0)
+								)}
+							</div>
+						</div>
+					</div>
+					<div class="mt-4 grid grid-cols-2 gap-4">
+						<div>
 							<div class="text-xs text-gray-500">Total Esperado</div>
 							<div class="text-sm font-medium">{formatCurrency(cashRegister.expectedAmount)}</div>
 						</div>
@@ -1321,11 +1378,33 @@
 					</div>
 				</div>
 
+				<!-- Conteo de billetes -->
+				<div class="mb-4 rounded bg-gray-50 p-4">
+					<h4 class="mb-3 text-sm font-medium text-gray-900">Conteo de Billetes</h4>
+					<div class="grid grid-cols-2 gap-3">
+						{#each Object.entries(billCounts) as [denomination, count]}
+							<div>
+								<label class="block text-xs text-gray-500">$ {denomination}</label>
+								<input
+									type="number"
+									min="0"
+									bind:value={billCounts[denomination as keyof typeof billCounts]}
+									class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-gray-900"
+								/>
+							</div>
+						{/each}
+					</div>
+					<div class="mt-3 flex justify-between border-t pt-3">
+						<span class="text-sm font-medium text-gray-700">Total Billetes:</span>
+						<span class="text-sm font-bold text-gray-900">{formatCurrency(totalBills)}</span>
+					</div>
+				</div>
+
 				<form onsubmit={closeCashRegister}>
 					<div class="space-y-4">
 						<div>
 							<label for="closingAmount" class="block text-sm font-medium text-gray-700"
-								>Monto Real</label
+								>Monto Real (o usar total de billetes)</label
 							>
 							<div class="relative">
 								<span class="absolute top-2 left-3 text-gray-500">$</span>
@@ -1340,6 +1419,13 @@
 									placeholder="0.00"
 								/>
 							</div>
+							<button
+								type="button"
+								onclick={() => (closingAmount = totalBills)}
+								class="mt-2 text-sm text-amber-600 hover:text-amber-700"
+							>
+								Usar total de billetes: {formatCurrency(totalBills)}
+							</button>
 						</div>
 
 						<div>
