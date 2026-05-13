@@ -66,7 +66,6 @@
 	let showMovementModal = $state(false);
 	let openingAmount = $state(0);
 	let openingBranch = $state('');
-	let openingShift = $state('');
 	let openingNotes = $state('');
 	let closingAmount = $state(0);
 	let closingNotes = $state('');
@@ -595,7 +594,6 @@
 				body: JSON.stringify({
 					initialAmount: openingAmount,
 					branch: openingBranch || null,
-					shift: openingShift || null,
 					openingBillCounts: openingBillCounts,
 					openingNotes: openingNotes || null
 				})
@@ -606,7 +604,6 @@
 				showOpenModal = false;
 				openingAmount = 0;
 				openingBranch = '';
-				openingShift = '';
 				openingNotes = '';
 				// Resetear conteo de billetes de apertura
 				openingBillCounts = {
@@ -1434,35 +1431,18 @@
 
 				<form onsubmit={openCashRegister}>
 					<div class="space-y-4">
-						<div class="grid grid-cols-2 gap-4">
-							<div>
-								<label for="openingBranch" class="block text-sm font-medium text-gray-700"
-									>Sucursal</label
-								>
-								<input
-									id="openingBranch"
-									type="text"
-									bind:value={openingBranch}
-									class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
-									placeholder="Principal"
-								/>
-							</div>
-							<div>
-								<label for="openingShift" class="block text-sm font-medium text-gray-700"
-									>Turno</label
-								>
-								<select
-									id="openingShift"
-									bind:value={openingShift}
-									class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
-								>
-									<option value="">Seleccionar...</option>
-									<option value="MAÑANA">Mañana</option>
-									<option value="TARDE">Tarde</option>
-									<option value="NOCHE">Noche</option>
-								</select>
-							</div>
-						</div>
+						<div>
+						<label for="openingBranch" class="block text-sm font-medium text-gray-700"
+							>Sucursal</label
+						>
+						<input
+							id="openingBranch"
+							type="text"
+							bind:value={openingBranch}
+							class="w-full rounded-md border-gray-300 px-3 py-2 text-gray-900"
+							placeholder="Principal"
+						/>
+					</div>
 
 						<div>
 							<label for="openingAmount" class="block text-sm font-medium text-gray-700"
