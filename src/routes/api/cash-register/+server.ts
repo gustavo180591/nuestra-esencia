@@ -146,7 +146,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 				expectedAmount,
 				difference,
 				notes,
-				billCounts: billCounts ? JSON.stringify(billCounts) : null
+				billCounts: billCounts || null
 			}
 		});
 
