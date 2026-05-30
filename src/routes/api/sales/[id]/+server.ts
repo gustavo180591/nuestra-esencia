@@ -243,3 +243,118 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		);
 	}
 };
+
+// Editar una venta (PUT /api/sales/[id])
+export const PUT: RequestHandler = async ({ params, request, locals }) => {
+	try {
+		// 🔐 Obtener usuario autenticado - Solo ADMIN puede editar
+		const user = locals.user;
+
+		if (!user) {
+			return json({ success: false, message: 'Usuario no autenticado' }, { status: 401 });
+		}
+
+		if (user.role !== 'ADMIN') {
+			return json(
+				{ success: false, message: 'Solo administradores pueden editar ventas' },
+				{ status: 403 }
+			);
+		}
+
+		const body = await request.json();
+		const { discount, paymentMethodId, cashReceived, createdAt } = body;
+
+		// Verificar que la venta existe
+		const sale = await db.sale.findUnique({
+			where: { id: params.id },
+			include: {
+				items: true,
+				paymentMethod: true
+			}
+		});
+
+		if (!sale) {
+			return json(
+				{
+					success: false,
+					message: 'Venta no encontrada'
+				},
+				{ status: 404 }
+			);
+		}
+
+		if (sale.status !== 'COMPLETADA') {
+			return json(
+				{
+					success: false,
+					message: 'Solo se pueden editar ventas completadas'
+				},
+				{ status: 400 }
+			);
+		}
+
+		// Calcular nuevo total
+		const newDiscount = discount !== undefined ? discount : sale.discount;
+		const newTotal = Math.max(0, Number(sale.subtotal) - newDiscount);
+
+		// Obtener método de pago si se cambió
+		const newPaymentMethodId = paymentMethodId || sale.paymentMethodId;
+		const newPaymentMethod = await db.paymentMethodConfig.findUnique({
+			where: { id: newPaymentMethodId }
+		});
+
+		if (!newPaymentMethod) {
+			return json(
+				{
+					success: false,
+					message: 'Método de pago inválido'
+				},
+				{ status: 400 }
+			);
+		}
+
+		// Calcular cambio si es efectivo
+		let newCashReceived = cashReceived !== undefined ? cashReceived : sale.cashReceived;
+		let newChangeGiven = null;
+
+		if (newPaymentMethod.code === 'EFECTIVO' && newCashReceived) {
+			newChangeGiven = Math.max(0, newCashReceived - newTotal);
+		} else if (newPaymentMethod.code !== 'EFECTIVO') {
+			newCashReceived = null;
+			newChangeGiven = null;
+		}
+
+		// Actualizar venta
+		const updatedSale = await db.sale.update({
+			where: { id: params.id },
+			data: {
+				discount: newDiscount,
+				total: newTotal,
+				paymentMethodId: newPaymentMethodId,
+				cashReceived: newCashReceived,
+				changeGiven: newChangeGiven,
+				...(createdAt && { createdAt: new Date(createdAt) })
+			},
+			include: {
+				items: true,
+				paymentMethod: true
+			}
+		});
+
+		return json({
+			success: true,
+			message: 'Venta actualizada exitosamente',
+			data: updatedSale
+		});
+	} catch (error) {
+		console.error('Error updating sale:', error);
+		return json(
+			{
+				success: false,
+				message: 'Error al actualizar la venta',
+				error: error instanceof Error ? error.message : 'Unknown error'
+			},
+			{ status: 500 }
+		);
+	}
+};

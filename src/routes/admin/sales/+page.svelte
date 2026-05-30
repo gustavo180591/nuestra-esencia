@@ -6,6 +6,8 @@
 		id: string;
 		saleNumber: number;
 		status: 'COMPLETADA' | 'CANCELADA';
+		subtotal?: string;
+		discount?: number | string;
 		total: string;
 		paymentMethodId: string;
 		paymentMethod?: {
@@ -55,6 +57,10 @@
 	let cancellingSaleId = $state<string | null>(null);
 	let deletingSaleId = $state<string | null>(null);
 	let showProfitModal = $state(false);
+	let showEditModal = $state(false);
+	let editingSaleId = $state<string | null>(null);
+	let saleToEdit = $state<Partial<Sale> | null>(null);
+	let paymentMethods = $state<Array<{ id: string; code: string; name: string; icon: string }>>([]);
 
 	// Filtros
 	let filters = $state({
@@ -75,19 +81,24 @@
 			if (filters.paymentMethodId) params.append('paymentMethodId', filters.paymentMethodId);
 			if (filters.saleNumber) params.append('saleNumber', filters.saleNumber);
 
-			const [salesRes, purchasesRes] = await Promise.all([
+			const [salesRes, purchasesRes, methodsRes] = await Promise.all([
 				fetch(`/api/sales?${params.toString()}`),
-				fetch('/api/purchases')
+				fetch('/api/purchases'),
+				fetch('/api/payment-methods')
 			]);
 
 			const salesData = await salesRes.json();
 			const purchasesData = await purchasesRes.json();
+			const methodsData = await methodsRes.json();
 
 			if (salesData.success) {
 				sales = salesData.data;
 			}
 			if (purchasesData.success) {
 				purchases = purchasesData.data;
+			}
+			if (methodsData.success) {
+				paymentMethods = methodsData.data;
 			}
 		} catch {
 			error = 'Error al cargar datos';
@@ -159,6 +170,58 @@
 	function closeDetailModal() {
 		showDetailModal = false;
 		selectedSale = null;
+	}
+
+	function openEditModal(sale: Sale) {
+		selectedSale = sale; // Guardar la venta completa para referencia
+		saleToEdit = {
+			id: sale.id,
+			discount: sale.discount ? parseFloat(sale.discount.toString()) : 0,
+			paymentMethodId: sale.paymentMethodId,
+			cashReceived: sale.cashReceived ? parseFloat(sale.cashReceived) : undefined,
+			createdAt: sale.createdAt,
+			saleNumber: sale.saleNumber,
+			subtotal: sale.subtotal,
+			total: sale.total,
+			items: sale.items,
+			paymentMethod: sale.paymentMethod
+		};
+		showEditModal = true;
+	}
+
+	function closeEditModal() {
+		showEditModal = false;
+		saleToEdit = null;
+	}
+
+	async function saveEditedSale() {
+		if (!saleToEdit || !saleToEdit.id) return;
+
+		editingSaleId = saleToEdit.id;
+		try {
+			const response = await fetch(`/api/sales/${saleToEdit.id}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					discount: saleToEdit.discount || 0,
+					paymentMethodId: saleToEdit.paymentMethodId,
+					cashReceived: saleToEdit.cashReceived,
+					createdAt: saleToEdit.createdAt
+				})
+			});
+			const data = await response.json();
+			if (data.success) {
+				await loadSales();
+				closeEditModal();
+				alert('Venta actualizada exitosamente');
+			} else {
+				alert(data.message || 'Error al actualizar venta');
+			}
+		} catch {
+			alert('Error al actualizar venta');
+		} finally {
+			editingSaleId = null;
+		}
 	}
 
 	function confirmCancelSale(saleId: string) {
@@ -490,6 +553,12 @@
 										</button>
 										{#if sale.status === 'COMPLETADA'}
 											<button
+												onclick={() => openEditModal(sale)}
+												class="text-blue-600 hover:text-blue-900"
+											>
+												Editar
+											</button>
+											<button
 												onclick={() => confirmCancelSale(sale.id)}
 												disabled={cancellingSaleId === sale.id}
 												class="text-red-600 hover:text-red-900"
@@ -614,6 +683,200 @@
 						class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
 					>
 						Cerrar
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Modal Editar Venta -->
+{#if showEditModal && saleToEdit}
+	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+		<div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white text-gray-900">
+			<div class="p-6">
+				<div class="mb-6 flex items-center justify-between">
+					<h2 class="text-xl font-semibold">Editar Venta #{saleToEdit?.saleNumber}</h2>
+					<button onclick={closeEditModal} class="text-2xl text-gray-400 hover:text-gray-600"
+						>×</button
+					>
+				</div>
+
+				<!-- Resumen de la venta -->
+				{#if saleToEdit && selectedSale}
+					<div class="mb-6 rounded-lg bg-gray-50 p-4">
+						<h3 class="mb-3 font-medium text-gray-900">Resumen de la Venta</h3>
+						<div class="grid grid-cols-2 gap-4">
+							<div>
+								<div class="text-xs text-gray-600">Fecha actual</div>
+								<div class="text-sm font-medium text-gray-900">
+									{new Date(selectedSale.createdAt).toLocaleString('es-AR')}
+								</div>
+							</div>
+							<div>
+								<div class="text-xs text-gray-600">Items</div>
+								<div class="text-sm font-medium text-gray-900">
+									{selectedSale.items.length} productos
+								</div>
+							</div>
+							<div>
+								<div class="text-xs text-gray-600">Subtotal</div>
+								<div class="text-sm font-medium text-gray-900">${selectedSale.subtotal}</div>
+							</div>
+							<div>
+								<div class="text-xs text-gray-600">Descuento actual</div>
+								<div class="text-sm font-medium text-gray-900">
+									${saleToEdit.discount || 0}
+								</div>
+							</div>
+							<div>
+								<div class="text-xs text-gray-600">Total actual</div>
+								<div class="text-lg font-bold text-green-600">${selectedSale.total}</div>
+							</div>
+							<div>
+								<div class="text-xs text-gray-600">Método de pago</div>
+								<div class="text-sm font-medium text-gray-900">
+									{saleToEdit.paymentMethod?.icon || ''} {saleToEdit.paymentMethod?.name || 'N/A'}
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Items de la venta -->
+					<div class="mb-6">
+						<h3 class="mb-2 font-medium text-gray-900">Productos</h3>
+						<div class="overflow-hidden rounded-lg border border-gray-200">
+							<table class="min-w-full divide-y divide-gray-200">
+								<thead class="bg-gray-50">
+									<tr>
+										<th class="px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase"
+											>Producto</th
+										>
+										<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 uppercase"
+											>Cantidad</th
+										>
+										<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 uppercase"
+											>Precio</th
+										>
+										<th class="px-3 py-2 text-right text-xs font-medium text-gray-700 uppercase"
+											>Subtotal</th
+										>
+									</tr>
+								</thead>
+								<tbody class="divide-y divide-gray-200 bg-white">
+									{#each selectedSale.items as item}
+										<tr>
+											<td class="px-3 py-2 text-sm text-gray-900">{item.productNameSnapshot}</td
+											>
+											<td class="px-3 py-2 text-right text-sm text-gray-600">{item.quantity}</td
+											>
+											<td class="px-3 py-2 text-right text-sm text-gray-900">${item.unitPrice}</td
+											>
+											<td class="px-3 py-2 text-right text-sm font-medium text-gray-900"
+												>${item.subtotal}</td
+											>
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				{/if}
+
+				<h3 class="mb-4 border-t pt-4 font-medium text-gray-900">Modificar Venta</h3>
+				<div class="space-y-4">
+					<div>
+						<label class="block text-sm font-medium text-gray-700">Fecha de Venta</label>
+						<input
+							type="datetime-local"
+							bind:value={saleToEdit.createdAt}
+							class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+						/>
+						<p class="mt-1 text-xs text-gray-500">Solo administradores pueden cambiar la fecha</p>
+					</div>
+
+					<div>
+						<label class="block text-sm font-medium text-gray-700">Descuento</label>
+						<div class="mt-1 flex gap-2">
+							<input
+								type="number"
+								bind:value={saleToEdit.discount}
+								min="0"
+								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+								placeholder="0"
+							/>
+							<span class="flex items-center text-gray-600">ARS</span>
+						</div>
+					</div>
+
+					<!-- Vista previa del nuevo total -->
+					{#if selectedSale}
+						{@const newTotal = Math.max(0, parseFloat(selectedSale.subtotal) - (saleToEdit.discount || 0))}
+						<div class="rounded-lg bg-blue-50 p-3">
+							<div class="flex justify-between">
+								<span class="text-sm text-gray-700">Subtotal:</span>
+								<span class="text-sm font-medium text-gray-900">${selectedSale.subtotal}</span>
+							</div>
+							<div class="flex justify-between">
+								<span class="text-sm text-gray-700">Descuento:</span>
+								<span class="text-sm font-medium text-red-600">-${saleToEdit.discount || 0}</span>
+							</div>
+							<div class="border-t border-blue-200 pt-2">
+								<div class="flex justify-between">
+									<span class="font-medium text-gray-900">Nuevo Total:</span>
+									<span class="text-lg font-bold text-green-600">${newTotal.toFixed(2)}</span>
+								</div>
+							</div>
+						</div>
+					{/if}
+
+					<div>
+						<label class="block text-sm font-medium text-gray-700">Método de Pago</label>
+						<select
+							bind:value={saleToEdit.paymentMethodId}
+							class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+						>
+							{#each paymentMethods as method}
+								<option value={method.id}>{method.icon} {method.name}</option>
+							{/each}
+						</select>
+					</div>
+
+					{#if saleToEdit.paymentMethodId && paymentMethods.find(m => m.id === saleToEdit.paymentMethodId)?.code === 'EFECTIVO'}
+						<div>
+							<label class="block text-sm font-medium text-gray-700">Dinero Recibido</label>
+							<input
+								type="number"
+								bind:value={saleToEdit.cashReceived}
+								min="0"
+								step="0.01"
+								class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+								placeholder="0"
+							/>
+							{#if selectedSale && saleToEdit.cashReceived}
+								{@const newTotal = Math.max(0, parseFloat(selectedSale.subtotal) - (saleToEdit.discount || 0))}
+								{@const changeGiven = Math.max(0, saleToEdit.cashReceived - newTotal)}
+								<div class="mt-2 text-sm text-gray-700">
+									Cambio: <span class="font-medium text-green-600">${changeGiven.toFixed(2)}</span>
+								</div>
+							{/if}
+						</div>
+					{/if}
+				</div>
+
+				<div class="mt-6 flex justify-end gap-2">
+					<button
+						onclick={closeEditModal}
+						class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
+					>
+						Cancelar
+					</button>
+					<button
+						onclick={saveEditedSale}
+						disabled={editingSaleId === saleToEdit.id}
+						class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+					>
+						{editingSaleId === saleToEdit.id ? 'Guardando...' : 'Guardar cambios'}
 					</button>
 				</div>
 			</div>
