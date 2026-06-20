@@ -2,6 +2,15 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 
+	function formatCurrency(value: number | string | null | undefined) {
+		const num = Number(value ?? 0);
+
+		return new Intl.NumberFormat('es-AR', {
+			style: 'currency',
+			currency: 'ARS'
+		}).format(Number.isNaN(num) ? 0 : num);
+	}
+
 	interface Client {
 		id: string;
 		name: string;
@@ -134,13 +143,13 @@
 						? 'text-red-600'
 						: 'text-green-600'}"
 				>
-					${Number(client.accountDebt).toFixed(2)}
+					{formatCurrency(client.accountDebt)}
 				</div>
 			</div>
 			<div class="rounded-lg bg-white p-6 shadow-md">
 				<div class="text-sm text-gray-500">Total Ventas Cuenta Corriente</div>
 				<div class="mt-2 text-2xl font-bold text-gray-900">
-					${totalSales.toFixed(2)}
+					{formatCurrency(totalSales)}
 				</div>
 			</div>
 			<div class="rounded-lg bg-white p-6 shadow-md">
@@ -196,7 +205,7 @@
 
 								<div class="text-right">
 									<div class="text-lg font-bold text-gray-900">
-										${Number(sale.total).toFixed(2)}
+										{formatCurrency(sale.total)}
 									</div>
 									<div class="text-xs font-medium text-purple-600">Cuenta corriente</div>
 								</div>
@@ -222,10 +231,10 @@
 													{item.quantity}
 												</td>
 												<td class="px-4 py-2 text-right text-gray-700">
-													${Number(item.unitPrice).toFixed(2)}
+													{formatCurrency(item.unitPrice)}
 												</td>
 												<td class="px-4 py-2 text-right font-medium text-gray-900">
-													${Number(item.subtotal).toFixed(2)}
+													{formatCurrency(item.subtotal)}
 												</td>
 											</tr>
 										{/each}

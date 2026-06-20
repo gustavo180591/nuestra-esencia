@@ -1,10 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
+	import * as XLSX from 'xlsx';
 
 	interface Client {
 		id: string;
 		name: string;
+		phone: string | null;
+		email: string | null;
+		address: string | null;
 		accountDebt: number;
 	}
 
@@ -30,6 +34,7 @@
 		createdAt: string;
 		user: { id: string; name: string };
 		sale?: Sale | null;
+		referenceType: string | null;
 	}
 
 	let client = $state<Client | null>(null);
@@ -120,6 +125,167 @@
 
 		return `${items[0].productNameSnapshot} (${items[0].quantity}), ${items[1].productNameSnapshot} (${items[1].quantity}) +${items.length - 2} más`;
 	};
+
+	function formatExcelDate(value: string | Date) {
+		return new Date(value).toLocaleString('es-AR', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	}
+
+	function toNumber(value: number | string | null | undefined) {
+		const num = Number(value ?? 0);
+		return Number.isNaN(num) ? 0 : num;
+	}
+
+	function formatCurrency(value: number | string | null | undefined) {
+		const num = Number(value ?? 0);
+
+		return new Intl.NumberFormat('es-AR', {
+			style: 'currency',
+			currency: 'ARS'
+		}).format(Number.isNaN(num) ? 0 : num);
+	}
+
+	function formatDate(value: string | Date) {
+		return new Date(value).toLocaleDateString('es-AR', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric'
+		});
+	}
+
+	function normalizeWhatsappPhone(phone: string | null | undefined) {
+		if (!phone) return '';
+
+		let digits = phone.replace(/\D/g, '');
+
+		// Quitar 0 inicial típico de llamadas locales
+		if (digits.startsWith('0')) {
+			digits = digits.slice(1);
+		}
+
+		// Si ya viene con Argentina + WhatsApp móvil: 549...
+		if (digits.startsWith('549')) {
+			return digits;
+		}
+
+		// Si ya viene con código país 54
+		if (digits.startsWith('54')) {
+			return digits;
+		}
+
+		// Para celulares argentinos locales: 376..., 3764..., etc.
+		return `549${digits}`;
+	}
+
+	function exportAccountToExcel() {
+		if (!client) {
+			alert('No hay cliente cargado');
+			return;
+		}
+
+		const exportDate = new Date().toLocaleDateString('es-AR').replace(/\//g, '-');
+
+		const resumenData = [
+			{
+				Cliente: client.name,
+				Teléfono: client.phone || '',
+				Email: client.email || '',
+				Dirección: client.address || '',
+				'Deuda actual': toNumber(client.accountDebt),
+				'Fecha de exportación': new Date().toLocaleString('es-AR')
+			}
+		];
+
+		const movementsData = movements.map((movement) => {
+			const amount = toNumber(movement.amount);
+
+			return {
+				Fecha: formatExcelDate(movement.createdAt),
+				Tipo: movement.type,
+				Descripción: movement.description || '',
+				Debe: movement.type === 'VENTA' ? amount : '',
+				Haber: movement.type === 'PAGO' ? amount : '',
+				Ajuste: movement.type === 'AJUSTE' ? amount : '',
+				'Saldo luego': toNumber(movement.balanceAfter),
+				Usuario: movement.user?.name || '',
+				Referencia: movement.referenceType || ''
+			};
+		});
+
+		const wb = XLSX.utils.book_new();
+
+		const resumenSheet = XLSX.utils.json_to_sheet(resumenData);
+		const movementsSheet = XLSX.utils.json_to_sheet(movementsData);
+
+		XLSX.utils.book_append_sheet(wb, resumenSheet, 'Resumen');
+		XLSX.utils.book_append_sheet(wb, movementsSheet, 'Movimientos');
+
+		const safeClientName = client.name
+			.toLowerCase()
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '')
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-|-$/g, '');
+
+		XLSX.writeFile(wb, `cuenta-corriente-${safeClientName}-${exportDate}.xlsx`);
+	}
+
+	function buildWhatsappMessage() {
+		if (!client) return '';
+
+		const lastMovements = movements.slice(0, 5);
+
+		const movementsText =
+			lastMovements.length > 0
+				? lastMovements
+						.map((movement) => {
+							const sign =
+								movement.type === 'PAGO'
+									? 'Pago'
+									: movement.type === 'AJUSTE'
+										? 'Ajuste'
+										: 'Compra';
+
+							return `• ${formatDate(movement.createdAt)} - ${sign}: ${formatCurrency(
+								movement.amount
+							)} - Saldo: ${formatCurrency(movement.balanceAfter)}`;
+						})
+						.join('\n')
+				: 'Sin movimientos recientes.';
+
+		return `Hola ${client.name}, te enviamos el resumen de tu cuenta corriente.
+
+Saldo pendiente: ${formatCurrency(client.accountDebt)}
+
+Últimos movimientos:
+${movementsText}
+
+Muchas gracias.`;
+	}
+
+	function sendWhatsapp() {
+		if (!client) {
+			alert('No hay cliente cargado');
+			return;
+		}
+
+		const phone = normalizeWhatsappPhone(client.phone);
+
+		if (!phone) {
+			alert('El cliente no tiene teléfono cargado');
+			return;
+		}
+
+		const message = buildWhatsappMessage();
+		const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+		window.open(url, '_blank', 'noopener,noreferrer');
+	}
 
 	async function registerPayment() {
 		const amount = Number(paymentAmount);
@@ -255,7 +421,7 @@
 							? 'text-red-600'
 							: 'text-green-600'}"
 					>
-						${Number(client.accountDebt).toFixed(2)}
+						{formatCurrency(client.accountDebt)}
 					</div>
 				</div>
 				<div>
@@ -283,14 +449,14 @@
 				Ajustar Saldo
 			</button>
 			<button
+				onclick={exportAccountToExcel}
 				class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-				onclick={() => alert('Funcionalidad de exportar Excel próximamente')}
 			>
 				Exportar Excel
 			</button>
 			<button
+				onclick={sendWhatsapp}
 				class="rounded-md bg-green-500 px-4 py-2 text-white hover:bg-green-600"
-				onclick={() => alert('Funcionalidad de enviar WhatsApp próximamente')}
 			>
 				Enviar WhatsApp
 			</button>
@@ -363,17 +529,17 @@
 									<td
 										class="px-6 py-4 text-right text-sm font-medium whitespace-nowrap text-gray-900"
 									>
-										{movement.type === 'VENTA' ? '$' + Number(movement.amount).toFixed(2) : '-'}
+										{movement.type === 'VENTA' ? formatCurrency(movement.amount) : '-'}
 									</td>
 									<td
 										class="px-6 py-4 text-right text-sm font-medium whitespace-nowrap text-gray-900"
 									>
-										{movement.type === 'PAGO' ? '$' + Number(movement.amount).toFixed(2) : '-'}
+										{movement.type === 'PAGO' ? formatCurrency(movement.amount) : '-'}
 									</td>
 									<td
 										class="px-6 py-4 text-right text-sm font-bold whitespace-nowrap text-gray-900"
 									>
-										${Number(movement.balanceAfter).toFixed(2)}
+										{formatCurrency(movement.balanceAfter)}
 									</td>
 								</tr>
 							{/each}
@@ -497,7 +663,9 @@
 						<div class="rounded-lg bg-gray-50 p-3 text-sm">
 							<div class="flex justify-between">
 								<span class="text-gray-600">Saldo actual:</span>
-								<span class="font-semibold text-gray-900">${Number(client.accountDebt).toFixed(2)}</span>
+								<span class="font-semibold text-gray-900"
+									>${Number(client.accountDebt).toFixed(2)}</span
+								>
 							</div>
 						</div>
 					{/if}
