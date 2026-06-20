@@ -80,6 +80,12 @@
 		Array<{ id: string; code: string; name: string; icon?: string | null }>
 	>([]);
 
+	// Pagination
+	let currentPage = $state(1);
+	let pageSize = $state(25);
+	let totalPages = $state(1);
+	let totalSales = $state(0);
+
 	// Filtros
 	let filters = $state({
 		dateFrom: '',
@@ -98,6 +104,8 @@
 			if (filters.status) params.append('status', filters.status);
 			if (filters.paymentMethodId) params.append('paymentMethodId', filters.paymentMethodId);
 			if (filters.saleNumber) params.append('saleNumber', filters.saleNumber);
+			params.append('page', currentPage.toString());
+			params.append('pageSize', pageSize.toString());
 
 			const [salesRes, purchasesRes, methodsRes] = await Promise.all([
 				fetch(`/api/sales?${params.toString()}`),
@@ -111,6 +119,10 @@
 
 			if (salesData.success) {
 				sales = salesData.data;
+				if (salesData.pagination) {
+					totalPages = salesData.pagination.totalPages;
+					totalSales = salesData.pagination.total;
+				}
 			}
 			if (purchasesData.success) {
 				purchases = purchasesData.data;
@@ -126,6 +138,7 @@
 	}
 
 	function applyFilters() {
+		currentPage = 1;
 		loadSales();
 	}
 
@@ -137,6 +150,20 @@
 			paymentMethodId: '',
 			saleNumber: ''
 		};
+		currentPage = 1;
+		loadSales();
+	}
+
+	function changePage(newPage: number) {
+		if (newPage >= 1 && newPage <= totalPages) {
+			currentPage = newPage;
+			loadSales();
+		}
+	}
+
+	function changePageSize(newSize: number) {
+		pageSize = newSize;
+		currentPage = 1;
 		loadSales();
 	}
 
@@ -605,6 +632,51 @@
 					</tbody>
 				</table>
 			</div>
+
+			<!-- Pagination Controls -->
+			{#if totalPages > 1}
+				<div class="mt-4 flex flex-col items-center justify-between gap-4 rounded-lg bg-white p-4 shadow sm:flex-row">
+					<div class="flex items-center gap-2">
+						<span class="text-sm text-gray-600">Mostrar:</span>
+						<select
+							bind:value={pageSize}
+							onchange={(e) => {
+								const target = e.target as HTMLSelectElement;
+								changePageSize(Number(target.value));
+							}}
+							class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-900"
+						>
+							<option value={25}>25</option>
+							<option value={50}>50</option>
+							<option value={100}>100</option>
+						</select>
+						<span class="text-sm text-gray-600">por página</span>
+					</div>
+
+					<div class="flex items-center gap-2">
+						<span class="text-sm text-gray-600">
+							Página {currentPage} de {totalPages} ({totalSales} ventas)
+						</span>
+					</div>
+
+					<div class="flex gap-2">
+						<button
+							onclick={() => changePage(currentPage - 1)}
+							disabled={currentPage === 1}
+							class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							Anterior
+						</button>
+						<button
+							onclick={() => changePage(currentPage + 1)}
+							disabled={currentPage === totalPages}
+							class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							Siguiente
+						</button>
+					</div>
+				</div>
+			{/if}
 		{/if}
 	</div>
 </div>

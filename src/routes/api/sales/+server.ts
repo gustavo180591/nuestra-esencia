@@ -323,6 +323,9 @@ export const GET: RequestHandler = async ({ url }) => {
 		const status = url.searchParams.get('status');
 		const paymentMethodId = url.searchParams.get('paymentMethodId');
 		const saleNumber = url.searchParams.get('saleNumber');
+		const page = url.searchParams.get('page');
+		const pageSize = url.searchParams.get('pageSize');
+		const exportAll = url.searchParams.get('export');
 
 		const whereClause: Record<string, unknown> = {};
 
@@ -350,11 +353,20 @@ export const GET: RequestHandler = async ({ url }) => {
 			whereClause.saleNumber = Number(saleNumber);
 		}
 
+		// Get total count for pagination
+		const totalCount = await db.sale.count({ where: whereClause });
+
+		// Apply pagination unless exporting all data
+		const skip = page && pageSize ? (Number(page) - 1) * Number(pageSize) : 0;
+		const take = exportAll === 'all' ? undefined : Number(pageSize) || 25;
+
 		const sales = await db.sale.findMany({
 			where: whereClause,
 			orderBy: {
 				createdAt: 'desc'
 			},
+			skip,
+			take,
 			include: {
 				paymentMethod: {
 					select: {
@@ -392,7 +404,13 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		return json({
 			success: true,
-			data: sales
+			data: sales,
+			pagination: {
+				total: totalCount,
+				page: page ? Number(page) : 1,
+				pageSize: pageSize ? Number(pageSize) : 25,
+				totalPages: Math.ceil(totalCount / (pageSize ? Number(pageSize) : 25))
+			}
 		});
 	} catch (error) {
 		console.error('Error fetching sales:', error);
