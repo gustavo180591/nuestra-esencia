@@ -21,7 +21,12 @@ export const GET: RequestHandler = async ({ locals }) => {
 				id: true,
 				name: true,
 				phone: true,
-				accountDebt: true
+				address: true,
+				email: true,
+				accountDebt: true,
+				active: true,
+				createdAt: true,
+				updatedAt: true
 			}
 		});
 

@@ -26,6 +26,7 @@
 	const navItems = [
 		{ href: '/pos', label: 'Caja', icon: '🏪' },
 		{ href: '/admin/sales', label: 'Ventas', icon: '💰' },
+		{ href: '/admin/clients', label: 'Clientes', icon: '👥' },
 		{ href: '/admin', label: 'Productos', icon: '📦' },
 		{ href: '/admin/stock', label: 'Stock', icon: '📊' },
 		{ href: '/admin/purchases', label: 'Compras', icon: '🛒' },

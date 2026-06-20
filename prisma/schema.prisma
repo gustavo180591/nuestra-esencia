@@ -8,24 +8,25 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(cuid())
-  name           String
-  email          String          @unique
-  passwordHash   String
-  role           UserRole
-  active         Boolean         @default(true)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  purchases      Purchase[]
-  cancelledSales Sale[]          @relation("SaleCancelledBy")
-  modifiedSales  Sale[]          @relation("SaleModifiedBy")
-  sales          Sale[]
-  openedCashRegisters CashRegister[] @relation("CashOpenedBy")
-  closedCashRegisters CashRegister[] @relation("CashClosedBy")
-  stockMoves     StockMovement[]
-  expenses       Expense[]       // Gastos registrados por este usuario
-  cashMovements  CashMovement[]  @relation("CashMovementUser")
-  cashCounts     CashCount[]     @relation("CashCountUser")
+  id                  String                  @id @default(cuid())
+  name                String
+  email               String                  @unique
+  passwordHash        String
+  role                UserRole
+  active              Boolean                 @default(true)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  purchases           Purchase[]
+  cancelledSales      Sale[]                  @relation("SaleCancelledBy")
+  modifiedSales       Sale[]                  @relation("SaleModifiedBy")
+  sales               Sale[]
+  openedCashRegisters CashRegister[]          @relation("CashOpenedBy")
+  closedCashRegisters CashRegister[]          @relation("CashClosedBy")
+  stockMoves          StockMovement[]
+  expenses            Expense[] // Gastos registrados por este usuario
+  cashMovements       CashMovement[]          @relation("CashMovementUser")
+  cashCounts          CashCount[]             @relation("CashCountUser")
+  accountMovements    ClientAccountMovement[]
 }
 
 model Category {
@@ -66,14 +67,14 @@ model Product {
 }
 
 model ProductComboItem {
-  id               String  @id @default(cuid())
-  comboProductId   String
-  componentId      String
-  quantity         Decimal @db.Decimal(10, 3)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  comboProduct     Product @relation("ComboParent", fields: [comboProductId], references: [id], onDelete: Cascade)
-  component        Product @relation("ComboComponent", fields: [componentId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  comboProductId String
+  componentId    String
+  quantity       Decimal  @db.Decimal(10, 3)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  comboProduct   Product  @relation("ComboParent", fields: [comboProductId], references: [id], onDelete: Cascade)
+  component      Product  @relation("ComboComponent", fields: [componentId], references: [id], onDelete: Cascade)
 
   @@unique([comboProductId, componentId])
   @@index([comboProductId])
@@ -109,37 +110,64 @@ model Supplier {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   purchases Purchase[]
-  expenses  Expense[]  // Gastos pagados a este proveedor
+  expenses  Expense[] // Gastos pagados a este proveedor
 
   @@index([name])
   @@map("suppliers")
 }
 
 model Client {
-  id           String   @id @default(cuid())
-  name         String
-  phone        String?
-  address      String?
-  email        String?
-  active       Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  accountDebt  Decimal  @default(0) @db.Decimal(12, 2)
-  sales        Sale[]
+  id               String                  @id @default(cuid())
+  name             String
+  phone            String?
+  address          String?
+  email            String?
+  active           Boolean                 @default(true)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  accountDebt      Decimal                 @default(0) @db.Decimal(12, 2)
+  sales            Sale[]
+  accountMovements ClientAccountMovement[]
 
   @@index([name])
   @@map("clients")
 }
 
+model ClientAccountMovement {
+  id            String              @id @default(cuid())
+  clientId      String
+  type          AccountMovementType
+  amount        Decimal             @db.Decimal(12, 2)
+  description   String
+  balanceAfter  Decimal             @db.Decimal(12, 2)
+  referenceId   String? // ID de venta o pago relacionado
+  referenceType String? // 'SALE', 'PAYMENT', 'ADJUSTMENT'
+  userId        String
+  user          User                @relation(fields: [userId], references: [id])
+  client        Client              @relation(fields: [clientId], references: [id])
+  createdAt     DateTime            @default(now())
+
+  @@index([clientId])
+  @@index([createdAt])
+  @@index([type])
+  @@map("client_account_movements")
+}
+
+enum AccountMovementType {
+  VENTA
+  PAGO
+  AJUSTE
+}
+
 model Sale {
-  id                 String          @id @default(cuid())
-  saleNumber         Int             @unique @default(autoincrement())
-  status             SaleStatus      @default(COMPLETADA)
+  id                 String              @id @default(cuid())
+  saleNumber         Int                 @unique @default(autoincrement())
+  status             SaleStatus          @default(COMPLETADA)
   userId             String
   clientId           String?
-  subtotal           Decimal         @db.Decimal(12, 2)
-  discount           Decimal         @default(0) @db.Decimal(12, 2)
-  total              Decimal         @db.Decimal(12, 2)
+  subtotal           Decimal             @db.Decimal(12, 2)
+  discount           Decimal             @default(0) @db.Decimal(12, 2)
+  total              Decimal             @db.Decimal(12, 2)
   cancelledAt        DateTime?
   cancelledById      String?
   cancellationReason String?
@@ -148,20 +176,20 @@ model Sale {
   modifiedAt         DateTime?
   modifiedById       String?
   modificationReason String?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  cashReceived       Decimal?        @db.Decimal(12, 2)
-  changeGiven        Decimal?        @db.Decimal(12, 2)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  cashReceived       Decimal?            @db.Decimal(12, 2)
+  changeGiven        Decimal?            @db.Decimal(12, 2)
   paymentMethodId    String
   paymentMethod      PaymentMethodConfig @relation(fields: [paymentMethodId], references: [id])
   cashRegisterId     String?
-  cashRegister       CashRegister?   @relation(fields: [cashRegisterId], references: [id])
+  cashRegister       CashRegister?       @relation(fields: [cashRegisterId], references: [id])
   paymentDueDate     DateTime?
   items              SaleItem[]
-  cancelledBy        User?           @relation("SaleCancelledBy", fields: [cancelledById], references: [id])
-  modifiedBy         User?           @relation("SaleModifiedBy", fields: [modifiedById], references: [id])
-  user               User            @relation(fields: [userId], references: [id])
-  client             Client?         @relation(fields: [clientId], references: [id])
+  cancelledBy        User?               @relation("SaleCancelledBy", fields: [cancelledById], references: [id])
+  modifiedBy         User?               @relation("SaleModifiedBy", fields: [modifiedById], references: [id])
+  user               User                @relation(fields: [userId], references: [id])
+  client             Client?             @relation(fields: [clientId], references: [id])
   stockMoves         StockMovement[]
 
   @@index([createdAt])
@@ -194,23 +222,23 @@ model SaleItem {
 }
 
 model Purchase {
-  id                String          @id @default(cuid())
-  purchaseNumber    Int             @unique @default(autoincrement())
-  status            PurchaseStatus  @default(REGISTRADA)
-  supplierId        String
-  userId            String?
-  subtotal          Decimal         @db.Decimal(12, 2)
-  discountAmount    Decimal         @default(0) @db.Decimal(12, 2)
-  discountPercentage Decimal        @default(0) @db.Decimal(5, 2)
-  discountReason    String?
-  total             Decimal         @db.Decimal(12, 2)
-  notes             String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  items             PurchaseItem[]
-  supplier          Supplier        @relation(fields: [supplierId], references: [id])
-  user              User?           @relation(fields: [userId], references: [id])
-  stockMoves        StockMovement[]
+  id                 String          @id @default(cuid())
+  purchaseNumber     Int             @unique @default(autoincrement())
+  status             PurchaseStatus  @default(REGISTRADA)
+  supplierId         String
+  userId             String?
+  subtotal           Decimal         @db.Decimal(12, 2)
+  discountAmount     Decimal         @default(0) @db.Decimal(12, 2)
+  discountPercentage Decimal         @default(0) @db.Decimal(5, 2)
+  discountReason     String?
+  total              Decimal         @db.Decimal(12, 2)
+  notes              String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  items              PurchaseItem[]
+  supplier           Supplier        @relation(fields: [supplierId], references: [id])
+  user               User?           @relation(fields: [userId], references: [id])
+  stockMoves         StockMovement[]
 
   @@index([createdAt])
   @@index([status])
@@ -238,30 +266,30 @@ model PurchaseItem {
 }
 
 model CashRegister {
-  id                  String         @id @default(cuid())
-  status              CashStatus     @default(ABIERTA)
-  openedAt            DateTime       @default(now())
-  closedAt            DateTime?
-  openedById          String
-  closedById          String?
-  branch              String?        // Sucursal
-  shift               String?        // Turno (MAÑANA, TARDE, NOCHE)
-  initialAmount       Decimal        @db.Decimal(12, 2)
-  openingBillCounts   Json?          // Conteo de billetes al abrir
-  openingNotes        String?        // Observaciones al abrir
-  expectedAmount      Decimal?       @db.Decimal(12, 2) // Calculado: inicial + ventas en efectivo - gastos en efectivo + movimientos
-  actualAmount        Decimal?       @db.Decimal(12, 2) // Conteo físico al cerrar
-  difference          Decimal?       @db.Decimal(12, 2) // Diferencia para arqueo
-  notes               String?        // Observaciones al cerrar
-  billCounts          Json?          // Conteo de billetes al cerrar
-  sales               Sale[]
-  expenses            Expense[]      // Gastos registrados durante esta caja
-  movements           CashMovement[] // Movimientos de caja
-  cashCounts          CashCount[]    // Conteos físicos
-  openedBy            User           @relation("CashOpenedBy", fields: [openedById], references: [id])
-  closedBy            User?          @relation("CashClosedBy", fields: [closedById], references: [id])
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
+  id                String         @id @default(cuid())
+  status            CashStatus     @default(ABIERTA)
+  openedAt          DateTime       @default(now())
+  closedAt          DateTime?
+  openedById        String
+  closedById        String?
+  branch            String? // Sucursal
+  shift             String? // Turno (MAÑANA, TARDE, NOCHE)
+  initialAmount     Decimal        @db.Decimal(12, 2)
+  openingBillCounts Json? // Conteo de billetes al abrir
+  openingNotes      String? // Observaciones al abrir
+  expectedAmount    Decimal?       @db.Decimal(12, 2) // Calculado: inicial + ventas en efectivo - gastos en efectivo + movimientos
+  actualAmount      Decimal?       @db.Decimal(12, 2) // Conteo físico al cerrar
+  difference        Decimal?       @db.Decimal(12, 2) // Diferencia para arqueo
+  notes             String? // Observaciones al cerrar
+  billCounts        Json? // Conteo de billetes al cerrar
+  sales             Sale[]
+  expenses          Expense[] // Gastos registrados durante esta caja
+  movements         CashMovement[] // Movimientos de caja
+  cashCounts        CashCount[] // Conteos físicos
+  openedBy          User           @relation("CashOpenedBy", fields: [openedById], references: [id])
+  closedBy          User?          @relation("CashClosedBy", fields: [closedById], references: [id])
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   @@index([status])
   @@index([openedAt])
@@ -341,13 +369,13 @@ enum CashCountType {
 }
 
 model CashCountItem {
-  id          String     @id @default(cuid())
-  cashCountId String
-  denomination Int        // 10, 50, 100, 200, 500, 1000, 2000, 10000, 20000
-  quantity    Int
-  subtotal    Decimal    @db.Decimal(12, 2)
-  cashCount   CashCount  @relation(fields: [cashCountId], references: [id], onDelete: Cascade)
-  createdAt   DateTime   @default(now())
+  id           String    @id @default(cuid())
+  cashCountId  String
+  denomination Int // 10, 50, 100, 200, 500, 1000, 2000, 10000, 20000
+  quantity     Int
+  subtotal     Decimal   @db.Decimal(12, 2)
+  cashCount    CashCount @relation(fields: [cashCountId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
 
   @@index([cashCountId])
   @@map("cash_count_items")
@@ -419,9 +447,9 @@ model PaymentMethodConfig {
   code        String   @unique
   name        String
   description String?
-  icon        String?  // emoji o icono
+  icon        String? // emoji o icono
   active      Boolean  @default(true)
-  affectsCash  Boolean  @default(false)  // Si afecta el dinero físico en caja
+  affectsCash Boolean  @default(false) // Si afecta el dinero físico en caja
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -433,10 +461,10 @@ model PaymentMethodConfig {
 }
 
 enum ExpenseCategory {
-  PROVEEDOR    // Pagos a proveedores
-  SERVICIO     // Servicios (luz, agua, internet, alquiler)
-  INSUMO       // Bolsas, packaging, etc.
-  OTRO         // Otros gastos
+  PROVEEDOR // Pagos a proveedores
+  SERVICIO // Servicios (luz, agua, internet, alquiler)
+  INSUMO // Bolsas, packaging, etc.
+  OTRO // Otros gastos
 }
 
 model Expense {
@@ -445,13 +473,13 @@ model Expense {
   amount         Decimal         @db.Decimal(12, 2)
   category       ExpenseCategory
   date           DateTime        @default(now())
-  paymentMethod  String          // EFECTIVO, TRANSFERENCIA, TARJETA, QR
-  supplierId     String?         // Opcional: si es pago a proveedor
+  paymentMethod  String // EFECTIVO, TRANSFERENCIA, TARJETA, QR
+  supplierId     String? // Opcional: si es pago a proveedor
   supplier       Supplier?       @relation(fields: [supplierId], references: [id])
   notes          String?
-  userId         String          // Quien registró el gasto
+  userId         String // Quien registró el gasto
   user           User            @relation(fields: [userId], references: [id])
-  cashRegisterId String?         // Relación con caja (si se registró durante una caja abierta)
+  cashRegisterId String? // Relación con caja (si se registró durante una caja abierta)
   cashRegister   CashRegister?   @relation(fields: [cashRegisterId], references: [id])
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
