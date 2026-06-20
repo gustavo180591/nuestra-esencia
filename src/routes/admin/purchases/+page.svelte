@@ -18,9 +18,14 @@
 	let error = $state('');
 	let showCreateModal = $state(false);
 	let showDetailModal = $state(false);
+	let showSupplierModal = $state(false);
 	let selectedPurchase = $state<Purchase | null>(null);
 	let purchaseItems = $state<PurchaseItemDetail[]>([]);
 	let loadingItems = $state(false);
+	let newSupplierName = $state('');
+	let newSupplierPhone = $state('');
+	let newSupplierAddress = $state('');
+	let newSupplierEmail = $state('');
 
 	// Form data
 	let formData = $state({
@@ -33,10 +38,14 @@
 			unitPrice: number;
 			totalPrice: number;
 			applySuggestedPrice: boolean;
+			profitMargin?: number; // Margen individual por ítem
 		}>,
 		profitMargin: 40, // Margen de ganancia por defecto 40%
 		roundPrices: false, // Redondear a centenas
-		updatePrices: true // Actualizar precios de venta al registrar compra
+		updatePrices: true, // Actualizar precios de venta al registrar compra
+		discountAmount: 0, // Descuento en pesos
+		discountPercentage: 0, // Descuento en porcentaje
+		discountReason: '' // Motivo del descuento
 	});
 
 	async function loadData() {
@@ -66,7 +75,10 @@
 			items: [],
 			profitMargin: 40,
 			roundPrices: false,
-			updatePrices: true
+			updatePrices: true,
+			discountAmount: 0,
+			discountPercentage: 0,
+			discountReason: ''
 		};
 	}
 
@@ -82,7 +94,8 @@
 			quantity: 1,
 			unitPrice: 0,
 			totalPrice: 0,
-			applySuggestedPrice: false
+			applySuggestedPrice: false,
+			profitMargin: formData.profitMargin // Usar margen general por defecto
 		});
 	}
 
@@ -93,8 +106,9 @@
 		}
 	}
 
-	function calculateSellingPrice(costPrice: number): number {
-		const withMargin = costPrice * (1 + formData.profitMargin / 100);
+	function calculateSellingPrice(costPrice: number, itemMargin?: number): number {
+		const marginToUse = itemMargin !== undefined ? itemMargin : formData.profitMargin;
+		const withMargin = costPrice * (1 + marginToUse / 100);
 		// Redondear a centenas (ej: 1230 → 1200, 1260 → 1300)
 		return formData.roundPrices
 			? Math.round(withMargin / 100) * 100
@@ -218,9 +232,17 @@
 	}
 
 	function calculateTotal() {
-		return formData.items.reduce((total, item) => {
+		const subtotal = formData.items.reduce((total, item) => {
 			return total + item.quantity * item.unitPrice;
 		}, 0);
+
+		// Calcular descuento
+		let discount = formData.discountAmount;
+		if (formData.discountPercentage > 0 && formData.discountAmount === 0) {
+			discount = subtotal * (formData.discountPercentage / 100);
+		}
+
+		return subtotal - discount;
 	}
 
 	async function savePurchase() {
@@ -243,12 +265,16 @@
 				updatePrices: formData.updatePrices,
 				profitMargin: formData.profitMargin,
 				roundPrices: formData.roundPrices,
+				discountAmount: formData.discountAmount,
+				discountPercentage: formData.discountPercentage,
+				discountReason: formData.discountReason,
 				items: formData.items.map((item) => ({
 					productId: item.productId,
 					quantity: item.quantity,
 					unitPrice: item.unitPrice,
 					unitMeasure: item.unitMeasure,
-					applySuggestedPrice: item.applySuggestedPrice
+					applySuggestedPrice: item.applySuggestedPrice,
+					profitMargin: item.profitMargin
 				}))
 			};
 
@@ -308,6 +334,51 @@
 		showDetailModal = false;
 		selectedPurchase = null;
 		purchaseItems = [];
+	}
+
+	function openSupplierModal() {
+		newSupplierName = '';
+		newSupplierPhone = '';
+		newSupplierAddress = '';
+		newSupplierEmail = '';
+		showSupplierModal = true;
+	}
+
+	function closeSupplierModal() {
+		showSupplierModal = false;
+	}
+
+	async function saveNewSupplier() {
+		if (!newSupplierName.trim()) {
+			alert('El nombre del proveedor es requerido');
+			return;
+		}
+
+		try {
+			const response = await fetch('/api/suppliers', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					name: newSupplierName,
+					phone: newSupplierPhone || null,
+					address: newSupplierAddress || null,
+					email: newSupplierEmail || null
+				})
+			});
+
+			const result = await response.json();
+
+			if (result.success) {
+				await loadData();
+				formData.supplierId = result.data.id;
+				closeSupplierModal();
+				alert('Proveedor agregado exitosamente');
+			} else {
+				alert(result.message || 'Error al agregar proveedor');
+			}
+		} catch {
+			alert('Error al agregar proveedor');
+		}
 	}
 
 	onMount(async () => {
@@ -443,17 +514,27 @@
 							<label for="purchase-supplier" class="mb-1 block text-sm font-medium text-gray-900">
 								Proveedor *
 							</label>
-							<select
-								id="purchase-supplier"
-								bind:value={formData.supplierId}
-								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-								required
-							>
-								<option value="">Seleccionar proveedor</option>
-								{#each suppliers as supplier}
-									<option value={supplier.id}>{supplier.name}</option>
-								{/each}
-							</select>
+							<div class="flex gap-2">
+								<select
+									id="purchase-supplier"
+									bind:value={formData.supplierId}
+									class="flex-1 rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+									required
+								>
+									<option value="">Seleccionar proveedor</option>
+									{#each suppliers as supplier}
+										<option value={supplier.id}>{supplier.name}</option>
+									{/each}
+								</select>
+								<button
+									type="button"
+									onclick={openSupplierModal}
+									class="rounded-md bg-green-600 px-3 py-2 text-white hover:bg-green-700"
+									title="Agregar nuevo proveedor"
+								>
+									+
+								</button>
+							</div>
 						</div>
 
 						<div>
@@ -505,6 +586,57 @@
 						<div class="mt-2 text-xs text-blue-700">
 							Precio de venta = Costo + {formData.profitMargin}% margen
 							{formData.roundPrices ? '(redondeado a centenas)' : ''}
+						</div>
+					</div>
+
+					<!-- Descuento Final -->
+					<div class="mb-4 rounded-lg bg-amber-50 p-4">
+						<div class="mb-3 text-sm font-medium text-amber-900">Descuento Final</div>
+						<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+							<div>
+								<label for="discount-amount" class="mb-1 block text-sm font-medium text-gray-900">
+									Descuento en Pesos ($)
+								</label>
+								<input
+									id="discount-amount"
+									type="number"
+									bind:value={formData.discountAmount}
+									min="0"
+									step="0.01"
+									class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+									placeholder="0"
+								/>
+							</div>
+							<div>
+								<label
+									for="discount-percentage"
+									class="mb-1 block text-sm font-medium text-gray-900"
+								>
+									Descuento en Porcentaje (%)
+								</label>
+								<input
+									id="discount-percentage"
+									type="number"
+									bind:value={formData.discountPercentage}
+									min="0"
+									max="100"
+									step="0.1"
+									class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+									placeholder="0"
+								/>
+							</div>
+							<div>
+								<label for="discount-reason" class="mb-1 block text-sm font-medium text-gray-900">
+									Motivo del Descuento
+								</label>
+								<input
+									id="discount-reason"
+									type="text"
+									bind:value={formData.discountReason}
+									class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+									placeholder="Opcional"
+								/>
+							</div>
 						</div>
 					</div>
 
@@ -609,12 +741,14 @@
 									{#if item.unitPrice > 0}
 										<div class="mt-1 flex items-center gap-2 text-sm">
 											<span class="font-medium text-green-600">
-												Venta sugerida: ${formatNumber(calculateSellingPrice(item.unitPrice))}
+												Venta sugerida: ${formatNumber(
+													calculateSellingPrice(item.unitPrice, item.profitMargin)
+												)}
 											</span>
 											<span class="text-gray-400">|</span>
 											<span class="text-gray-500">
 												Ganancia: ${formatNumber(
-													calculateSellingPrice(item.unitPrice) - item.unitPrice
+													calculateSellingPrice(item.unitPrice, item.profitMargin) - item.unitPrice
 												)}
 											</span>
 											<label class="ml-2 flex cursor-pointer items-center gap-1">
@@ -625,6 +759,17 @@
 												/>
 												<span class="text-xs text-gray-600">Aplicar</span>
 											</label>
+										</div>
+										<div class="mt-1 flex items-center gap-2 text-xs">
+											<span class="text-gray-500">Margen individual:</span>
+											<input
+												type="number"
+												bind:value={item.profitMargin}
+												min="0"
+												max="1000"
+												class="w-16 rounded border border-gray-300 px-1 py-0.5 text-center text-xs"
+											/>
+											<span class="text-gray-500">%</span>
 										</div>
 									{/if}
 								</div>
@@ -784,6 +929,85 @@
 						class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
 					>
 						Cerrar
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Modal Agregar Proveedor -->
+{#if showSupplierModal}
+	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+		<div class="w-full max-w-md rounded-lg bg-white">
+			<div class="p-6">
+				<div class="mb-4 flex items-center justify-between">
+					<h2 class="text-xl font-semibold text-gray-900">Nuevo Proveedor</h2>
+					<button onclick={closeSupplierModal} class="text-2xl text-gray-400 hover:text-gray-600">
+						×
+					</button>
+				</div>
+
+				<div class="space-y-4">
+					<div>
+						<label for="supplier-name" class="mb-1 block text-sm font-medium text-gray-900">
+							Nombre *
+						</label>
+						<input
+							id="supplier-name"
+							type="text"
+							bind:value={newSupplierName}
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+							required
+						/>
+					</div>
+					<div>
+						<label for="supplier-phone" class="mb-1 block text-sm font-medium text-gray-900">
+							Teléfono
+						</label>
+						<input
+							id="supplier-phone"
+							type="text"
+							bind:value={newSupplierPhone}
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+						/>
+					</div>
+					<div>
+						<label for="supplier-address" class="mb-1 block text-sm font-medium text-gray-900">
+							Dirección
+						</label>
+						<input
+							id="supplier-address"
+							type="text"
+							bind:value={newSupplierAddress}
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+						/>
+					</div>
+					<div>
+						<label for="supplier-email" class="mb-1 block text-sm font-medium text-gray-900">
+							Email
+						</label>
+						<input
+							id="supplier-email"
+							type="email"
+							bind:value={newSupplierEmail}
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+						/>
+					</div>
+				</div>
+
+				<div class="mt-6 flex justify-end gap-3">
+					<button
+						onclick={closeSupplierModal}
+						class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
+					>
+						Cancelar
+					</button>
+					<button
+						onclick={saveNewSupplier}
+						class="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+					>
+						Guardar
 					</button>
 				</div>
 			</div>

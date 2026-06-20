@@ -33,6 +33,12 @@ export const GET: RequestHandler = async ({ url }) => {
 				...dateFilter
 			},
 			include: {
+				paymentMethod: {
+					select: {
+						code: true,
+						name: true
+					}
+				},
 				items: {
 					include: {
 						product: {
@@ -98,7 +104,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 			const saleRevenue = Number(sale.total);
 			const saleItems = sale.items.reduce((sum, item) => sum + Number(item.quantity), 0);
-			const paymentMethod = sale.paymentMethod;
+			const paymentMethod = sale.paymentMethod?.code || 'UNKNOWN';
 			const sellerName = sale.user?.name || 'Sistema';
 
 			// Actualizar totales del día

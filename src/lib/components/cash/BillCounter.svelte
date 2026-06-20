@@ -40,7 +40,7 @@
 
 	function useBillTotal() {
 		dispatch('counts', counts);
-		dispatch('total', total.value);
+		dispatch('total', total());
 	}
 </script>
 
@@ -69,7 +69,7 @@
 	<div class="mt-4 flex items-center justify-between border-t pt-3">
 		<span class="text-sm font-medium text-gray-700">Total:</span>
 		<span class="text-lg font-bold text-gray-900"
-			>${total.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}</span
+			>${total().toLocaleString('es-AR', { style: 'currency', currency: 'ARS' })}</span
 		>
 	</div>
 

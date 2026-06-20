@@ -261,24 +261,33 @@
 		<div class="mb-6 rounded-lg bg-white p-4 shadow-md">
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-5">
 				<div>
-					<label class="block text-sm font-medium text-gray-700">Fecha desde</label>
+					<label for="filter-start-date" class="block text-sm font-medium text-gray-700"
+						>Fecha desde</label
+					>
 					<input
+						id="filter-start-date"
 						type="date"
 						bind:value={filterStartDate}
 						class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 					/>
 				</div>
 				<div>
-					<label class="block text-sm font-medium text-gray-700">Fecha hasta</label>
+					<label for="filter-end-date" class="block text-sm font-medium text-gray-700"
+						>Fecha hasta</label
+					>
 					<input
+						id="filter-end-date"
 						type="date"
 						bind:value={filterEndDate}
 						class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 					/>
 				</div>
 				<div>
-					<label class="block text-sm font-medium text-gray-700">Categoría</label>
+					<label for="filter-category" class="block text-sm font-medium text-gray-700"
+						>Categoría</label
+					>
 					<select
+						id="filter-category"
 						bind:value={filterCategory}
 						class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 					>
@@ -289,8 +298,11 @@
 					</select>
 				</div>
 				<div>
-					<label class="block text-sm font-medium text-gray-700">Proveedor</label>
+					<label for="filter-supplier" class="block text-sm font-medium text-gray-700"
+						>Proveedor</label
+					>
 					<select
+						id="filter-supplier"
 						bind:value={filterSupplierId}
 						class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 					>
@@ -435,8 +447,11 @@
 				<form onsubmit={createExpense} class="p-6">
 					<div class="space-y-4">
 						<div>
-							<label class="block text-sm font-medium text-gray-700">Descripción *</label>
+							<label for="expense-description" class="block text-sm font-medium text-gray-700"
+								>Descripción *</label
+							>
 							<input
+								id="expense-description"
 								type="text"
 								bind:value={description}
 								required
@@ -445,8 +460,11 @@
 						</div>
 						<div class="grid grid-cols-2 gap-4">
 							<div>
-								<label class="block text-sm font-medium text-gray-700">Monto *</label>
+								<label for="expense-amount" class="block text-sm font-medium text-gray-700"
+									>Monto *</label
+								>
 								<input
+									id="expense-amount"
 									type="number"
 									bind:value={amount}
 									required
@@ -456,8 +474,11 @@
 								/>
 							</div>
 							<div>
-								<label class="block text-sm font-medium text-gray-700">Categoría *</label>
+								<label for="expense-category" class="block text-sm font-medium text-gray-700"
+									>Categoría *</label
+								>
 								<select
+									id="expense-category"
 									bind:value={category}
 									class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 								>
@@ -469,8 +490,11 @@
 						</div>
 						<div class="grid grid-cols-2 gap-4">
 							<div>
-								<label class="block text-sm font-medium text-gray-700">Fecha *</label>
+								<label for="expense-date" class="block text-sm font-medium text-gray-700"
+									>Fecha *</label
+								>
 								<input
+									id="expense-date"
 									type="date"
 									bind:value={date}
 									required
@@ -478,8 +502,11 @@
 								/>
 							</div>
 							<div>
-								<label class="block text-sm font-medium text-gray-700">Método de pago *</label>
+								<label for="expense-payment-method" class="block text-sm font-medium text-gray-700"
+									>Método de pago *</label
+								>
 								<select
+									id="expense-payment-method"
 									bind:value={paymentMethod}
 									class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 								>
@@ -490,8 +517,11 @@
 							</div>
 						</div>
 						<div>
-							<label class="block text-sm font-medium text-gray-700">Proveedor (opcional)</label>
+							<label for="expense-supplier" class="block text-sm font-medium text-gray-700"
+								>Proveedor (opcional)</label
+							>
 							<select
+								id="expense-supplier"
 								bind:value={supplierId}
 								class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 							>
@@ -502,12 +532,15 @@
 							</select>
 						</div>
 						<div>
-							<label class="block text-sm font-medium text-gray-700">Notas (opcional)</label>
+							<label for="expense-notes" class="block text-sm font-medium text-gray-700"
+								>Notas (opcional)</label
+							>
 							<textarea
+								id="expense-notes"
 								bind:value={notes}
 								rows="2"
 								class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-							/>
+							></textarea>
 						</div>
 					</div>
 					<div class="mt-6 flex justify-end gap-3">
@@ -545,8 +578,11 @@
 				<form onsubmit={updateExpense} class="p-6">
 					<div class="space-y-4">
 						<div>
-							<label class="block text-sm font-medium text-gray-700">Descripción *</label>
+							<label for="edit-expense-description" class="block text-sm font-medium text-gray-700"
+								>Descripción *</label
+							>
 							<input
+								id="edit-expense-description"
 								type="text"
 								bind:value={description}
 								required
@@ -555,8 +591,11 @@
 						</div>
 						<div class="grid grid-cols-2 gap-4">
 							<div>
-								<label class="block text-sm font-medium text-gray-700">Monto *</label>
+								<label for="edit-expense-amount" class="block text-sm font-medium text-gray-700"
+									>Monto *</label
+								>
 								<input
+									id="edit-expense-amount"
 									type="number"
 									bind:value={amount}
 									required
@@ -566,8 +605,11 @@
 								/>
 							</div>
 							<div>
-								<label class="block text-sm font-medium text-gray-700">Categoría *</label>
+								<label for="edit-expense-category" class="block text-sm font-medium text-gray-700"
+									>Categoría *</label
+								>
 								<select
+									id="edit-expense-category"
 									bind:value={category}
 									class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 								>
@@ -579,8 +621,11 @@
 						</div>
 						<div class="grid grid-cols-2 gap-4">
 							<div>
-								<label class="block text-sm font-medium text-gray-700">Fecha *</label>
+								<label for="edit-expense-date" class="block text-sm font-medium text-gray-700"
+									>Fecha *</label
+								>
 								<input
+									id="edit-expense-date"
 									type="date"
 									bind:value={date}
 									required
@@ -588,8 +633,12 @@
 								/>
 							</div>
 							<div>
-								<label class="block text-sm font-medium text-gray-700">Método de pago *</label>
+								<label
+									for="edit-expense-payment-method"
+									class="block text-sm font-medium text-gray-700">Método de pago *</label
+								>
 								<select
+									id="edit-expense-payment-method"
 									bind:value={paymentMethod}
 									class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 								>
@@ -600,8 +649,11 @@
 							</div>
 						</div>
 						<div>
-							<label class="block text-sm font-medium text-gray-700">Proveedor (opcional)</label>
+							<label for="edit-expense-supplier" class="block text-sm font-medium text-gray-700"
+								>Proveedor (opcional)</label
+							>
 							<select
+								id="edit-expense-supplier"
 								bind:value={supplierId}
 								class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 							>
@@ -612,12 +664,15 @@
 							</select>
 						</div>
 						<div>
-							<label class="block text-sm font-medium text-gray-700">Notas (opcional)</label>
+							<label for="edit-expense-notes" class="block text-sm font-medium text-gray-700"
+								>Notas (opcional)</label
+							>
 							<textarea
+								id="edit-expense-notes"
 								bind:value={notes}
 								rows="2"
 								class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-							/>
+							></textarea>
 						</div>
 					</div>
 					<div class="mt-6 flex justify-end gap-3">

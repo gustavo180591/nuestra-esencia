@@ -5,11 +5,18 @@ import type { RequestHandler } from './$types';
 // Cancelar o eliminar una compra (DELETE /api/purchases/[id])
 export const DELETE: RequestHandler = async ({ params, request, locals }) => {
 	try {
-		// 🔐 Obtener usuario autenticado
-		const userId = locals.user?.id;
+		// 🔐 Obtener usuario autenticado - Solo ADMIN puede eliminar compras
+		const user = locals.user;
 
-		if (!userId) {
+		if (!user) {
 			return json({ success: false, message: 'Usuario no autenticado' }, { status: 401 });
+		}
+
+		if (user.role !== 'ADMIN') {
+			return json(
+				{ success: false, message: 'Solo administradores pueden eliminar compras' },
+				{ status: 403 }
+			);
 		}
 
 		const body = await request.json().catch(() => ({ reason: '', permanent: false }));
@@ -107,7 +114,7 @@ export const DELETE: RequestHandler = async ({ params, request, locals }) => {
 						previousStock: previousStock.toString(),
 						newStock: newStock.toString(),
 						purchaseId: purchase.id,
-						userId,
+						userId: user.id,
 						reason: reason || `Cancelación de compra #${purchase.purchaseNumber}`
 					}
 				});

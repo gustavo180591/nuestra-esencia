@@ -151,7 +151,7 @@
 
 			const response = await fetch(`/api/movements?${params.toString()}`);
 			const data = await response.json();
-			
+
 			if (!data.success) {
 				alert('Error al obtener datos para exportar');
 				return;
@@ -163,12 +163,12 @@
 			const excelData = allMovements.map((movement: Movement) => {
 				return {
 					'Fecha/Hora': formatDate(movement.timestamp),
-					'Tipo': movement.type === 'OPENING' ? 'Apertura' : 'Cierre',
-					'Usuario': `${movement.user.name} (${movement.user.email})`,
-					'Monto': movement.amount,
-					'Descripción': movement.description,
-					'Notas': movement.notes || '',
-					'Diferencia': movement.difference !== undefined ? movement.difference : '',
+					Tipo: movement.type === 'OPENING' ? 'Apertura' : 'Cierre',
+					Usuario: `${movement.user.name} (${movement.user.email})`,
+					Monto: movement.amount,
+					Descripción: movement.description,
+					Notas: movement.notes || '',
+					Diferencia: movement.difference !== undefined ? movement.difference : '',
 					'Monto Esperado': movement.expectedAmount || '',
 					'ID Caja': movement.cashRegisterId
 				};
@@ -182,7 +182,7 @@
 			// Generate filename with current date and filters
 			const date = new Date().toLocaleDateString('es-AR').replace(/\//g, '-');
 			let filename = `movimientos-${date}`;
-			
+
 			if (selectedType) {
 				filename += `-tipo-${selectedType}`;
 			}
@@ -298,20 +298,20 @@
 					<div class="text-red-800">{error}</div>
 				</div>
 			{:else}
-			<!-- Botón de exportación -->
-			{#if movements.length > 0}
-				<div class="mb-4">
-					<button
-						onclick={exportToExcel}
-						class="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
-					>
-						📊 Exportar Excel
-					</button>
-				</div>
-			{/if}
+				<!-- Botón de exportación -->
+				{#if movements.length > 0}
+					<div class="mb-4">
+						<button
+							onclick={exportToExcel}
+							class="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+						>
+							📊 Exportar Excel
+						</button>
+					</div>
+				{/if}
 
-			<!-- Tabla de movimientos -->
-			<div class="overflow-hidden rounded-lg bg-white shadow">
+				<!-- Tabla de movimientos -->
+				<div class="overflow-hidden rounded-lg bg-white shadow">
 					<div class="overflow-x-auto">
 						<table class="min-w-full divide-y divide-gray-200">
 							<thead class="bg-gray-50">

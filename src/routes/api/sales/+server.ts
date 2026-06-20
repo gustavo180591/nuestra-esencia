@@ -14,6 +14,8 @@ interface SaleRequest {
 	discount?: number;
 	paymentMethodId: string;
 	cashReceived?: number;
+	clientId?: string;
+	paymentDueDate?: string;
 }
 
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -164,7 +166,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const discount = body.discount || 0;
 		const total = Math.max(0, subtotal - discount);
 
-		// Obtener el método de pago para verificar si es EFECTIVO
+		// Obtener el método de pago para verificar si es EFECTIVO o CUENTA_CORRIENTE
 		const paymentMethod = await db.paymentMethodConfig.findUnique({
 			where: { id: body.paymentMethodId }
 		});
@@ -175,6 +177,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		if (paymentMethod?.code === 'EFECTIVO' && body.cashReceived) {
 			cashReceived = body.cashReceived;
 			changeGiven = Math.max(0, cashReceived - total);
+		}
+
+		// Si es CUENTA_CORRIENTE, verificar que se proporcionó un cliente
+		if (paymentMethod?.code === 'CUENTA_CORRIENTE' && !body.clientId) {
+			return json(
+				{ success: false, message: 'Para Cuenta Corriente debe seleccionar un cliente' },
+				{ status: 400 }
+			);
 		}
 
 		// 🔥 TRANSACCIÓN
@@ -189,13 +199,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				data: {
 					saleNumber,
 					status: 'COMPLETADA',
-					userId, // ✅ dinámico
+					userId,
 					subtotal,
 					discount,
 					total,
 					paymentMethodId: body.paymentMethodId,
 					cashReceived,
-					changeGiven
+					changeGiven,
+					clientId: body.clientId || null,
+					paymentDueDate:
+						paymentMethod?.code === 'CUENTA_CORRIENTE' && body.paymentDueDate
+							? new Date(body.paymentDueDate)
+							: null
 				}
 			});
 
@@ -205,6 +220,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					saleId: sale.id
 				}))
 			});
+
+			// Si es CUENTA_CORRIENTE, actualizar deuda del cliente
+			if (paymentMethod?.code === 'CUENTA_CORRIENTE' && body.clientId) {
+				await tx.client.update({
+					where: { id: body.clientId },
+					data: {
+						accountDebt: {
+							increment: total
+						}
+					}
+				});
+			}
 
 			for (const item of body.items as SaleItemRequest[]) {
 				const product = products.find((p) => p.id === item.productId);
@@ -340,6 +367,14 @@ export const GET: RequestHandler = async ({ url }) => {
 					select: {
 						id: true,
 						name: true
+					}
+				},
+				client: {
+					select: {
+						id: true,
+						name: true,
+						phone: true,
+						accountDebt: true
 					}
 				},
 				items: {

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { db } from '$lib/server/db';
 
 	let cashRegisters = $state<any[]>([]);
 	let selectedRegister = $state<any>(null);

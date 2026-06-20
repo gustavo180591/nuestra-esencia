@@ -44,11 +44,24 @@
 	let discount = $state(0);
 	let discountType = $state<'percentage' | 'amount'>('amount');
 	let discountPercentage = $state(0);
-	let paymentMethod = $state<'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA' | 'QR'>('EFECTIVO');
+	let paymentMethod = $state<'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA' | 'QR' | 'CUENTA_CORRIENTE'>(
+		'EFECTIVO'
+	);
 	let paymentMethodId = $state<string>('');
 	let cashReceived = $state(0);
 	let changeGiven = $state(0);
-	let paymentMethods = $state<Array<{ id: string; code: string; name: string; icon: string }>>([]);
+	let paymentMethods = $state<
+		Array<{ id: string; code: string; name: string; icon?: string | null }>
+	>([]);
+	let showPaymentModal = $state(false);
+	let selectedClientId = $state<string>('');
+	let clients = $state<Array<{ id: string; name: string; phone: string; accountDebt: number }>>([]);
+	let showCreateClientModal = $state(false);
+	let newClientName = $state('');
+	let newClientPhone = $state('');
+	let newClientAddress = $state('');
+	let newClientEmail = $state('');
+	let clientDueDate = $state('');
 
 	// Estado de caja
 	let cashRegister = $state<{
@@ -66,11 +79,13 @@
 	let showOpenModal = $state(false);
 	let showMovementModal = $state(false);
 	let showCloseModal = $state(false);
+	let showPrintReportModal = $state(false);
 	let openingAmount = $state(0);
 	let openingNotes = $state('');
 	let closingAmount = $state(0);
 	let closingNotes = $state('');
 	let saving = $state(false);
+	let closingReportData = $state<any>(null);
 
 	// Estado de movimientos de caja
 	let movements = $state<
@@ -261,6 +276,80 @@
 		}
 	}
 
+	async function loadClients() {
+		try {
+			const response = await fetch('/api/clients');
+			const data = await response.json();
+			if (data.success) {
+				clients = data.data;
+			}
+		} catch (error) {
+			console.error('Error loading clients:', error);
+		}
+	}
+
+	async function createClient() {
+		if (!newClientName.trim()) {
+			alert('El nombre del cliente es obligatorio');
+			return;
+		}
+
+		try {
+			const response = await fetch('/api/clients', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					name: newClientName,
+					phone: newClientPhone || undefined,
+					address: newClientAddress || undefined,
+					email: newClientEmail || undefined
+				})
+			});
+
+			const result = await response.json();
+			if (result.success) {
+				selectedClientId = result.data.id;
+				await loadClients();
+				showCreateClientModal = false;
+				newClientName = '';
+				newClientPhone = '';
+				newClientAddress = '';
+				newClientEmail = '';
+			} else {
+				alert(`Error: ${result.message}`);
+			}
+		} catch {
+			alert('Error al crear cliente');
+		}
+	}
+
+	function openPaymentModal() {
+		if (cart.length === 0) {
+			alert('El carrito está vacío');
+			return;
+		}
+		if (!cashRegister) {
+			alert('Debe abrir la caja antes de realizar ventas');
+			showOpenModal = true;
+			return;
+		}
+		showPaymentModal = true;
+	}
+
+	function selectPaymentMethod(code: string) {
+		paymentMethod = code as any;
+		const method = paymentMethods.find((pm) => pm.code === code);
+		if (method) paymentMethodId = method.id;
+	}
+
+	function closePaymentModal() {
+		showPaymentModal = false;
+		cashReceived = 0;
+		changeGiven = 0;
+		selectedClientId = '';
+		clientDueDate = '';
+	}
+
 	// Teclado numérico
 	function openKeypad(inputType: 'discount' | 'cash') {
 		activeInput = inputType;
@@ -390,30 +479,26 @@
 			}
 		}
 
-		// F1-F4: Métodos de pago
+		// F1-F5: Métodos de pago
 		if (event.key === 'F1') {
 			event.preventDefault();
-			paymentMethod = 'EFECTIVO';
-			const efectivo = paymentMethods.find((pm) => pm.code === 'EFECTIVO');
-			if (efectivo) paymentMethodId = efectivo.id;
+			selectPaymentMethod('EFECTIVO');
 		}
 		if (event.key === 'F2') {
 			event.preventDefault();
-			paymentMethod = 'TRANSFERENCIA';
-			const transferencia = paymentMethods.find((pm) => pm.code === 'TRANSFERENCIA');
-			if (transferencia) paymentMethodId = transferencia.id;
+			selectPaymentMethod('TRANSFERENCIA');
 		}
 		if (event.key === 'F3') {
 			event.preventDefault();
-			paymentMethod = 'TARJETA';
-			const tarjeta = paymentMethods.find((pm) => pm.code === 'TARJETA');
-			if (tarjeta) paymentMethodId = tarjeta.id;
+			selectPaymentMethod('TARJETA');
 		}
 		if (event.key === 'F4') {
 			event.preventDefault();
-			paymentMethod = 'QR';
-			const qr = paymentMethods.find((pm) => pm.code === 'QR');
-			if (qr) paymentMethodId = qr.id;
+			selectPaymentMethod('QR');
+		}
+		if (event.key === 'F5') {
+			event.preventDefault();
+			selectPaymentMethod('CUENTA_CORRIENTE');
 		}
 
 		// Ctrl/Cmd + D: Foco en descuento
@@ -505,7 +590,7 @@
 			return;
 		}
 
-		// En efectivo, si no se ingresó monto, asumir que se recibe exacto
+		// Validaciones según método de pago
 		if (paymentMethod === 'EFECTIVO') {
 			if (cashReceived === 0) {
 				cashReceived = Math.round(total * 100) / 100;
@@ -516,8 +601,15 @@
 			}
 		}
 
+		if (paymentMethod === 'CUENTA_CORRIENTE') {
+			if (!selectedClientId) {
+				alert('Debe seleccionar un cliente para Cuenta Corriente');
+				return;
+			}
+		}
+
 		try {
-			const saleData = {
+			const saleData: any = {
 				items: cart.map((item) => ({
 					productId: item.productId,
 					productSaleFormatId: item.productSaleFormatId,
@@ -528,6 +620,13 @@
 				paymentMethodId,
 				cashReceived: paymentMethod === 'EFECTIVO' ? cashReceived : undefined
 			};
+
+			if (paymentMethod === 'CUENTA_CORRIENTE') {
+				saleData.clientId = selectedClientId;
+				if (clientDueDate) {
+					saleData.paymentDueDate = clientDueDate;
+				}
+			}
 
 			const response = await fetch('/api/sales', {
 				method: 'POST',
@@ -547,6 +646,7 @@
 				alert(
 					`Venta #${result.data.saleNumber} procesada exitosamente\nTotal: $${result.data.total}`
 				);
+				closePaymentModal();
 				clearCart();
 				await loadProducts(); // Recargar productos para actualizar stock
 			} else {
@@ -691,7 +791,10 @@
 
 			const result = await response.json();
 			if (result.success) {
+				// Guardar datos del reporte para impresión
+				closingReportData = result.data.arqueo;
 				showCloseModal = false;
+				showPrintReportModal = true;
 				closingAmount = 0;
 				closingNotes = '';
 				// Resetear conteo de billetes
@@ -721,6 +824,7 @@
 	onMount(async () => {
 		await loadProducts();
 		await loadPaymentMethods();
+		await loadClients();
 		await loadCashRegister();
 	});
 
@@ -978,7 +1082,7 @@
 					<div class="mb-4 space-y-2">
 						<button
 							class="w-full rounded-lg bg-amber-600 py-3 font-medium text-white hover:bg-amber-700 disabled:bg-gray-400"
-							onclick={processSale}
+							onclick={openPaymentModal}
 							disabled={cart.length === 0}
 						>
 							Cobrar {formatCurrency(total)}
@@ -1996,6 +2100,333 @@
 							</button>
 						{/if}
 					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Modal Reporte de Cierre -->
+{#if showPrintReportModal && closingReportData}
+	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+		<div class="w-full max-w-2xl rounded-lg bg-white">
+			<div class="p-6">
+				<div class="mb-4 flex items-center justify-between">
+					<h2 class="text-xl font-semibold text-gray-900">Reporte de Cierre de Caja</h2>
+					<button
+						onclick={() => (showPrintReportModal = false)}
+						class="text-2xl text-gray-400 hover:text-gray-600"
+					>
+						×
+					</button>
+				</div>
+
+				<div class="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<div class="text-xs text-gray-500">Monto Inicial</div>
+							<div class="text-lg font-bold text-gray-900">
+								${formatCurrency(closingReportData.initialAmount)}
+							</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500">Ventas en Efectivo</div>
+							<div class="text-lg font-bold text-green-600">
+								${formatCurrency(closingReportData.totalCashSales)}
+							</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500">Transferencias</div>
+							<div class="text-lg font-bold text-blue-600">
+								${formatCurrency(closingReportData.totalTransferSales)}
+							</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500">QR</div>
+							<div class="text-lg font-bold text-purple-600">
+								${formatCurrency(closingReportData.totalQrSales)}
+							</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500">Tarjeta</div>
+							<div class="text-lg font-bold text-orange-600">
+								${formatCurrency(closingReportData.totalCardSales)}
+							</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500">Gastos en Efectivo</div>
+							<div class="text-lg font-bold text-red-600">
+								${formatCurrency(closingReportData.totalCashExpenses)}
+							</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500">Monto Esperado</div>
+							<div class="text-lg font-bold text-gray-900">
+								${formatCurrency(closingReportData.expectedAmount)}
+							</div>
+						</div>
+						<div>
+							<div class="text-xs text-gray-500">Monto Contado</div>
+							<div class="text-lg font-bold text-gray-900">
+								${formatCurrency(closingReportData.totalAmount)}
+							</div>
+						</div>
+					</div>
+
+					<div class="border-t border-gray-300 pt-4">
+						<div class="flex items-center justify-between">
+							<div class="text-sm font-medium text-gray-700">Diferencia</div>
+							<div
+								class="text-2xl font-bold {closingReportData.difference === 0
+									? 'text-green-600'
+									: closingReportData.difference > 0
+										? 'text-blue-600'
+										: 'text-red-600'}"
+							>
+								{closingReportData.differenceText}: ${formatCurrency(closingReportData.difference)}
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="mt-6 flex justify-end gap-3">
+					<button
+						onclick={() => (showPrintReportModal = false)}
+						class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
+					>
+						Cerrar
+					</button>
+					<button
+						onclick={() => {
+							window.print();
+							showPrintReportModal = false;
+						}}
+						class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+					>
+						🖨️ Imprimir
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Modal de Cobro Mejorado -->
+{#if showPaymentModal}
+	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+		<div class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
+			<div class="p-4 sm:p-6">
+				<div class="mb-4 flex items-center justify-between">
+					<h2 class="text-xl font-semibold text-gray-900 sm:text-2xl">Cobrar Venta</h2>
+					<button onclick={closePaymentModal} class="text-2xl text-gray-400 hover:text-gray-600">
+						×
+					</button>
+				</div>
+
+				<!-- Total a cobrar -->
+				<div class="mb-6 rounded-lg bg-amber-50 p-4 text-center">
+					<div class="text-sm text-gray-600">Total a cobrar</div>
+					<div class="text-3xl font-bold text-amber-600 sm:text-4xl">{formatCurrency(total)}</div>
+				</div>
+
+				<!-- Métodos de pago -->
+				<div class="mb-6">
+					<div class="mb-3 text-sm font-medium text-gray-700">Seleccionar método de pago:</div>
+					<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+						{#each paymentMethods as method}
+							<button
+								onclick={() => selectPaymentMethod(method.code)}
+								class="rounded-lg border-2 p-3 text-left transition-all sm:p-4 {paymentMethod ===
+								method.code
+									? 'border-amber-500 bg-amber-50'
+									: 'border-gray-200 bg-white hover:border-amber-300 hover:bg-gray-50'}"
+							>
+								<div class="text-xl sm:text-2xl">{method.icon}</div>
+								<div class="mt-1 text-sm font-medium text-gray-900 sm:text-base">{method.name}</div>
+								{#if paymentMethod === method.code}
+									<div class="mt-1 text-xs text-amber-600">✓ Seleccionado</div>
+								{/if}
+							</button>
+						{/each}
+					</div>
+				</div>
+
+				<!-- Campos específicos por método de pago -->
+				{#if paymentMethod === 'EFECTIVO'}
+					<div class="mb-6 rounded-lg bg-blue-50 p-4">
+						<label for="cash-received-modal" class="mb-2 block text-sm font-medium text-gray-900"
+							>Efectivo recibido:</label
+						>
+						<input
+							id="cash-received-modal"
+							type="number"
+							bind:value={cashReceived}
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+							placeholder="0.00"
+							min="0"
+							step="0.01"
+						/>
+						{#if cashReceived > 0}
+							<div class="mt-3 flex justify-between font-medium text-green-600">
+								<span>Cambio:</span>
+								<span class="text-xl">{formatCurrency(changeGiven)}</span>
+							</div>
+						{/if}
+						{#if cashReceived > 0 && cashReceived < total}
+							<div class="mt-2 text-sm text-red-600">⚠️ El efectivo recibido es insuficiente</div>
+						{/if}
+					</div>
+				{/if}
+
+				{#if paymentMethod === 'CUENTA_CORRIENTE'}
+					<div class="mb-6 rounded-lg bg-purple-50 p-4">
+						<label for="client-select" class="mb-2 block text-sm font-medium text-gray-900"
+							>Cliente:</label
+						>
+						<select
+							id="client-select"
+							bind:value={selectedClientId}
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+						>
+							<option value="">Seleccionar cliente...</option>
+							{#each clients as client}
+								<option value={client.id}>
+									{client.name}
+									{client.phone ? `(${client.phone})` : ''} - Deuda: ${formatCurrency(
+										client.accountDebt
+									)}
+								</option>
+							{/each}
+						</select>
+						<button
+							onclick={() => (showCreateClientModal = true)}
+							class="mt-2 w-full rounded-md border border-purple-300 bg-white px-3 py-2 text-sm font-medium text-purple-700 hover:bg-purple-100"
+						>
+							+ Crear nuevo cliente
+						</button>
+
+						<label for="client-due-date" class="mt-3 mb-2 block text-sm font-medium text-gray-900"
+							>Fecha estimada de pago:</label
+						>
+						<input
+							id="client-due-date"
+							type="date"
+							bind:value={clientDueDate}
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+						/>
+					</div>
+				{/if}
+
+				{#if paymentMethod === 'QR'}
+					<div class="mb-6 rounded-lg bg-purple-50 p-4 text-center">
+						<div class="mb-2 text-4xl">📱</div>
+						<p class="text-sm font-medium text-purple-700">Escanea el QR del cliente</p>
+						<p class="text-xs text-purple-600">O el cliente escanea tu código</p>
+					</div>
+				{/if}
+
+				<!-- Botones de acción -->
+				<div class="flex justify-end gap-3">
+					<button
+						onclick={closePaymentModal}
+						class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
+					>
+						Cancelar
+					</button>
+					<button
+						onclick={processSale}
+						disabled={(paymentMethod === 'EFECTIVO' && cashReceived < total) ||
+							(paymentMethod === 'CUENTA_CORRIENTE' && !selectedClientId)}
+						class="rounded-md bg-amber-600 px-4 py-2 text-white hover:bg-amber-700 disabled:bg-gray-400"
+					>
+						Confirmar Venta
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Modal Crear Cliente -->
+{#if showCreateClientModal}
+	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+		<div class="w-full max-w-md rounded-lg bg-white">
+			<div class="p-6">
+				<div class="mb-4 flex items-center justify-between">
+					<h2 class="text-xl font-semibold text-gray-900">Nuevo Cliente</h2>
+					<button
+						onclick={() => (showCreateClientModal = false)}
+						class="text-2xl text-gray-400 hover:text-gray-600"
+					>
+						×
+					</button>
+				</div>
+
+				<div class="space-y-4">
+					<div>
+						<label for="client-name" class="mb-1 block text-sm font-medium text-gray-700"
+							>Nombre *</label
+						>
+						<input
+							id="client-name"
+							type="text"
+							bind:value={newClientName}
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+							placeholder="Nombre del cliente"
+						/>
+					</div>
+					<div>
+						<label for="client-phone" class="mb-1 block text-sm font-medium text-gray-700"
+							>Teléfono</label
+						>
+						<input
+							id="client-phone"
+							type="text"
+							bind:value={newClientPhone}
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+							placeholder="Teléfono"
+						/>
+					</div>
+					<div>
+						<label for="client-address" class="mb-1 block text-sm font-medium text-gray-700"
+							>Dirección</label
+						>
+						<input
+							id="client-address"
+							type="text"
+							bind:value={newClientAddress}
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+							placeholder="Dirección"
+						/>
+					</div>
+					<div>
+						<label for="client-email" class="mb-1 block text-sm font-medium text-gray-700"
+							>Email</label
+						>
+						<input
+							id="client-email"
+							type="email"
+							bind:value={newClientEmail}
+							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+							placeholder="Email"
+						/>
+					</div>
+				</div>
+
+				<div class="mt-6 flex justify-end gap-3">
+					<button
+						onclick={() => (showCreateClientModal = false)}
+						class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
+					>
+						Cancelar
+					</button>
+					<button
+						onclick={createClient}
+						disabled={!newClientName.trim()}
+						class="rounded-md bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:bg-gray-400"
+					>
+						Crear Cliente
+					</button>
 				</div>
 			</div>
 		</div>

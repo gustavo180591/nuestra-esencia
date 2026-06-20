@@ -28,6 +28,11 @@ export const GET: RequestHandler = async ({ url }) => {
 						name: true
 					}
 				},
+				_count: {
+					select: {
+						items: true
+					}
+				},
 				items: {
 					select: {
 						productNameSnapshot: true,
@@ -64,7 +69,17 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const data = await request.json();
 
-		const { supplierId, items, notes, updatePrices, profitMargin, roundPrices } = data;
+		const {
+			supplierId,
+			items,
+			notes,
+			updatePrices,
+			profitMargin,
+			roundPrices,
+			discountAmount,
+			discountPercentage,
+			discountReason
+		} = data;
 
 		// Validaciones básicas
 		if (!supplierId) {
@@ -128,11 +143,23 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		}
 
-		// Calcular total
-		let total = 0;
+		// Calcular subtotal y total con descuento
+		let subtotal = 0;
 		for (const item of items) {
-			total += Number(item.quantity) * Number(item.unitPrice);
+			subtotal += Number(item.quantity) * Number(item.unitPrice);
 		}
+
+		// Aplicar descuento si se proporciona
+		const discountAmt = Number(discountAmount) || 0;
+		const discountPct = Number(discountPercentage) || 0;
+		let finalDiscount = discountAmt;
+
+		// Si se proporciona porcentaje, calcular el monto
+		if (discountPct > 0 && discountAmt === 0) {
+			finalDiscount = subtotal * (discountPct / 100);
+		}
+
+		const total = subtotal - finalDiscount;
 
 		// Realizar la transacción
 		const result = await db.$transaction(async (tx) => {
@@ -144,7 +171,15 @@ export const POST: RequestHandler = async ({ request }) => {
 							id: supplierId
 						}
 					},
-					subtotal: total.toString(),
+					subtotal: subtotal.toString(),
+					discountAmount: finalDiscount.toString(),
+					discountPercentage:
+						discountPct > 0
+							? discountPct.toString()
+							: discountAmt > 0 && subtotal > 0
+								? ((discountAmt / subtotal) * 100).toString()
+								: '0',
+					discountReason: discountReason || null,
 					total: total.toString(),
 					status: 'REGISTRADA',
 					notes: notes || null
@@ -180,6 +215,7 @@ export const POST: RequestHandler = async ({ request }) => {
 									unitMeasure: item.unitMeasure || 'UNIDAD',
 									quantity: item.quantity,
 									unitCost: item.unitPrice,
+									profitMargin: item.profitMargin ? item.profitMargin.toString() : '0',
 									subtotal: (Number(item.quantity) * Number(item.unitPrice)).toString()
 								}
 							});

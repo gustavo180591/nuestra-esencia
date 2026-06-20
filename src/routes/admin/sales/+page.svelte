@@ -6,30 +6,46 @@
 		id: string;
 		saleNumber: number;
 		status: 'COMPLETADA' | 'CANCELADA';
+
 		subtotal?: string;
 		discount?: number | string;
 		total: string;
+
 		paymentMethodId: string;
 		paymentMethod?: {
 			code: string;
 			name: string;
-			icon: string;
+			icon?: string | null;
 		};
-		cashReceived?: string;
-		changeGiven?: string;
+
+		clientId?: string | null;
+		client?: {
+			id: string;
+			name: string;
+			phone?: string | null;
+			accountDebt?: string | number | null;
+		} | null;
+
+		paymentDueDate?: string | null;
+
+		cashReceived?: string | null;
+		changeGiven?: string | null;
+
 		userId?: string;
 		user?: {
 			id: string;
 			name: string;
 		};
+
 		items: Array<{
 			id: string;
 			productNameSnapshot: string;
-			quantity: number;
+			quantity: number | string;
 			unitPrice: string;
 			unitCost: string;
 			subtotal: string;
 		}>;
+
 		createdAt: string;
 	}
 
@@ -60,7 +76,9 @@
 	let showEditModal = $state(false);
 	let editingSaleId = $state<string | null>(null);
 	let saleToEdit = $state<Partial<Sale> | null>(null);
-	let paymentMethods = $state<Array<{ id: string; code: string; name: string; icon: string }>>([]);
+	let paymentMethods = $state<
+		Array<{ id: string; code: string; name: string; icon?: string | null }>
+	>([]);
 
 	// Filtros
 	let filters = $state({
@@ -178,7 +196,7 @@
 			id: sale.id,
 			discount: sale.discount ? parseFloat(sale.discount.toString()) : 0,
 			paymentMethodId: sale.paymentMethodId,
-			cashReceived: sale.cashReceived ? parseFloat(sale.cashReceived) : undefined,
+			cashReceived: sale.cashReceived ? sale.cashReceived.toString() : undefined,
 			createdAt: sale.createdAt,
 			saleNumber: sale.saleNumber,
 			subtotal: sale.subtotal,
@@ -231,9 +249,12 @@
 		}
 	}
 
-	function getPaymentMethodLabel(method: { code: string; name: string; icon: string } | undefined) {
+	function getPaymentMethodLabel(
+		method: { code: string; name: string; icon?: string | null } | null | undefined
+	) {
 		if (!method) return '-';
-		return `${method.icon} ${method.name}`;
+
+		return `${method.icon ?? '💳'} ${method.name}`;
 	}
 
 	function getStatusColor(status: string) {
@@ -309,7 +330,7 @@
 
 			const response = await fetch(`/api/sales?${params.toString()}`);
 			const data = await response.json();
-			
+
 			if (!data.success) {
 				alert('Error al obtener datos para exportar');
 				return;
@@ -319,19 +340,19 @@
 
 			// Prepare data for Excel
 			const excelData = allSales.map((sale: Sale) => {
-				const items = sale.items.map(item => 
-					`${item.productNameSnapshot} (${item.quantity} x $${item.unitPrice})`
-				).join('\n');
-				
+				const items = sale.items
+					.map((item) => `${item.productNameSnapshot} (${item.quantity} x $${item.unitPrice})`)
+					.join('\n');
+
 				return {
 					'N° Venta': sale.saleNumber,
-					'Fecha': new Date(sale.createdAt).toLocaleDateString('es-AR'),
-					'Items': items,
+					Fecha: new Date(sale.createdAt).toLocaleDateString('es-AR'),
+					Items: items,
 					'Cantidad Items': sale.items.length,
-					'Total': parseFloat(sale.total),
+					Total: parseFloat(sale.total),
 					'Método de Pago': getPaymentMethodLabel(sale.paymentMethod),
-					'Estado': sale.status === 'COMPLETADA' ? 'Completada' : 'Cancelada',
-					'Usuario': sale.user?.name || 'N/A'
+					Estado: sale.status === 'COMPLETADA' ? 'Completada' : 'Cancelada',
+					Usuario: sale.user?.name || 'N/A'
 				};
 			});
 
@@ -343,7 +364,7 @@
 			// Generate filename with current date and filters
 			const date = new Date().toLocaleDateString('es-AR').replace(/\//g, '-');
 			let filename = `ventas-${date}`;
-			
+
 			if (filters.dateFrom || filters.dateTo) {
 				filename += `-desde-${filters.dateFrom || 'inicio'}-hasta-${filters.dateTo || 'hoy'}`;
 			}
@@ -417,9 +438,12 @@
 						class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900"
 					>
 						<option value="">Todos</option>
-						<option value="EFECTIVO">Efectivo</option>
-						<option value="TRANSFERENCIA">Transferencia</option>
-						<option value="TARJETA">Tarjeta</option>
+						{#each paymentMethods as method (method.id)}
+							<option value={method.id}>
+								{method.icon ?? '💳'}
+								{method.name}
+							</option>
+						{/each}
 					</select>
 				</div>
 				<div>
@@ -635,6 +659,20 @@
 							</div>
 						</div>
 					{/if}
+					{#if selectedSale.paymentMethod?.code === 'CUENTA_CORRIENTE'}
+						<div>
+							<div class="text-xs text-gray-500">Cliente</div>
+							<div class="text-sm font-medium">{selectedSale.client?.name || 'N/A'}</div>
+						</div>
+						{#if selectedSale.paymentDueDate}
+							<div>
+								<div class="text-xs text-gray-500">Fecha estimada de pago</div>
+								<div class="text-sm font-medium text-purple-600">
+									{new Date(selectedSale.paymentDueDate).toLocaleDateString('es-AR')}
+								</div>
+							</div>
+						{/if}
+					{/if}
 					<div>
 						<div class="text-xs text-gray-500">Atendido por</div>
 						<div class="text-sm font-medium">
@@ -677,7 +715,13 @@
 					</table>
 				</div>
 
-				<div class="mt-6 flex justify-end">
+				<div class="mt-6 flex justify-end gap-2">
+					<button
+						onclick={() => openEditModal(selectedSale!)}
+						class="rounded-md bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"
+					>
+						Editar
+					</button>
 					<button
 						onclick={closeDetailModal}
 						class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
@@ -736,7 +780,8 @@
 							<div>
 								<div class="text-xs text-gray-600">Método de pago</div>
 								<div class="text-sm font-medium text-gray-900">
-									{saleToEdit.paymentMethod?.icon || ''} {saleToEdit.paymentMethod?.name || 'N/A'}
+									{saleToEdit.paymentMethod?.icon || ''}
+									{saleToEdit.paymentMethod?.name || 'N/A'}
 								</div>
 							</div>
 						</div>
@@ -766,12 +811,9 @@
 								<tbody class="divide-y divide-gray-200 bg-white">
 									{#each selectedSale.items as item}
 										<tr>
-											<td class="px-3 py-2 text-sm text-gray-900">{item.productNameSnapshot}</td
-											>
-											<td class="px-3 py-2 text-right text-sm text-gray-600">{item.quantity}</td
-											>
-											<td class="px-3 py-2 text-right text-sm text-gray-900">${item.unitPrice}</td
-											>
+											<td class="px-3 py-2 text-sm text-gray-900">{item.productNameSnapshot}</td>
+											<td class="px-3 py-2 text-right text-sm text-gray-600">{item.quantity}</td>
+											<td class="px-3 py-2 text-right text-sm text-gray-900">${item.unitPrice}</td>
 											<td class="px-3 py-2 text-right text-sm font-medium text-gray-900"
 												>${item.subtotal}</td
 											>
@@ -786,8 +828,11 @@
 				<h3 class="mb-4 border-t pt-4 font-medium text-gray-900">Modificar Venta</h3>
 				<div class="space-y-4">
 					<div>
-						<label class="block text-sm font-medium text-gray-700">Fecha de Venta</label>
+						<label for="sale-date" class="block text-sm font-medium text-gray-700"
+							>Fecha de Venta</label
+						>
 						<input
+							id="sale-date"
 							type="datetime-local"
 							bind:value={saleToEdit.createdAt}
 							class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
@@ -796,9 +841,12 @@
 					</div>
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700">Descuento</label>
+						<label for="sale-discount" class="block text-sm font-medium text-gray-700"
+							>Descuento</label
+						>
 						<div class="mt-1 flex gap-2">
 							<input
+								id="sale-discount"
 								type="number"
 								bind:value={saleToEdit.discount}
 								min="0"
@@ -810,8 +858,11 @@
 					</div>
 
 					<!-- Vista previa del nuevo total -->
-					{#if selectedSale}
-						{@const newTotal = Math.max(0, parseFloat(selectedSale.subtotal) - (saleToEdit.discount || 0))}
+					{#if selectedSale && saleToEdit}
+						{@const newTotal = Math.max(
+							0,
+							Number(selectedSale.subtotal) - Number(saleToEdit.discount || 0)
+						)}
 						<div class="rounded-lg bg-blue-50 p-3">
 							<div class="flex justify-between">
 								<span class="text-sm text-gray-700">Subtotal:</span>
@@ -831,8 +882,11 @@
 					{/if}
 
 					<div>
-						<label class="block text-sm font-medium text-gray-700">Método de Pago</label>
+						<label for="sale-payment-method" class="block text-sm font-medium text-gray-700"
+							>Método de Pago</label
+						>
 						<select
+							id="sale-payment-method"
 							bind:value={saleToEdit.paymentMethodId}
 							class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 						>
@@ -842,25 +896,37 @@
 						</select>
 					</div>
 
-					{#if saleToEdit.paymentMethodId && paymentMethods.find(m => m.id === saleToEdit.paymentMethodId)?.code === 'EFECTIVO'}
-						<div>
-							<label class="block text-sm font-medium text-gray-700">Dinero Recibido</label>
-							<input
-								type="number"
-								bind:value={saleToEdit.cashReceived}
-								min="0"
-								step="0.01"
-								class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-								placeholder="0"
-							/>
-							{#if selectedSale && saleToEdit.cashReceived}
-								{@const newTotal = Math.max(0, parseFloat(selectedSale.subtotal) - (saleToEdit.discount || 0))}
-								{@const changeGiven = Math.max(0, saleToEdit.cashReceived - newTotal)}
-								<div class="mt-2 text-sm text-gray-700">
-									Cambio: <span class="font-medium text-green-600">${changeGiven.toFixed(2)}</span>
-								</div>
-							{/if}
-						</div>
+					{#if saleToEdit}
+						{@const currentPaymentMethod = paymentMethods.find(
+							(m) => m.id === saleToEdit?.paymentMethodId
+						)}
+						{#if saleToEdit.paymentMethodId && currentPaymentMethod?.code === 'EFECTIVO'}
+							<div>
+								<label for="sale-cash-received" class="block text-sm font-medium text-gray-700"
+									>Dinero Recibido</label
+								>
+								<input
+									id="sale-cash-received"
+									type="number"
+									bind:value={saleToEdit.cashReceived}
+									min="0"
+									step="0.01"
+									class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+									placeholder="0"
+								/>
+								{#if selectedSale && saleToEdit?.cashReceived}
+									{@const newTotal = Math.max(
+										0,
+										Number(selectedSale.subtotal) - Number(saleToEdit.discount || 0)
+									)}
+									{@const changeGiven = Math.max(0, Number(saleToEdit.cashReceived) - newTotal)}
+									<div class="mt-2 text-sm text-gray-700">
+										Cambio: <span class="font-medium text-green-600">${changeGiven.toFixed(2)}</span
+										>
+									</div>
+								{/if}
+							</div>
+						{/if}
 					{/if}
 				</div>
 

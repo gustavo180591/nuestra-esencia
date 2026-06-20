@@ -113,6 +113,8 @@ export const GET: RequestHandler = async ({ url }) => {
 			period: string;
 			salesCount: number;
 			revenue: number;
+			cost: number;
+			profit: number;
 			itemsSold: number;
 			averageTicket: number;
 			sales: Array<{
@@ -126,12 +128,14 @@ export const GET: RequestHandler = async ({ url }) => {
 					productName: string;
 					quantity: number;
 					unitPrice: number;
+					unitCost: number;
 					subtotal: number;
 				}>;
 			}>;
 		}
 		const groupedSales: Record<string, GroupedSale> = {};
 		let totalRevenue = 0;
+		let totalCost = 0;
 		let totalSales = 0;
 		let totalItems = 0;
 
@@ -178,6 +182,8 @@ export const GET: RequestHandler = async ({ url }) => {
 				period,
 				salesCount: 0,
 				revenue: 0,
+				cost: 0,
+				profit: 0,
 				itemsSold: 0,
 				averageTicket: 0,
 				sales: []
@@ -210,14 +216,23 @@ export const GET: RequestHandler = async ({ url }) => {
 			}
 
 			const saleRevenue = Number(sale.total);
-			const saleItems = sale.items.reduce(
+			const saleItemsCount = sale.items.reduce(
 				(sum: number, item: (typeof sale.items)[0]) => sum + Number(item.quantity),
+				0
+			);
+
+			// Calcular costo de la venta usando costos históricos
+			const saleCost = sale.items.reduce(
+				(sum: number, item: (typeof sale.items)[0]) =>
+					sum + Number(item.unitCost) * Number(item.quantity),
 				0
 			);
 
 			groupedSales[period].salesCount += 1;
 			groupedSales[period].revenue += saleRevenue;
-			groupedSales[period].itemsSold += saleItems;
+			groupedSales[period].cost += saleCost;
+			groupedSales[period].profit += saleRevenue - saleCost;
+			groupedSales[period].itemsSold += saleItemsCount;
 			groupedSales[period].sales.push({
 				id: sale.id,
 				saleNumber: sale.saleNumber,
@@ -229,13 +244,15 @@ export const GET: RequestHandler = async ({ url }) => {
 					productName: item.product?.name || 'Producto',
 					quantity: Number(item.quantity),
 					unitPrice: Number(item.unitPrice),
+					unitCost: Number(item.unitCost),
 					subtotal: Number(item.subtotal)
 				}))
 			});
 
 			totalRevenue += saleRevenue;
+			totalCost += saleCost;
 			totalSales += 1;
-			totalItems += saleItems;
+			totalItems += saleItemsCount;
 		}
 
 		// Calcular ticket promedio por período
@@ -251,6 +268,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		// Estadísticas generales
 		const overallAverageTicket = totalSales > 0 ? totalRevenue / totalSales : 0;
+		const totalProfit = totalRevenue - totalCost;
 
 		return json({
 			success: true,
@@ -261,6 +279,8 @@ export const GET: RequestHandler = async ({ url }) => {
 				summary: {
 					totalSales,
 					totalRevenue,
+					totalCost,
+					totalProfit,
 					totalItems,
 					averageTicket: overallAverageTicket
 				},

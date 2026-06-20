@@ -17,6 +17,7 @@ async function main() {
 	await prisma.category.deleteMany();
 	await prisma.supplier.deleteMany();
 	await prisma.user.deleteMany();
+	await prisma.client.deleteMany();
 
 	console.log('🧹 Datos limpiados');
 
@@ -28,7 +29,8 @@ async function main() {
 				{ code: 'EFECTIVO', name: 'Efectivo', icon: '💵', sortOrder: 0 },
 				{ code: 'TRANSFERENCIA', name: 'Transferencia', icon: '🏦', sortOrder: 1 },
 				{ code: 'TARJETA', name: 'Tarjeta', icon: '💳', sortOrder: 2 },
-				{ code: 'QR', name: 'QR', icon: '📱', sortOrder: 3 }
+				{ code: 'QR', name: 'QR', icon: '📱', sortOrder: 3 },
+				{ code: 'CUENTA_CORRIENTE', name: 'Cuenta Corriente', icon: '📒', sortOrder: 4 }
 			]
 		});
 		console.log('💳 Métodos de pago creados');
@@ -136,6 +138,36 @@ async function main() {
 	});
 
 	console.log('🚚 Proveedores creados');
+
+	// 3.5 Crear clientes de ejemplo
+	await prisma.client.create({
+		data: {
+			name: 'Juan Pérez',
+			phone: '+54 9 341 456-7890',
+			address: 'Av. Libertador 1234',
+			email: 'juan.perez@email.com'
+		}
+	});
+
+	await prisma.client.create({
+		data: {
+			name: 'María García',
+			phone: '+54 9 341 567-8901',
+			address: 'Calle San Martín 567',
+			email: 'maria.garcia@email.com'
+		}
+	});
+
+	await prisma.client.create({
+		data: {
+			name: 'Carlos López',
+			phone: '+54 9 341 678-9012',
+			address: 'Belgrano 890',
+			email: 'carlos.lopez@email.com'
+		}
+	});
+
+	console.log('👥 Clientes creados');
 
 	// 4. Crear productos con sus formatos de venta
 	const productos = [
