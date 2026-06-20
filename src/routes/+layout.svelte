@@ -1,7 +1,7 @@
 <script lang="ts">
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
-	import Navbar from '../components/Navbar.svelte';
+	import AppShell from '../components/layout/AppShell.svelte';
 
 	let { children, data } = $props() as { children: any; data: { user: any } };
 </script>
@@ -22,6 +22,6 @@
 	</script>
 </svelte:head>
 
-<Navbar user={data.user} />
-
-{@render children()}
+<AppShell user={data.user}>
+	{@render children()}
+</AppShell>
