@@ -36,14 +36,14 @@
 
 <!-- Desktop Sidebar -->
 <aside
-	class="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-gray-800 lg:bg-gray-900 lg:fixed lg:left-0 lg:top-14 lg:bottom-0 lg:overflow-y-auto"
+	class="hidden lg:fixed lg:top-14 lg:bottom-0 lg:left-0 lg:flex lg:w-64 lg:flex-col lg:overflow-y-auto lg:border-r lg:border-gray-800 lg:bg-gray-900"
 >
 	<div class="flex flex-col gap-6 p-4">
 		{#each sections as section (section.title)}
 			<div>
 				<button
 					onclick={() => toggleSection(section.title)}
-					class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400 transition-colors hover:text-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+					class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold tracking-wider text-gray-400 uppercase transition-colors hover:text-gray-300 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
 					aria-expanded={isSectionExpanded(section.title)}
 					aria-controls={`section-${section.title}`}
 				>
@@ -96,7 +96,7 @@
 			<h2 id="mobile-sidebar-title" class="text-lg font-semibold text-white">Menú</h2>
 			<button
 				onclick={onClose}
-				class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+				class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
 				aria-label="Cerrar menú"
 			>
 				<X class="h-5 w-5" aria-hidden="true" />
@@ -109,7 +109,7 @@
 				<div class="mb-4">
 					<button
 						onclick={() => toggleSection(section.title)}
-						class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400 transition-colors hover:text-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+						class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold tracking-wider text-gray-400 uppercase transition-colors hover:text-gray-300 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
 						aria-expanded={isSectionExpanded(section.title)}
 						aria-controls={`mobile-section-${section.title}`}
 					>

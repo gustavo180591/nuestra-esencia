@@ -60,7 +60,7 @@
 			<h2 id="mobile-menu-title" class="text-lg font-semibold text-white">Menú</h2>
 			<button
 				onclick={onClose}
-				class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+				class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
 				aria-label="Cerrar menú"
 			>
 				<X class="h-5 w-5" aria-hidden="true" />
@@ -73,7 +73,7 @@
 				<div class="mb-4">
 					<button
 						onclick={() => toggleSection(section.title)}
-						class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-800 hover:text-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+						class="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-800 hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
 						aria-expanded={isSectionExpanded(section.title)}
 						aria-controls={`section-${section.title}`}
 					>
@@ -88,11 +88,7 @@
 					{#if isSectionExpanded(section.title)}
 						<div id={`section-${section.title}`} class="mt-2 space-y-1 pl-2">
 							{#each section.items as item (item.href)}
-								<NavItem
-									{...item}
-									isActive={currentPath === item.href}
-									onclick={handleItemClick}
-								/>
+								<NavItem {...item} isActive={currentPath === item.href} onclick={handleItemClick} />
 							{/each}
 						</div>
 					{/if}
@@ -118,7 +114,7 @@
 					onLogout();
 					onClose();
 				}}
-				class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+				class="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
 			>
 				<X class="h-4 w-4" aria-hidden="true" />
 				Cerrar sesión

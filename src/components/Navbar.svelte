@@ -27,9 +27,7 @@
 			: null
 	);
 
-	let navigationSections = $derived(
-		currentUser ? getNavigationForRole(currentUser.role) : []
-	);
+	let navigationSections = $derived(currentUser ? getNavigationForRole(currentUser.role) : []);
 
 	let currentPath = $derived($page.url.pathname);
 
@@ -75,11 +73,7 @@
 				<div class="hidden lg:flex lg:items-center lg:gap-1">
 					{#each navigationSections as section}
 						{#each section.items as item}
-							<NavItem
-								{...item}
-								isActive={currentPath === item.href}
-								onclick={closeMobileMenu}
-							/>
+							<NavItem {...item} isActive={currentPath === item.href} onclick={closeMobileMenu} />
 						{/each}
 					{/each}
 				</div>
@@ -107,7 +101,7 @@
 				{#if currentUser}
 					<button
 						onclick={toggleMobileMenu}
-						class="rounded-lg p-2 text-gray-300 transition-colors hover:bg-gray-800 hover:text-amber-200 lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+						class="rounded-lg p-2 text-gray-300 transition-colors hover:bg-gray-800 hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none lg:hidden"
 						aria-label="Abrir menú"
 						aria-expanded={mobileMenuOpen}
 					>
@@ -123,7 +117,7 @@
 {#if currentUser}
 	<MobileMenu
 		sections={navigationSections}
-		currentPath={currentPath}
+		{currentPath}
 		isOpen={mobileMenuOpen}
 		onClose={closeMobileMenu}
 		onLogout={handleLogout}

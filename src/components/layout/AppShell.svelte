@@ -30,9 +30,7 @@
 			: null
 	);
 
-	let navigationSections = $derived(
-		currentUser ? getNavigationForRole(currentUser.role) : []
-	);
+	let navigationSections = $derived(currentUser ? getNavigationForRole(currentUser.role) : []);
 
 	let currentPath = $derived($page.url.pathname);
 
@@ -63,27 +61,19 @@
 </script>
 
 <div class="min-h-screen bg-gray-50">
-	<Navbar
-		user={user}
-		onToggleSidebar={toggleSidebar}
-		onLogout={handleLogout}
-	/>
+	<Navbar {user} onToggleSidebar={toggleSidebar} onLogout={handleLogout} />
 
 	{#if currentUser}
 		<Sidebar
 			sections={navigationSections}
-			currentPath={currentPath}
+			{currentPath}
 			isOpen={sidebarOpen}
 			onClose={closeSidebar}
 		/>
 	{/if}
 
 	<!-- Main content area -->
-	<main
-		class="pt-14 {currentUser
-			? 'lg:pl-64'
-			: ''}"
-	>
+	<main class="pt-14 {currentUser ? 'lg:pl-64' : ''}">
 		{@render children()}
 	</main>
 </div>

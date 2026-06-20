@@ -73,9 +73,7 @@ export function getNavigationForRole(role: 'ADMIN' | 'CAJERO'): NavSection[] {
 	return navigationSections
 		.map((section) => ({
 			...section,
-			items: section.items.filter(
-				(item) => !item.roles || item.roles.includes(role)
-			)
+			items: section.items.filter((item) => !item.roles || item.roles.includes(role))
 		}))
 		.filter((section) => section.items.length > 0);
 }

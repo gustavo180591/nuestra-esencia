@@ -15,8 +15,8 @@
 
 <a
 	{href}
-	onclick={onclick}
-	class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 {isActive
+	{onclick}
+	class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 focus-visible:outline-none {isActive
 		? 'bg-amber-600 text-white shadow-md'
 		: 'text-gray-300 hover:bg-gray-800 hover:text-amber-200'}"
 	aria-current={isActive ? 'page' : undefined}

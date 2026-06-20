@@ -67,7 +67,7 @@
 				{#if currentUser}
 					<button
 						onclick={onToggleSidebar}
-						class="rounded-lg p-2 text-gray-300 transition-colors hover:bg-gray-800 hover:text-amber-200 lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+						class="rounded-lg p-2 text-gray-300 transition-colors hover:bg-gray-800 hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none lg:hidden"
 						aria-label="Abrir menú"
 					>
 						<Menu class="h-5 w-5" aria-hidden="true" />
@@ -101,7 +101,7 @@
 						name={currentUser.name}
 						role={currentUser.role}
 						email={currentUser.email}
-						onLogout={onLogout}
+						{onLogout}
 					/>
 				{:else}
 					<a

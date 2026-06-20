@@ -40,7 +40,7 @@
 <div class="user-menu-container relative">
 	<button
 		onclick={toggle}
-		class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-300 transition-all duration-200 hover:bg-gray-800 hover:text-amber-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
+		class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gray-300 transition-all duration-200 hover:bg-gray-800 hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 focus-visible:outline-none"
 		aria-expanded={isOpen}
 		aria-haspopup="true"
 	>
@@ -48,7 +48,10 @@
 			<User class="h-4 w-4 text-white" aria-hidden="true" />
 		</div>
 		<span class="hidden sm:block">{name}</span>
-		<ChevronDown class="h-4 w-4 opacity-70 transition-transform duration-200 {isOpen ? 'rotate-180' : ''}" aria-hidden="true" />
+		<ChevronDown
+			class="h-4 w-4 opacity-70 transition-transform duration-200 {isOpen ? 'rotate-180' : ''}"
+			aria-hidden="true"
+		/>
 	</button>
 
 	{#if isOpen}
