@@ -217,19 +217,29 @@
 			<table class="min-w-full divide-y divide-gray-200">
 				<thead class="bg-gray-50">
 					<tr>
-						<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+						<th
+							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						>
 							Nombre
 						</th>
-						<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+						<th
+							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						>
 							Teléfono
 						</th>
-						<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+						<th
+							class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						>
 							Email
 						</th>
-						<th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+						<th
+							class="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase"
+						>
 							Deuda
 						</th>
-						<th class="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+						<th
+							class="px-6 py-3 text-center text-xs font-medium tracking-wider text-gray-500 uppercase"
+						>
 							Acciones
 						</th>
 					</tr>
@@ -237,19 +247,19 @@
 				<tbody class="divide-y divide-gray-200 bg-white">
 					{#each filteredClients as client}
 						<tr class="hover:bg-gray-50">
-							<td class="whitespace-nowrap px-6 py-4">
+							<td class="px-6 py-4 whitespace-nowrap">
 								<div class="text-sm font-medium text-gray-900">{client.name}</div>
 								{#if client.address}
 									<div class="text-xs text-gray-500">{client.address}</div>
 								{/if}
 							</td>
-							<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 								{client.phone || '-'}
 							</td>
-							<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 								{client.email || '-'}
 							</td>
-							<td class="whitespace-nowrap px-6 py-4 text-right text-sm">
+							<td class="px-6 py-4 text-right text-sm whitespace-nowrap">
 								{#if client.accountDebt > 0}
 									<span class="font-medium text-red-600">
 										${Number(client.accountDebt).toFixed(2)}
@@ -258,7 +268,7 @@
 									<span class="text-gray-500">$0.00</span>
 								{/if}
 							</td>
-							<td class="whitespace-nowrap px-6 py-4 text-center text-sm">
+							<td class="px-6 py-4 text-center text-sm whitespace-nowrap">
 								<div class="flex justify-center gap-2">
 									<a
 										href="/admin/clients/{client.id}"
@@ -293,7 +303,7 @@
 
 <!-- Modal de crear cliente -->
 {#if showCreateModal}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
 		<div class="w-full max-w-md rounded-lg bg-white shadow-xl">
 			<div class="border-b px-6 py-4">
 				<h2 class="text-xl font-semibold text-gray-900">Nuevo Cliente</h2>
@@ -305,8 +315,7 @@
 			<form onsubmit={createClient} class="p-6">
 				<div class="space-y-4">
 					<div>
-						<label for="client-name" class="block text-sm font-medium text-gray-700"
-							>Nombre *</label
+						<label for="client-name" class="block text-sm font-medium text-gray-700">Nombre *</label
 						>
 						<input
 							id="client-name"
@@ -339,9 +348,7 @@
 						/>
 					</div>
 					<div>
-						<label for="client-email" class="block text-sm font-medium text-gray-700"
-							>Email</label
-						>
+						<label for="client-email" class="block text-sm font-medium text-gray-700">Email</label>
 						<input
 							id="client-email"
 							type="email"
@@ -373,7 +380,7 @@
 
 <!-- Modal de editar cliente -->
 {#if showEditModal}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
 		<div class="w-full max-w-md rounded-lg bg-white shadow-xl">
 			<div class="border-b px-6 py-4">
 				<h2 class="text-xl font-semibold text-gray-900">Editar Cliente</h2>

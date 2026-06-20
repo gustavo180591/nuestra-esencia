@@ -87,7 +87,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			}
 
 			const currentBalance = Number(client.accountDebt);
-			let newBalance = currentBalance;
+			let newBalance: number;
 
 			if (type === 'VENTA') {
 				newBalance = currentBalance + Number(amount);

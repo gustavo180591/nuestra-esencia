@@ -70,9 +70,7 @@
 		loadClient();
 	});
 
-	const recentSales = $derived(
-		client?.sales.slice(0, 10) || []
-	);
+	const recentSales = $derived(client?.sales.slice(0, 10) || []);
 
 	const totalSales = $derived(
 		client?.sales.reduce((sum, sale) => sum + Number(sale.total), 0) || 0
@@ -131,7 +129,11 @@
 		<div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
 			<div class="rounded-lg bg-white p-6 shadow-md">
 				<div class="text-sm text-gray-500">Deuda Actual</div>
-				<div class="mt-2 text-2xl font-bold {client.accountDebt > 0 ? 'text-red-600' : 'text-green-600'}">
+				<div
+					class="mt-2 text-2xl font-bold {client.accountDebt > 0
+						? 'text-red-600'
+						: 'text-green-600'}"
+				>
 					${Number(client.accountDebt).toFixed(2)}
 				</div>
 			</div>
@@ -196,9 +198,7 @@
 									<div class="text-lg font-bold text-gray-900">
 										${Number(sale.total).toFixed(2)}
 									</div>
-									<div class="text-xs font-medium text-purple-600">
-										Cuenta corriente
-									</div>
+									<div class="text-xs font-medium text-purple-600">Cuenta corriente</div>
 								</div>
 							</div>
 

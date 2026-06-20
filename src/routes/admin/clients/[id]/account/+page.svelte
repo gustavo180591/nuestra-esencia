@@ -190,7 +190,11 @@
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 				<div>
 					<div class="text-sm text-gray-500">Saldo Actual</div>
-					<div class="mt-2 text-2xl font-bold {client.accountDebt > 0 ? 'text-red-600' : 'text-green-600'}">
+					<div
+						class="mt-2 text-2xl font-bold {client.accountDebt > 0
+							? 'text-red-600'
+							: 'text-green-600'}"
+					>
 						${Number(client.accountDebt).toFixed(2)}
 					</div>
 				</div>
@@ -241,25 +245,39 @@
 					<table class="min-w-full divide-y divide-gray-200">
 						<thead class="bg-gray-50">
 							<tr>
-								<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+								<th
+									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								>
 									Fecha
 								</th>
-								<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+								<th
+									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								>
 									Tipo
 								</th>
-								<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+								<th
+									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								>
 									Descripción
 								</th>
-								<th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+								<th
+									class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+								>
 									Productos
 								</th>
-								<th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+								<th
+									class="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase"
+								>
 									Debe
 								</th>
-								<th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+								<th
+									class="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase"
+								>
 									Haber
 								</th>
-								<th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+								<th
+									class="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase"
+								>
 									Saldo
 								</th>
 							</tr>
@@ -267,21 +285,31 @@
 						<tbody class="divide-y divide-gray-200 bg-white">
 							{#each movements as movement}
 								<tr class="hover:bg-gray-50">
-									<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+									<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
 										{new Date(movement.createdAt).toLocaleDateString('es-AR')}
 									</td>
-									<td class="whitespace-nowrap px-6 py-4 text-sm font-medium {getMovementTypeClass(movement.type)}">
+									<td
+										class="px-6 py-4 text-sm font-medium whitespace-nowrap {getMovementTypeClass(
+											movement.type
+										)}"
+									>
 										{getMovementTypeLabel(movement.type)}
 									</td>
 									<td class="px-6 py-4 text-sm text-gray-900">{movement.description}</td>
 									<td class="px-6 py-4 text-sm text-gray-900">{getProductsSummary(movement)}</td>
-									<td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-gray-900">
+									<td
+										class="px-6 py-4 text-right text-sm font-medium whitespace-nowrap text-gray-900"
+									>
 										{movement.type === 'VENTA' ? '$' + Number(movement.amount).toFixed(2) : '-'}
 									</td>
-									<td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-gray-900">
+									<td
+										class="px-6 py-4 text-right text-sm font-medium whitespace-nowrap text-gray-900"
+									>
 										{movement.type === 'PAGO' ? '$' + Number(movement.amount).toFixed(2) : '-'}
 									</td>
-									<td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-gray-900">
+									<td
+										class="px-6 py-4 text-right text-sm font-bold whitespace-nowrap text-gray-900"
+									>
 										${Number(movement.balanceAfter).toFixed(2)}
 									</td>
 								</tr>
@@ -299,9 +327,7 @@
 		<div class="w-full max-w-md rounded-lg bg-white shadow-xl">
 			<div class="border-b px-6 py-4">
 				<h2 class="text-xl font-semibold text-gray-900">Registrar pago</h2>
-				<p class="text-sm text-gray-500">
-					Registrar un pago para descontar de la cuenta corriente
-				</p>
+				<p class="text-sm text-gray-500">Registrar un pago para descontar de la cuenta corriente</p>
 			</div>
 
 			<form onsubmit={registerPayment} class="p-6">
@@ -354,7 +380,9 @@
 						<div class="rounded-lg bg-gray-50 p-3 text-sm">
 							<div class="flex justify-between">
 								<span class="text-gray-600">Deuda actual:</span>
-								<span class="font-semibold text-gray-900">${Number(client.accountDebt).toFixed(2)}</span>
+								<span class="font-semibold text-gray-900"
+									>${Number(client.accountDebt).toFixed(2)}</span
+								>
 							</div>
 							{#if paymentAmount}
 								<div class="mt-1 flex justify-between">
