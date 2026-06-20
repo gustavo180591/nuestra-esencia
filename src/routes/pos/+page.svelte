@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { Product, ProductSaleFormat } from '$lib/types';
+	import CashRegisterStatusCard from '../../components/pos/CashRegisterStatusCard.svelte';
+	import CashCloseReportModal from '../../components/pos/CashCloseReportModal.svelte';
+	import CurrencyInput from '../../components/pos/CurrencyInput.svelte';
 
 	// Helper para formatear números con separadores de miles (formato argentino: $12.000,00)
 	function formatCurrency(value: number | null | undefined): string {
@@ -841,50 +844,6 @@
 </script>
 
 <div class="min-h-screen bg-gray-50">
-	<!-- Header -->
-	<header class="bg-amber-600 text-white shadow-lg">
-		<div class="container mx-auto px-4 py-4">
-			<div class="flex items-center justify-between">
-				<div class="flex items-center space-x-4">
-					<h1 class="text-2xl font-bold">Nuestra Esencia</h1>
-					<span class="text-amber-100">Sistema de Caja</span>
-				</div>
-				<div class="flex items-center space-x-3">
-					<div class="text-right text-sm">
-						{#if cashRegister}
-							<div class="text-amber-100">
-								💵 Caja Abierta
-								{formatCurrency(cashRegister.initialAmount)}
-							</div>
-							<div class="text-xs text-amber-200">
-								Por: {cashRegister.openedBy?.name || 'Usuario'}
-							</div>
-						{:else}
-							<div class="text-red-100">🔴 Caja Cerrada</div>
-						{/if}
-					</div>
-					{#if cashRegister}
-						<button
-							type="button"
-							onclick={() => (showCloseModal = true)}
-							class="rounded-md bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
-						>
-							Cerrar Caja
-						</button>
-					{:else}
-						<button
-							type="button"
-							onclick={() => (showOpenModal = true)}
-							class="rounded-md bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
-						>
-							Abrir Caja
-						</button>
-					{/if}
-				</div>
-			</div>
-		</div>
-	</header>
-
 	<!-- Main Content -->
 	<main class="container mx-auto px-4 py-6">
 		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -1075,10 +1034,21 @@
 
 			<!-- Panel del Carrito (1/3 del ancho) -->
 			<div class="lg:col-span-1">
-				<div class="sticky top-6 rounded-lg bg-white p-6 shadow-md">
-					<h2 class="mb-4 text-xl font-semibold text-gray-900">Carrito</h2>
+				<div class="sticky top-6 space-y-4">
+					<!-- Estado de Caja -->
+					<CashRegisterStatusCard
+						isOpen={!!cashRegister}
+						initialAmount={cashRegister?.initialAmount || 0}
+						openedBy={cashRegister?.openedBy?.name}
+						onOpen={() => (showOpenModal = true)}
+						onClose={() => (showCloseModal = true)}
+					/>
 
-					<!-- Botones de acción -->
+					<!-- Carrito -->
+					<div class="rounded-lg bg-white p-6 shadow-md">
+						<h2 class="mb-4 text-xl font-semibold text-gray-900">Carrito</h2>
+
+						<!-- Botones de acción -->
 					<div class="mb-4 space-y-2">
 						<button
 							class="w-full rounded-lg bg-amber-600 py-3 font-medium text-white hover:bg-amber-700 disabled:bg-gray-400"
@@ -1431,6 +1401,7 @@
 						</div>
 					{/if}
 				</div>
+					</div>
 			</div>
 		</div>
 	</main>
@@ -1681,35 +1652,23 @@
 								<label for="opening-qr-amount" class="block text-sm font-medium text-gray-700"
 									>QR</label
 								>
-								<div class="relative">
-									<span class="absolute top-2 left-3 text-gray-500">$</span>
-									<input
-										type="number"
-										id="opening-qr-amount"
-										min="0"
-										step="0.01"
-										bind:value={openingQrAmount}
-										class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900"
-										placeholder="0.00"
-									/>
-								</div>
+								<CurrencyInput
+									id="opening-qr-amount"
+									value={openingQrAmount}
+									onchange={(v) => (openingQrAmount = v)}
+									placeholder="0,00"
+								/>
 							</div>
 							<div>
 								<label for="opening-transfer-amount" class="block text-sm font-medium text-gray-700"
 									>Transferencias</label
 								>
-								<div class="relative">
-									<span class="absolute top-2 left-3 text-gray-500">$</span>
-									<input
-										type="number"
-										id="opening-transfer-amount"
-										min="0"
-										step="0.01"
-										bind:value={openingTransferAmount}
-										class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900"
-										placeholder="0.00"
-									/>
-								</div>
+								<CurrencyInput
+									id="opening-transfer-amount"
+									value={openingTransferAmount}
+									onchange={(v) => (openingTransferAmount = v)}
+									placeholder="0,00"
+								/>
 							</div>
 						</div>
 
@@ -2018,35 +1977,23 @@
 						<div class="mt-4 space-y-4">
 							<div>
 								<label for="qr-amount" class="block text-sm font-medium text-gray-700">QR</label>
-								<div class="relative">
-									<span class="absolute top-2 left-3 text-gray-500">$</span>
-									<input
-										type="number"
-										id="qr-amount"
-										min="0"
-										step="0.01"
-										bind:value={qrAmount}
-										class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900"
-										placeholder="0.00"
-									/>
-								</div>
+								<CurrencyInput
+									id="qr-amount"
+									value={qrAmount}
+									onchange={(v) => (qrAmount = v)}
+									placeholder="0,00"
+								/>
 							</div>
 							<div>
 								<label for="transfer-amount" class="block text-sm font-medium text-gray-700"
 									>Transferencias</label
 								>
-								<div class="relative">
-									<span class="absolute top-2 left-3 text-gray-500">$</span>
-									<input
-										type="number"
-										id="transfer-amount"
-										min="0"
-										step="0.01"
-										bind:value={transferAmount}
-										class="w-full rounded-md border-gray-300 py-2 pr-3 pl-8 text-gray-900"
-										placeholder="0.00"
-									/>
-								</div>
+								<CurrencyInput
+									id="transfer-amount"
+									value={transferAmount}
+									onchange={(v) => (transferAmount = v)}
+									placeholder="0,00"
+								/>
 							</div>
 						</div>
 
@@ -2107,109 +2054,15 @@
 {/if}
 
 <!-- Modal Reporte de Cierre -->
-{#if showPrintReportModal && closingReportData}
-	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
-		<div class="w-full max-w-2xl rounded-lg bg-white">
-			<div class="p-6">
-				<div class="mb-4 flex items-center justify-between">
-					<h2 class="text-xl font-semibold text-gray-900">Reporte de Cierre de Caja</h2>
-					<button
-						onclick={() => (showPrintReportModal = false)}
-						class="text-2xl text-gray-400 hover:text-gray-600"
-					>
-						×
-					</button>
-				</div>
-
-				<div class="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-					<div class="grid grid-cols-2 gap-4">
-						<div>
-							<div class="text-xs text-gray-500">Monto Inicial</div>
-							<div class="text-lg font-bold text-gray-900">
-								${formatCurrency(closingReportData.initialAmount)}
-							</div>
-						</div>
-						<div>
-							<div class="text-xs text-gray-500">Ventas en Efectivo</div>
-							<div class="text-lg font-bold text-green-600">
-								${formatCurrency(closingReportData.totalCashSales)}
-							</div>
-						</div>
-						<div>
-							<div class="text-xs text-gray-500">Transferencias</div>
-							<div class="text-lg font-bold text-blue-600">
-								${formatCurrency(closingReportData.totalTransferSales)}
-							</div>
-						</div>
-						<div>
-							<div class="text-xs text-gray-500">QR</div>
-							<div class="text-lg font-bold text-purple-600">
-								${formatCurrency(closingReportData.totalQrSales)}
-							</div>
-						</div>
-						<div>
-							<div class="text-xs text-gray-500">Tarjeta</div>
-							<div class="text-lg font-bold text-orange-600">
-								${formatCurrency(closingReportData.totalCardSales)}
-							</div>
-						</div>
-						<div>
-							<div class="text-xs text-gray-500">Gastos en Efectivo</div>
-							<div class="text-lg font-bold text-red-600">
-								${formatCurrency(closingReportData.totalCashExpenses)}
-							</div>
-						</div>
-						<div>
-							<div class="text-xs text-gray-500">Monto Esperado</div>
-							<div class="text-lg font-bold text-gray-900">
-								${formatCurrency(closingReportData.expectedAmount)}
-							</div>
-						</div>
-						<div>
-							<div class="text-xs text-gray-500">Monto Contado</div>
-							<div class="text-lg font-bold text-gray-900">
-								${formatCurrency(closingReportData.totalAmount)}
-							</div>
-						</div>
-					</div>
-
-					<div class="border-t border-gray-300 pt-4">
-						<div class="flex items-center justify-between">
-							<div class="text-sm font-medium text-gray-700">Diferencia</div>
-							<div
-								class="text-2xl font-bold {closingReportData.difference === 0
-									? 'text-green-600'
-									: closingReportData.difference > 0
-										? 'text-blue-600'
-										: 'text-red-600'}"
-							>
-								{closingReportData.differenceText}: ${formatCurrency(closingReportData.difference)}
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div class="mt-6 flex justify-end gap-3">
-					<button
-						onclick={() => (showPrintReportModal = false)}
-						class="rounded-md border border-gray-300 px-4 py-2 text-gray-900 hover:bg-gray-50"
-					>
-						Cerrar
-					</button>
-					<button
-						onclick={() => {
-							window.print();
-							showPrintReportModal = false;
-						}}
-						class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-					>
-						🖨️ Imprimir
-					</button>
-				</div>
-			</div>
-		</div>
-	</div>
-{/if}
+<CashCloseReportModal
+	isOpen={showPrintReportModal}
+	data={closingReportData}
+	onClose={() => (showPrintReportModal = false)}
+	onPrint={() => {
+		window.print();
+		showPrintReportModal = false;
+	}}
+/>
 
 <!-- Modal de Cobro Mejorado -->
 {#if showPaymentModal}
