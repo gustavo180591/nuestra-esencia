@@ -43,6 +43,11 @@
 	let paymentDescription = $state('');
 	let savingPayment = $state(false);
 
+	let showAdjustmentModal = $state(false);
+	let adjustmentAmount = $state('');
+	let adjustmentDescription = $state('');
+	let savingAdjustment = $state(false);
+
 	const paymentMethods = ['EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'QR'];
 
 	const { id } = $derived($page.params);
@@ -166,6 +171,61 @@
 			savingPayment = false;
 		}
 	}
+
+	async function adjustBalance() {
+		const amount = Number(adjustmentAmount);
+
+		if (Number.isNaN(amount) || amount < 0) {
+			alert('Ingrese un saldo válido');
+			return;
+		}
+
+		if (!adjustmentDescription.trim()) {
+			alert('Debe ingresar un motivo para el ajuste');
+			return;
+		}
+
+		const confirmed = confirm(
+			`¿Confirmar ajuste de saldo?\n\nSaldo actual: $${client?.accountDebt ?? 0}\nNuevo saldo: $${amount.toFixed(2)}`
+		);
+
+		if (!confirmed) return;
+
+		savingAdjustment = true;
+
+		try {
+			const response = await fetch(`/api/clients/${id}/account`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					type: 'AJUSTE',
+					amount,
+					description: adjustmentDescription,
+					referenceType: 'AJUSTE_MANUAL'
+				})
+			});
+
+			const result = await response.json();
+
+			if (!result.success) {
+				alert(result.message || 'Error al ajustar saldo');
+				return;
+			}
+
+			showAdjustmentModal = false;
+			adjustmentAmount = '';
+			adjustmentDescription = '';
+
+			await loadData();
+
+			alert('Saldo ajustado correctamente');
+		} catch (error) {
+			console.error('Error adjusting balance:', error);
+			alert('Error al ajustar saldo');
+		} finally {
+			savingAdjustment = false;
+		}
+	}
 </script>
 
 <main class="container mx-auto px-4 py-6">
@@ -214,8 +274,11 @@
 				Registrar Pago
 			</button>
 			<button
+				onclick={() => {
+					adjustmentAmount = client?.accountDebt?.toString() ?? '0';
+					showAdjustmentModal = true;
+				}}
 				class="rounded-md bg-amber-600 px-4 py-2 text-white hover:bg-amber-700"
-				onclick={() => alert('Funcionalidad de ajustar saldo próximamente')}
 			>
 				Ajustar Saldo
 			</button>
@@ -411,6 +474,95 @@
 						class="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:bg-gray-400"
 					>
 						{savingPayment ? 'Registrando...' : 'Confirmar pago'}
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{/if}
+
+{#if showAdjustmentModal}
+	<div class="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black p-4">
+		<div class="w-full max-w-md rounded-lg bg-white shadow-xl">
+			<div class="border-b px-6 py-4">
+				<h2 class="text-xl font-semibold text-gray-900">Ajustar saldo</h2>
+				<p class="text-sm text-gray-500">
+					Modifica manualmente el saldo de la cuenta corriente del cliente
+				</p>
+			</div>
+
+			<form onsubmit={adjustBalance} class="p-6">
+				<div class="space-y-4">
+					{#if client}
+						<div class="rounded-lg bg-gray-50 p-3 text-sm">
+							<div class="flex justify-between">
+								<span class="text-gray-600">Saldo actual:</span>
+								<span class="font-semibold text-gray-900">${Number(client.accountDebt).toFixed(2)}</span>
+							</div>
+						</div>
+					{/if}
+
+					<div>
+						<label for="adjustment-amount" class="block text-sm font-medium text-gray-700">
+							Nuevo saldo *
+						</label>
+						<input
+							id="adjustment-amount"
+							type="number"
+							bind:value={adjustmentAmount}
+							min="0"
+							step="0.01"
+							required
+							placeholder="0.00"
+							class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+						/>
+					</div>
+
+					<div>
+						<label for="adjustment-description" class="block text-sm font-medium text-gray-700">
+							Motivo del ajuste *
+						</label>
+						<textarea
+							id="adjustment-description"
+							bind:value={adjustmentDescription}
+							rows="3"
+							required
+							placeholder="Ej: Corrección de saldo, pago no registrado, error de carga..."
+							class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+						></textarea>
+					</div>
+
+					{#if client && adjustmentAmount !== ''}
+						<div class="rounded-lg bg-amber-50 p-3 text-sm">
+							<div class="flex justify-between">
+								<span class="text-gray-700">Diferencia:</span>
+								<span
+									class="font-semibold {Number(adjustmentAmount) - Number(client.accountDebt) >= 0
+										? 'text-red-600'
+										: 'text-green-600'}"
+								>
+									${(Number(adjustmentAmount) - Number(client.accountDebt)).toFixed(2)}
+								</span>
+							</div>
+						</div>
+					{/if}
+				</div>
+
+				<div class="mt-6 flex justify-end gap-3">
+					<button
+						type="button"
+						onclick={() => (showAdjustmentModal = false)}
+						class="rounded-md bg-gray-200 px-4 py-2 text-gray-900 hover:bg-gray-300"
+					>
+						Cancelar
+					</button>
+
+					<button
+						type="submit"
+						disabled={savingAdjustment}
+						class="rounded-md bg-amber-600 px-4 py-2 text-white hover:bg-amber-700 disabled:bg-gray-400"
+					>
+						{savingAdjustment ? 'Ajustando...' : 'Confirmar ajuste'}
 					</button>
 				</div>
 			</form>

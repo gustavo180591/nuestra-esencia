@@ -73,8 +73,18 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		const data = await request.json();
 		const { type, amount, description, referenceId, referenceType } = data;
 
-		if (!type || !amount || Number(amount) <= 0) {
+		const numericAmount = Number(amount);
+
+		if (!type || Number.isNaN(numericAmount)) {
 			return json({ success: false, message: 'Tipo y monto son requeridos' }, { status: 400 });
+		}
+
+		if ((type === 'VENTA' || type === 'PAGO') && numericAmount <= 0) {
+			return json({ success: false, message: 'El monto debe ser mayor a 0' }, { status: 400 });
+		}
+
+		if (type === 'AJUSTE' && numericAmount < 0) {
+			return json({ success: false, message: 'El saldo no puede ser negativo' }, { status: 400 });
 		}
 
 		const result = await db.$transaction(async (tx) => {
@@ -90,11 +100,11 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			let newBalance: number;
 
 			if (type === 'VENTA') {
-				newBalance = currentBalance + Number(amount);
+				newBalance = currentBalance + numericAmount;
 			} else if (type === 'PAGO') {
-				newBalance = currentBalance - Number(amount);
+				newBalance = currentBalance - numericAmount;
 			} else if (type === 'AJUSTE') {
-				newBalance = Number(amount);
+				newBalance = numericAmount;
 			} else {
 				throw new Error('INVALID_TYPE');
 			}
@@ -103,7 +113,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 				data: {
 					clientId: clientId,
 					type,
-					amount: Number(amount),
+					amount: numericAmount,
 					description: description || '',
 					balanceAfter: newBalance,
 					referenceId,
