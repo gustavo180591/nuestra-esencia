@@ -73,7 +73,7 @@
 	{/if}
 
 	<!-- Main content area -->
-	<main class="pt-14 {currentUser ? 'lg:pl-64' : ''}">
+	<main class="pt-14">
 		{@render children()}
 	</main>
 </div>

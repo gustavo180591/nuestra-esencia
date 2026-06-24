@@ -2,6 +2,8 @@
 	import { page } from '$app/stores';
 	import { Menu } from '@lucide/svelte';
 	import UserMenu from './UserMenu.svelte';
+	import NavigationDropdown from './NavigationDropdown.svelte';
+	import { getNavigationForRole } from '$lib/navigation';
 
 	interface User {
 		id: string;
@@ -29,6 +31,12 @@
 	);
 
 	let currentPath = $derived($page.url.pathname);
+
+	let navigationSections = $derived(
+		currentUser ? getNavigationForRole(currentUser.role) : []
+	);
+
+	let openDropdownSection = $state<string | null>(null);
 
 	function getPageTitle(path: string): string {
 		const titles: Record<string, string> = {
@@ -85,6 +93,29 @@
 						<p class="text-[10px] text-amber-200">Sabores al Paso</p>
 					</div>
 				</a>
+
+				<!-- Navigation Dropdowns -->
+				{#if currentUser}
+					<div class="hidden lg:flex items-center gap-1">
+						{#each navigationSections as section (section.title)}
+							<NavigationDropdown
+								{section}
+								{currentPath}
+								isOpen={openDropdownSection === section.title}
+								onToggle={() => {
+									if (openDropdownSection === section.title) {
+										openDropdownSection = null;
+									} else {
+										openDropdownSection = section.title;
+									}
+								}}
+								onClose={() => {
+									openDropdownSection = null;
+								}}
+							/>
+						{/each}
+					</div>
+				{/if}
 
 				{#if currentUser && pageTitle !== 'Nuestra Esencia'}
 					<div class="hidden md:block">
