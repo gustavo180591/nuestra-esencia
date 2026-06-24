@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { User, LogOut, Settings, ChevronDown } from '@lucide/svelte';
+	import { User, LogOut, Settings, ChevronDown, BarChart3, LayoutDashboard } from '@lucide/svelte';
 
 	interface Props {
 		name: string;
@@ -90,6 +90,24 @@
 					>
 						<Settings class="h-4 w-4 text-gray-400" aria-hidden="true" />
 						Proveedores
+					</a>
+					<a
+						href="/admin/movements"
+						onclick={close}
+						class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+						role="menuitem"
+					>
+						<BarChart3 class="h-4 w-4 text-gray-400" aria-hidden="true" />
+						Movimientos
+					</a>
+					<a
+						href="/admin/reports"
+						onclick={close}
+						class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+						role="menuitem"
+					>
+						<LayoutDashboard class="h-4 w-4 text-gray-400" aria-hidden="true" />
+						Reportes
 					</a>
 				{/if}
 				<a

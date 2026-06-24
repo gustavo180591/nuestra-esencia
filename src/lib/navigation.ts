@@ -8,13 +8,7 @@ import {
 	Wallet,
 	Receipt,
 	CreditCard,
-	Settings,
-	User,
-	Truck,
-	BarChart3,
-	LayoutGrid,
-	Tags,
-	LayoutDashboard
+	Tags
 } from '@lucide/svelte';
 
 export interface NavItem {
@@ -56,15 +50,6 @@ export const navigationSections: NavSection[] = [
 			{ href: '/admin/purchases', label: 'Compras', icon: ShoppingCart },
 			{ href: '/admin/expenses', label: 'Gastos', icon: Receipt },
 			{ href: '/admin/payment-methods', label: 'Métodos de Pago', icon: CreditCard }
-		]
-	},
-	{
-		title: 'Administración',
-		items: [
-			{ href: '/admin/users', label: 'Usuarios', icon: User, roles: ['ADMIN'] },
-			{ href: '/admin/suppliers', label: 'Proveedores', icon: Truck, roles: ['ADMIN'] },
-			{ href: '/admin/movements', label: 'Movimientos', icon: BarChart3, roles: ['ADMIN'] },
-			{ href: '/admin/reports', label: 'Reportes', icon: LayoutDashboard, roles: ['ADMIN'] }
 		]
 	}
 ];
