@@ -336,6 +336,13 @@
 			showOpenModal = true;
 			return;
 		}
+
+		// Si no es cuenta corriente, procesar venta directamente
+		if (paymentMethod !== 'CUENTA_CORRIENTE') {
+			processSale();
+			return;
+		}
+
 		showPaymentModal = true;
 	}
 
@@ -1049,359 +1056,359 @@
 						<h2 class="mb-4 text-xl font-semibold text-gray-900">Carrito</h2>
 
 						<!-- Botones de acción -->
-					<div class="mb-4 space-y-2">
-						<button
-							class="w-full rounded-lg bg-amber-600 py-3 font-medium text-white hover:bg-amber-700 disabled:bg-gray-400"
-							onclick={openPaymentModal}
-							disabled={cart.length === 0}
-						>
-							Cobrar {formatCurrency(total)}
-						</button>
-						<button
-							class="w-full rounded-lg bg-gray-200 py-2 text-gray-900 hover:bg-gray-300"
-							onclick={clearCart}
-							disabled={cart.length === 0}
-						>
-							Vaciar Carrito
-						</button>
-					</div>
+						<div class="mb-4 space-y-2">
+							<button
+								class="w-full rounded-lg bg-amber-600 py-3 font-medium text-white hover:bg-amber-700 disabled:bg-gray-400"
+								onclick={openPaymentModal}
+								disabled={cart.length === 0}
+							>
+								Cobrar {formatCurrency(total)}
+							</button>
+							<button
+								class="w-full rounded-lg bg-gray-200 py-2 text-gray-900 hover:bg-gray-300"
+								onclick={clearCart}
+								disabled={cart.length === 0}
+							>
+								Vaciar Carrito
+							</button>
+						</div>
 
-					<!-- Items del carrito -->
-					<div class="mb-4 max-h-96 space-y-2 overflow-y-auto">
-						{#if cart.length === 0}
-							<div class="py-4 text-center text-gray-900">El carrito está vacío</div>
-						{:else}
-							{#each cart
-								.slice()
-								.reverse() as item, index (item.productId + '-' + item.productSaleFormatId + '-' + index)}
-								{@const isWeightBased = item.unitMeasure === 'KILOGRAMO'}
-								{@const realIndex = cart.length - 1 - index}
-								<div
-									class="flex items-center justify-between rounded bg-gray-50 p-3 {item.isCombo
-										? 'border-l-4 border-purple-500 bg-purple-50'
-										: ''}"
-								>
-									<div class="flex-1">
-										<div class="font-medium" style="color: #000">
-											{#if item.isCombo}
-												<span class="mr-1 text-purple-600">🎁</span>
-												<span class="text-purple-700">{item.productName}</span>
-												<span
-													class="ml-1 rounded bg-purple-200 px-1.5 py-0.5 text-xs text-purple-700"
-													>COMBO</span
-												>
-											{:else}
-												{item.productName}
+						<!-- Items del carrito -->
+						<div class="mb-4 max-h-96 space-y-2 overflow-y-auto">
+							{#if cart.length === 0}
+								<div class="py-4 text-center text-gray-900">El carrito está vacío</div>
+							{:else}
+								{#each cart
+									.slice()
+									.reverse() as item, index (item.productId + '-' + item.productSaleFormatId + '-' + index)}
+									{@const isWeightBased = item.unitMeasure === 'KILOGRAMO'}
+									{@const realIndex = cart.length - 1 - index}
+									<div
+										class="flex items-center justify-between rounded bg-gray-50 p-3 {item.isCombo
+											? 'border-l-4 border-purple-500 bg-purple-50'
+											: ''}"
+									>
+										<div class="flex-1">
+											<div class="font-medium" style="color: #000">
+												{#if item.isCombo}
+													<span class="mr-1 text-purple-600">🎁</span>
+													<span class="text-purple-700">{item.productName}</span>
+													<span
+														class="ml-1 rounded bg-purple-200 px-1.5 py-0.5 text-xs text-purple-700"
+														>COMBO</span
+													>
+												{:else}
+													{item.productName}
+												{/if}
+											</div>
+											{#if item.formatLabel && !item.isCombo}
+												<div class="text-sm text-gray-600" style="color: #666">
+													{item.formatLabel}
+												</div>
 											{/if}
+											{#if item.isCombo && item.comboItems && item.comboItems.length > 0}
+												<div class="mt-1 text-xs text-gray-500">
+													{#each item.comboItems as comboItem, i (comboItem.id)}
+														{comboItem.component.name} x{comboItem.quantity}{i <
+														item.comboItems!.length - 1
+															? ', '
+															: ''}
+													{/each}
+												</div>
+											{/if}
+											<div class="text-sm font-bold" style="color: #000">
+												{#if isWeightBased}
+													${item.unitPrice} / kg
+												{:else}
+													${item.unitPrice} c/u
+												{/if}
+											</div>
 										</div>
-										{#if item.formatLabel && !item.isCombo}
-											<div class="text-sm text-gray-600" style="color: #666">
-												{item.formatLabel}
+										<div class="flex items-center space-x-2">
+											<div class="flex flex-col items-end">
+												{#if isWeightBased}
+													<!-- Producto por peso: botones rápidos -->
+													<div class="flex items-center gap-1">
+														<button
+															class="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
+															onclick={() => updateQuantity(realIndex, item.quantity + 0.1)}
+														>
+															100g
+														</button>
+														<button
+															class="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
+															onclick={() => updateQuantity(realIndex, item.quantity + 0.2)}
+														>
+															200g
+														</button>
+														<button onclick={() => updateQuantity(realIndex, item.quantity + 0.5)}>
+															500g
+														</button>
+														<button
+															class="h-7 w-7 rounded bg-red-100 text-red-600 hover:bg-red-200"
+															onclick={() =>
+																updateQuantity(realIndex, Math.max(0.05, item.quantity - 0.05))}
+															disabled={item.quantity <= 0.05}
+														>
+															-50g
+														</button>
+														<button
+															class="h-7 w-7 rounded bg-green-100 text-green-600 hover:bg-green-200"
+															onclick={() => updateQuantity(realIndex, item.quantity + 0.05)}
+														>
+															+50g
+														</button>
+													</div>
+													<div class="mt-1 text-right text-sm">
+														{#if editingGramsIndex === realIndex}
+															<input
+																type="number"
+																class="w-20 rounded border px-1 py-1 text-center text-sm font-medium text-black"
+																bind:value={gramsEditValue}
+																min="0.1"
+																step="0.1"
+																onblur={() => applyGramsEdit(realIndex)}
+																onkeydown={(e) => {
+																	if (e.key === 'Enter') {
+																		applyGramsEdit(realIndex);
+																	}
+																}}
+															/>
+														{:else}
+															<button
+																class="font-medium hover:text-amber-600"
+																style="color: #000"
+																onclick={() => startEditingGrams(realIndex, item.quantity * 1000)}
+																title="Click para editar gramos"
+															>
+																{(item.quantity * 1000).toFixed(1)}g
+															</button>
+														{/if}
+														<span class="text-gray-500">= </span>
+														{#if editingPriceIndex === realIndex}
+															<input
+																type="number"
+																class="w-24 rounded border px-1 py-1 text-right text-sm font-medium text-black"
+																bind:value={priceEditValue}
+																min="0"
+																step="0.01"
+																onblur={() => applyPriceEdit(realIndex)}
+																onkeydown={(e) => {
+																	if (e.key === 'Enter') {
+																		applyPriceEdit(realIndex);
+																	}
+																}}
+															/>
+														{:else}
+															<button
+																class="text-gray-500 hover:text-amber-600"
+																onclick={() => startEditingPrice(realIndex, item.subtotal)}
+																title="Click para editar precio"
+															>
+																{formatCurrency(item.subtotal)}
+															</button>
+														{/if}
+													</div>
+												{:else}
+													<!-- Producto por unidad: input numérico -->
+													<div class="flex items-center space-x-2">
+														<button
+															class="h-8 w-8 rounded bg-red-100 text-red-600 hover:bg-red-200"
+															onclick={() => updateQuantity(realIndex, item.quantity - 1)}
+														>
+															-
+														</button>
+														<input
+															type="number"
+															class="w-16 rounded border px-1 py-1 text-center text-sm text-black"
+															value={item.quantity}
+															min="1"
+															step="1"
+															onchange={(e) => {
+																const val = parseInt(e.currentTarget.value) || 1;
+																updateQuantity(realIndex, val);
+															}}
+														/>
+														<button
+															class="h-8 w-8 rounded bg-green-100 text-green-600 hover:bg-green-200"
+															onclick={() => updateQuantity(realIndex, item.quantity + 1)}
+														>
+															+
+														</button>
+													</div>
+													<div class="mt-1 text-right font-bold" style="color: #000">
+														{#if editingSubtotalIndex === realIndex}
+															<input
+																type="number"
+																class="w-24 rounded border px-1 py-1 text-right text-sm font-medium text-black"
+																bind:value={subtotalEditValue}
+																min="0"
+																step="0.01"
+																onblur={() => applySubtotalEdit(realIndex)}
+																onkeydown={(e) => {
+																	if (e.key === 'Enter') {
+																		applySubtotalEdit(realIndex);
+																	}
+																}}
+															/>
+														{:else}
+															<button
+																class="hover:text-amber-600"
+																style="color: #000"
+																onclick={() => startEditingSubtotal(realIndex, item.subtotal)}
+																title="Click para editar subtotal"
+															>
+																{formatCurrency(item.subtotal)}
+															</button>
+														{/if}
+													</div>
+												{/if}
 											</div>
-										{/if}
-										{#if item.isCombo && item.comboItems && item.comboItems.length > 0}
-											<div class="mt-1 text-xs text-gray-500">
-												{#each item.comboItems as comboItem, i (comboItem.id)}
-													{comboItem.component.name} x{comboItem.quantity}{i <
-													item.comboItems!.length - 1
-														? ', '
-														: ''}
-												{/each}
-											</div>
-										{/if}
-										<div class="text-sm font-bold" style="color: #000">
-											{#if isWeightBased}
-												${item.unitPrice} / kg
-											{:else}
-												${item.unitPrice} c/u
-											{/if}
 										</div>
 									</div>
-									<div class="flex items-center space-x-2">
-										<div class="flex flex-col items-end">
-											{#if isWeightBased}
-												<!-- Producto por peso: botones rápidos -->
-												<div class="flex items-center gap-1">
-													<button
-														class="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
-														onclick={() => updateQuantity(realIndex, item.quantity + 0.1)}
-													>
-														100g
-													</button>
-													<button
-														class="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-200"
-														onclick={() => updateQuantity(realIndex, item.quantity + 0.2)}
-													>
-														200g
-													</button>
-													<button onclick={() => updateQuantity(realIndex, item.quantity + 0.5)}>
-														500g
-													</button>
-													<button
-														class="h-7 w-7 rounded bg-red-100 text-red-600 hover:bg-red-200"
-														onclick={() =>
-															updateQuantity(realIndex, Math.max(0.05, item.quantity - 0.05))}
-														disabled={item.quantity <= 0.05}
-													>
-														-50g
-													</button>
-													<button
-														class="h-7 w-7 rounded bg-green-100 text-green-600 hover:bg-green-200"
-														onclick={() => updateQuantity(realIndex, item.quantity + 0.05)}
-													>
-														+50g
-													</button>
-												</div>
-												<div class="mt-1 text-right text-sm">
-													{#if editingGramsIndex === realIndex}
-														<input
-															type="number"
-															class="w-20 rounded border px-1 py-1 text-center text-sm font-medium text-black"
-															bind:value={gramsEditValue}
-															min="0.1"
-															step="0.1"
-															onblur={() => applyGramsEdit(realIndex)}
-															onkeydown={(e) => {
-																if (e.key === 'Enter') {
-																	applyGramsEdit(realIndex);
-																}
-															}}
-														/>
-													{:else}
-														<button
-															class="font-medium hover:text-amber-600"
-															style="color: #000"
-															onclick={() => startEditingGrams(realIndex, item.quantity * 1000)}
-															title="Click para editar gramos"
-														>
-															{(item.quantity * 1000).toFixed(1)}g
-														</button>
-													{/if}
-													<span class="text-gray-500">= </span>
-													{#if editingPriceIndex === realIndex}
-														<input
-															type="number"
-															class="w-24 rounded border px-1 py-1 text-right text-sm font-medium text-black"
-															bind:value={priceEditValue}
-															min="0"
-															step="0.01"
-															onblur={() => applyPriceEdit(realIndex)}
-															onkeydown={(e) => {
-																if (e.key === 'Enter') {
-																	applyPriceEdit(realIndex);
-																}
-															}}
-														/>
-													{:else}
-														<button
-															class="text-gray-500 hover:text-amber-600"
-															onclick={() => startEditingPrice(realIndex, item.subtotal)}
-															title="Click para editar precio"
-														>
-															{formatCurrency(item.subtotal)}
-														</button>
-													{/if}
-												</div>
-											{:else}
-												<!-- Producto por unidad: input numérico -->
-												<div class="flex items-center space-x-2">
-													<button
-														class="h-8 w-8 rounded bg-red-100 text-red-600 hover:bg-red-200"
-														onclick={() => updateQuantity(realIndex, item.quantity - 1)}
-													>
-														-
-													</button>
-													<input
-														type="number"
-														class="w-16 rounded border px-1 py-1 text-center text-sm text-black"
-														value={item.quantity}
-														min="1"
-														step="1"
-														onchange={(e) => {
-															const val = parseInt(e.currentTarget.value) || 1;
-															updateQuantity(realIndex, val);
-														}}
-													/>
-													<button
-														class="h-8 w-8 rounded bg-green-100 text-green-600 hover:bg-green-200"
-														onclick={() => updateQuantity(realIndex, item.quantity + 1)}
-													>
-														+
-													</button>
-												</div>
-												<div class="mt-1 text-right font-bold" style="color: #000">
-													{#if editingSubtotalIndex === realIndex}
-														<input
-															type="number"
-															class="w-24 rounded border px-1 py-1 text-right text-sm font-medium text-black"
-															bind:value={subtotalEditValue}
-															min="0"
-															step="0.01"
-															onblur={() => applySubtotalEdit(realIndex)}
-															onkeydown={(e) => {
-																if (e.key === 'Enter') {
-																	applySubtotalEdit(realIndex);
-																}
-															}}
-														/>
-													{:else}
-														<button
-															class="hover:text-amber-600"
-															style="color: #000"
-															onclick={() => startEditingSubtotal(realIndex, item.subtotal)}
-															title="Click para editar subtotal"
-														>
-															{formatCurrency(item.subtotal)}
-														</button>
-													{/if}
-												</div>
-											{/if}
-										</div>
-									</div>
-								</div>
-							{/each}
-						{/if}
-					</div>
-
-					<!-- Resumen de totales -->
-					<div class="space-y-2 border-t pt-4">
-						<div class="flex justify-between">
-							<span style="color: #000">Subtotal:</span>
-							<span style="color: #000"
-								>{formatCurrency(cart.reduce((sum, item) => sum + item.subtotal, 0))}</span
-							>
-						</div>
-						<div class="flex items-center justify-between">
-							<span style="color: #000">Descuento:</span>
-							<div class="flex items-center gap-2">
-								<!-- Selector de tipo de descuento -->
-								<div class="flex overflow-hidden rounded border">
-									<button
-										type="button"
-										class="px-2 py-1 text-sm {discountType === 'amount'
-											? 'bg-amber-600 text-white'
-											: 'bg-gray-100 text-gray-700'}"
-										onclick={() => {
-											discountType = 'amount';
-											discount = 0;
-											discountPercentage = 0;
-											updateTotals();
-										}}
-									>
-										$
-									</button>
-									<button
-										type="button"
-										class="px-2 py-1 text-sm {discountType === 'percentage'
-											? 'bg-amber-600 text-white'
-											: 'bg-gray-100 text-gray-700'}"
-										onclick={() => {
-											discountType = 'percentage';
-											discount = 0;
-											discountPercentage = 0;
-											updateTotals();
-										}}
-									>
-										%
-									</button>
-								</div>
-								<!-- Input de descuento según tipo seleccionado -->
-								{#if discountType === 'amount'}
-									<input
-										type="number"
-										bind:value={discount}
-										class="w-20 rounded border px-2 py-1 text-right"
-										placeholder="0"
-										readonly
-										onclick={() => openKeypad('discount')}
-										style="color: #000"
-									/>
-								{:else}
-									<input
-										type="number"
-										bind:value={discountPercentage}
-										class="w-20 rounded border px-2 py-1 text-right"
-										placeholder="0"
-										min="0"
-										max="100"
-										onchange={(e) => {
-											const pct = Math.min(
-												100,
-												Math.max(0, parseFloat(e.currentTarget.value) || 0)
-											);
-											discountPercentage = pct;
-											const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
-											discount = Math.round((subtotal * pct) / 100);
-											updateTotals();
-										}}
-										style="color: #000"
-									/>
-									<span class="text-sm text-gray-600">%</span>
-								{/if}
-							</div>
-						</div>
-						<div class="flex justify-between text-lg font-bold">
-							<span style="color: #000">Total:</span>
-							<span class="text-amber-600" style="color: #000">{formatCurrency(total)}</span>
-						</div>
-					</div>
-
-					<!-- Método de pago -->
-					<div class="mt-4 space-y-2">
-						<label for="payment-method" class="block text-sm font-medium text-gray-900"
-							>Método de pago:</label
-						>
-						<select
-							id="payment-method"
-							bind:value={paymentMethod}
-							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-						>
-							{#each paymentMethods as pm (pm.id)}
-								<option value={pm.code}>
-									{pm.icon}
-									{pm.name}
-								</option>
-							{/each}
-						</select>
-					</div>
-
-					<!-- Campos para efectivo -->
-					{#if paymentMethod === 'EFECTIVO'}
-						<div class="rounded-lg bg-blue-50 p-3 text-center text-sm text-blue-700">
-							F1: Efectivo | F2: Transferencia | F3: Tarjeta | F4: QR
-						</div>
-					{/if}
-					{#if paymentMethod === 'QR'}
-						<div class="rounded-lg bg-purple-50 p-4 text-center">
-							<div class="mb-2 text-4xl">📱</div>
-							<p class="text-sm font-medium text-purple-700">Escanea el QR del cliente</p>
-							<p class="text-xs text-purple-600">O el cliente escanea tu código</p>
-						</div>
-					{/if}
-					{#if paymentMethod === 'EFECTIVO'}
-						<div class="space-y-2">
-							<label for="cash-received" class="block text-sm font-medium text-gray-900"
-								>Efectivo recibido:</label
-							>
-							<input
-								id="cash-received"
-								type="number"
-								bind:value={cashReceived}
-								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-								placeholder="0.00"
-								min="0"
-								step="0.01"
-							/>
-							{#if cashReceived > 0}
-								<div class="flex justify-between font-medium text-green-600">
-									<span>Cambio:</span>
-									<span>{formatCurrency(changeGiven)}</span>
-								</div>
+								{/each}
 							{/if}
 						</div>
-					{/if}
-				</div>
+
+						<!-- Resumen de totales -->
+						<div class="space-y-2 border-t pt-4">
+							<div class="flex justify-between">
+								<span style="color: #000">Subtotal:</span>
+								<span style="color: #000"
+									>{formatCurrency(cart.reduce((sum, item) => sum + item.subtotal, 0))}</span
+								>
+							</div>
+							<div class="flex items-center justify-between">
+								<span style="color: #000">Descuento:</span>
+								<div class="flex items-center gap-2">
+									<!-- Selector de tipo de descuento -->
+									<div class="flex overflow-hidden rounded border">
+										<button
+											type="button"
+											class="px-2 py-1 text-sm {discountType === 'amount'
+												? 'bg-amber-600 text-white'
+												: 'bg-gray-100 text-gray-700'}"
+											onclick={() => {
+												discountType = 'amount';
+												discount = 0;
+												discountPercentage = 0;
+												updateTotals();
+											}}
+										>
+											$
+										</button>
+										<button
+											type="button"
+											class="px-2 py-1 text-sm {discountType === 'percentage'
+												? 'bg-amber-600 text-white'
+												: 'bg-gray-100 text-gray-700'}"
+											onclick={() => {
+												discountType = 'percentage';
+												discount = 0;
+												discountPercentage = 0;
+												updateTotals();
+											}}
+										>
+											%
+										</button>
+									</div>
+									<!-- Input de descuento según tipo seleccionado -->
+									{#if discountType === 'amount'}
+										<input
+											type="number"
+											bind:value={discount}
+											class="w-20 rounded border px-2 py-1 text-right"
+											placeholder="0"
+											readonly
+											onclick={() => openKeypad('discount')}
+											style="color: #000"
+										/>
+									{:else}
+										<input
+											type="number"
+											bind:value={discountPercentage}
+											class="w-20 rounded border px-2 py-1 text-right"
+											placeholder="0"
+											min="0"
+											max="100"
+											onchange={(e) => {
+												const pct = Math.min(
+													100,
+													Math.max(0, parseFloat(e.currentTarget.value) || 0)
+												);
+												discountPercentage = pct;
+												const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+												discount = Math.round((subtotal * pct) / 100);
+												updateTotals();
+											}}
+											style="color: #000"
+										/>
+										<span class="text-sm text-gray-600">%</span>
+									{/if}
+								</div>
+							</div>
+							<div class="flex justify-between text-lg font-bold">
+								<span style="color: #000">Total:</span>
+								<span class="text-amber-600" style="color: #000">{formatCurrency(total)}</span>
+							</div>
+						</div>
+
+						<!-- Método de pago -->
+						<div class="mt-4 space-y-2">
+							<label for="payment-method" class="block text-sm font-medium text-gray-900"
+								>Método de pago:</label
+							>
+							<select
+								id="payment-method"
+								bind:value={paymentMethod}
+								class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+							>
+								{#each paymentMethods as pm (pm.id)}
+									<option value={pm.code}>
+										{pm.icon}
+										{pm.name}
+									</option>
+								{/each}
+							</select>
+						</div>
+
+						<!-- Campos para efectivo -->
+						{#if paymentMethod === 'EFECTIVO'}
+							<div class="rounded-lg bg-blue-50 p-3 text-center text-sm text-blue-700">
+								F1: Efectivo | F2: Transferencia | F3: Tarjeta | F4: QR
+							</div>
+						{/if}
+						{#if paymentMethod === 'QR'}
+							<div class="rounded-lg bg-purple-50 p-4 text-center">
+								<div class="mb-2 text-4xl">📱</div>
+								<p class="text-sm font-medium text-purple-700">Escanea el QR del cliente</p>
+								<p class="text-xs text-purple-600">O el cliente escanea tu código</p>
+							</div>
+						{/if}
+						{#if paymentMethod === 'EFECTIVO'}
+							<div class="space-y-2">
+								<label for="cash-received" class="block text-sm font-medium text-gray-900"
+									>Efectivo recibido:</label
+								>
+								<input
+									id="cash-received"
+									type="number"
+									bind:value={cashReceived}
+									class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
+									placeholder="0.00"
+									min="0"
+									step="0.01"
+								/>
+								{#if cashReceived > 0}
+									<div class="flex justify-between font-medium text-green-600">
+										<span>Cambio:</span>
+										<span>{formatCurrency(changeGiven)}</span>
+									</div>
+								{/if}
+							</div>
+						{/if}
 					</div>
+				</div>
 			</div>
 		</div>
 	</main>
@@ -2086,51 +2093,29 @@
 				<div class="mb-6">
 					<div class="mb-3 text-sm font-medium text-gray-700">Seleccionar método de pago:</div>
 					<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-						{#each paymentMethods as method}
-							<button
-								onclick={() => selectPaymentMethod(method.code)}
-								class="rounded-lg border-2 p-3 text-left transition-all sm:p-4 {paymentMethod ===
-								method.code
-									? 'border-amber-500 bg-amber-50'
-									: 'border-gray-200 bg-white hover:border-amber-300 hover:bg-gray-50'}"
-							>
-								<div class="text-xl sm:text-2xl">{method.icon}</div>
-								<div class="mt-1 text-sm font-medium text-gray-900 sm:text-base">{method.name}</div>
-								{#if paymentMethod === method.code}
-									<div class="mt-1 text-xs text-amber-600">✓ Seleccionado</div>
-								{/if}
-							</button>
+						{#each paymentMethods as method (method.id)}
+							{#if method.code === 'CUENTA_CORRIENTE'}
+								<button
+									onclick={() => selectPaymentMethod(method.code)}
+									class="rounded-lg border-2 p-3 text-left transition-all sm:p-4 {paymentMethod ===
+									method.code
+										? 'border-amber-500 bg-amber-50'
+										: 'border-gray-200 bg-white hover:border-amber-300 hover:bg-gray-50'}"
+								>
+									<div class="text-xl sm:text-2xl">{method.icon}</div>
+									<div class="mt-1 text-sm font-medium text-gray-900 sm:text-base">
+										{method.name}
+									</div>
+									{#if paymentMethod === method.code}
+										<div class="mt-1 text-xs text-amber-600">✓ Seleccionado</div>
+									{/if}
+								</button>
+							{/if}
 						{/each}
 					</div>
 				</div>
 
 				<!-- Campos específicos por método de pago -->
-				{#if paymentMethod === 'EFECTIVO'}
-					<div class="mb-6 rounded-lg bg-blue-50 p-4">
-						<label for="cash-received-modal" class="mb-2 block text-sm font-medium text-gray-900"
-							>Efectivo recibido:</label
-						>
-						<input
-							id="cash-received-modal"
-							type="number"
-							bind:value={cashReceived}
-							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
-							placeholder="0.00"
-							min="0"
-							step="0.01"
-						/>
-						{#if cashReceived > 0}
-							<div class="mt-3 flex justify-between font-medium text-green-600">
-								<span>Cambio:</span>
-								<span class="text-xl">{formatCurrency(changeGiven)}</span>
-							</div>
-						{/if}
-						{#if cashReceived > 0 && cashReceived < total}
-							<div class="mt-2 text-sm text-red-600">⚠️ El efectivo recibido es insuficiente</div>
-						{/if}
-					</div>
-				{/if}
-
 				{#if paymentMethod === 'CUENTA_CORRIENTE'}
 					<div class="mb-6 rounded-lg bg-purple-50 p-4">
 						<label for="client-select" class="mb-2 block text-sm font-medium text-gray-900"
@@ -2142,7 +2127,7 @@
 							class="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"
 						>
 							<option value="">Seleccionar cliente...</option>
-							{#each clients as client}
+							{#each clients as client (client.id)}
 								<option value={client.id}>
 									{client.name}
 									{client.phone ? `(${client.phone})` : ''} - Deuda: ${formatCurrency(
@@ -2170,14 +2155,6 @@
 					</div>
 				{/if}
 
-				{#if paymentMethod === 'QR'}
-					<div class="mb-6 rounded-lg bg-purple-50 p-4 text-center">
-						<div class="mb-2 text-4xl">📱</div>
-						<p class="text-sm font-medium text-purple-700">Escanea el QR del cliente</p>
-						<p class="text-xs text-purple-600">O el cliente escanea tu código</p>
-					</div>
-				{/if}
-
 				<!-- Botones de acción -->
 				<div class="flex justify-end gap-3">
 					<button
@@ -2188,8 +2165,7 @@
 					</button>
 					<button
 						onclick={processSale}
-						disabled={(paymentMethod === 'EFECTIVO' && cashReceived < total) ||
-							(paymentMethod === 'CUENTA_CORRIENTE' && !selectedClientId)}
+						disabled={paymentMethod === 'CUENTA_CORRIENTE' && !selectedClientId}
 						class="rounded-md bg-amber-600 px-4 py-2 text-white hover:bg-amber-700 disabled:bg-gray-400"
 					>
 						Confirmar Venta

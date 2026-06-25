@@ -10,7 +10,16 @@
 		disabled?: boolean;
 	}
 
-	let { value, onchange, placeholder = '0,00', id, class: className, min = 0, step = 0.01, disabled = false }: Props = $props();
+	let {
+		value,
+		onchange,
+		placeholder = '0,00',
+		id,
+		class: className,
+		min = 0,
+		step = 0.01,
+		disabled = false
+	}: Props = $props();
 
 	let inputElement: HTMLInputElement;
 	let isFocused = $state(false);
@@ -25,7 +34,10 @@
 		});
 	}
 
-	function formatWhileTyping(input: string, cursorPosition: number): { formatted: string; newCursor: number } {
+	function formatWhileTyping(
+		input: string,
+		cursorPosition: number
+	): { formatted: string; newCursor: number } {
 		// Remove all non-numeric characters except comma
 		let cleaned = input.replace(/[^\d,]/g, '');
 
@@ -33,7 +45,8 @@
 		const commaCount = (cleaned.match(/,/g) || []).length;
 		if (commaCount > 1) {
 			const lastCommaIndex = cleaned.lastIndexOf(',');
-			cleaned = cleaned.substring(0, lastCommaIndex).replace(/,/g, '') + cleaned.substring(lastCommaIndex);
+			cleaned =
+				cleaned.substring(0, lastCommaIndex).replace(/,/g, '') + cleaned.substring(lastCommaIndex);
 		}
 
 		// Split by comma to handle integer and decimal parts
@@ -102,7 +115,7 @@
 		oninput={handleInput}
 		onfocus={handleFocus}
 		onblur={handleBlur}
-		placeholder={placeholder}
-		class="w-full rounded-md border border-gray-300 py-2 pr-3 pl-8 text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 {className}"
+		{placeholder}
+		class="w-full rounded-md border border-gray-300 py-2 pr-3 pl-8 text-gray-900 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none {className}"
 	/>
 </div>

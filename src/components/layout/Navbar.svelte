@@ -32,9 +32,7 @@
 
 	let currentPath = $derived($page.url.pathname);
 
-	let navigationSections = $derived(
-		currentUser ? getNavigationForRole(currentUser.role) : []
-	);
+	let navigationSections = $derived(currentUser ? getNavigationForRole(currentUser.role) : []);
 
 	let openDropdownSection = $state<string | null>(null);
 
@@ -96,7 +94,7 @@
 
 				<!-- Navigation Dropdowns -->
 				{#if currentUser}
-					<div class="hidden lg:flex items-center gap-1">
+					<div class="hidden items-center gap-1 lg:flex">
 						{#each navigationSections as section (section.title)}
 							<NavigationDropdown
 								{section}

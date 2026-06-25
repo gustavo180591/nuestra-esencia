@@ -56,7 +56,8 @@
 					<a
 						href={item.href}
 						onclick={close}
-						class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none {currentPath === item.href
+						class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none {currentPath ===
+						item.href
 							? 'bg-amber-50 text-amber-700'
 							: ''}"
 						role="menuitem"

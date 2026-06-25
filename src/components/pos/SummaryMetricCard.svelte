@@ -32,7 +32,7 @@
 		{#if Icon}
 			<Icon class="h-4 w-4 {textStyles[variant]}" aria-hidden="true" />
 		{/if}
-		<span class="text-xs font-medium uppercase tracking-wider text-gray-500">{label}</span>
+		<span class="text-xs font-medium tracking-wider text-gray-500 uppercase">{label}</span>
 	</div>
 	<div class="text-2xl font-bold {textStyles[variant]}">{value}</div>
 </div>

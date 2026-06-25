@@ -74,15 +74,13 @@
 						<h2 class="text-xl font-bold text-gray-900">Cierre de Caja</h2>
 						<p class="text-sm text-gray-500">Resumen del turno</p>
 					</div>
-					<span
-						class="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700"
-					>
+					<span class="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
 						Caja cerrada
 					</span>
 				</div>
 				<button
 					onclick={onClose}
-					class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+					class="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
 					aria-label="Cerrar modal"
 				>
 					<X class="h-5 w-5" aria-hidden="true" />
@@ -130,7 +128,9 @@
 				<div class="mb-6 rounded-lg bg-gray-50 p-4">
 					<div class="flex items-center justify-between">
 						<span class="text-sm font-medium text-gray-700">Monto inicial</span>
-						<span class="text-lg font-bold text-gray-900">{formatCurrency(data.initialAmount || 0)}</span>
+						<span class="text-lg font-bold text-gray-900"
+							>{formatCurrency(data.initialAmount || 0)}</span
+						>
 					</div>
 				</div>
 
@@ -176,13 +176,13 @@
 			<div class="flex items-center justify-end gap-3 border-t border-gray-200 px-6 py-4">
 				<button
 					onclick={onClose}
-					class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+					class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:outline-none"
 				>
 					Cerrar
 				</button>
 				<button
 					onclick={onPrint}
-					class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+					class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
 				>
 					<Printer class="h-4 w-4" aria-hidden="true" />
 					Imprimir reporte

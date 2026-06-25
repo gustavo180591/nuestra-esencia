@@ -635,7 +635,9 @@
 
 			<!-- Pagination Controls -->
 			{#if totalPages > 1}
-				<div class="mt-4 flex flex-col items-center justify-between gap-4 rounded-lg bg-white p-4 shadow sm:flex-row">
+				<div
+					class="mt-4 flex flex-col items-center justify-between gap-4 rounded-lg bg-white p-4 shadow sm:flex-row"
+				>
 					<div class="flex items-center gap-2">
 						<span class="text-sm text-gray-600">Mostrar:</span>
 						<select
@@ -663,14 +665,14 @@
 						<button
 							onclick={() => changePage(currentPage - 1)}
 							disabled={currentPage === 1}
-							class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+							class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-900 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							Anterior
 						</button>
 						<button
 							onclick={() => changePage(currentPage + 1)}
 							disabled={currentPage === totalPages}
-							class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+							class="rounded-md border border-gray-300 px-3 py-1 text-sm text-gray-900 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							Siguiente
 						</button>
